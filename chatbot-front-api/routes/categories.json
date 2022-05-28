@@ -1,0 +1,22 @@
+[
+    {
+        "id": 0,
+        "name": "Compiladores"
+    },
+    {
+        "id": 1,
+        "name": "Computação Estruturada"
+    },
+    {
+        "id": 2,
+        "name": "Aprendizado de Máquina"
+    },
+    {
+        "id": 3,
+        "name": "Grafos"
+    },
+    {
+        "id": 4,
+        "name": "Orientação a Objetos"
+    }
+]

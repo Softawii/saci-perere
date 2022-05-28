@@ -1,0 +1,48 @@
+{
+  "extends": [
+    "airbnb-base"
+  ],
+  "env": {
+    "es2022": true,
+    "browser": true
+  },
+  "rules": {
+    "indent": [
+      "error",
+      2
+    ],
+    "no-console": "off",
+    "prefer-destructuring": "off",
+    "no-restricted-syntax": "off",
+    "max-len": [
+      "error",
+      {
+        "code": 200,
+        "ignorePattern": "d=\"([\\s\\S]*?)\""
+      }
+    ],
+    "no-unused-vars": "warn",
+    "radix": "off",
+    "arrow-parens": [
+      "error",
+      "as-needed"
+    ],
+    "typescript-eslint": "off",
+    "no-plusplus": "off",
+    "no-use-before-define": "off",
+    "consistent-return": "warn",
+    "object-property-newline": [
+      "error",
+      {
+        "allowAllPropertiesOnSameLine": false
+      }
+    ],
+    "object-curly-newline": [
+      "error",
+      "always"
+    ]
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022
+  }
+}
