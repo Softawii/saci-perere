@@ -1,0 +1,49 @@
+{
+  "extends": [
+    "airbnb-base",
+    "plugin:vue/vue3-recommended"
+  ],
+  "env": {
+    "es2022": true,
+    "browser": true
+  },
+  "rules": {
+    "indent": [
+      "error",
+      2
+    ],
+    "no-console": "off",
+    "prefer-destructuring": "off",
+    "no-restricted-syntax": "off",
+    "vue/max-attributes-per-line": [
+      "error",
+      {
+        "singleline": {
+          "max": 4
+        },
+        "multiline": {
+          "max": 4
+        }
+      }
+    ],
+    "max-len": [
+      "error",
+      {
+        "code": 200,
+        "ignorePattern": "d=\"([\\s\\S]*?)\""
+      }
+    ],
+    "no-unused-vars": "warn",
+    "radix": "off",
+    "arrow-parens": [
+      "error",
+      "as-needed"
+    ],
+    "vue/multi-word-component-names": "off",
+    "typescript-eslint": "off",
+    "no-plusplus": "off"
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022
+  }
+}

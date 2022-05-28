@@ -1,0 +1,18 @@
+{
+    "id": 1,
+    "name": "Computação Estruturada",
+    "questions": [
+        {
+            "question": "O que é algoritmo",
+            "answers": [
+                "Uma \"receita\" que contém o passo a passo para a realização de uma tarefa"
+            ]
+        },
+        {
+            "question": "Como compilar um programa em C no Linux?",
+            "answers": [
+                "gcc -o nomeSaida nomePrograma.c"
+            ]
+        }
+    ]
+}
