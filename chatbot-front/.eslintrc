@@ -48,10 +48,8 @@
         "allowAllPropertiesOnSameLine": false
       }
     ],
-    "object-curly-newline": [
-      "error",
-      "always"
-    ]
+    "no-shadow": "warn",
+    "no-use-before-define": "off"
   },
   "parserOptions": {
     "ecmaVersion": 2022

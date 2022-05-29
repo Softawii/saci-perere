@@ -1,6 +1,3 @@
-<script setup>
-import DotsVertical from '../components/icons/DotsVertical.vue';
-</script>
 <template>
   <div id="main" style="min-height: 100vh; min-width: 100vw;">
     <i-container>
@@ -13,7 +10,7 @@ import DotsVertical from '../components/icons/DotsVertical.vue';
           </i-navbar-brand>
           <i-navbar-collapsible id="aaa">
             <i-nav>
-              <i-nav-item to="/">
+              <i-nav-item @click="logout">
                 Logout
               </i-nav-item>
               <i-nav-item to="/about">
@@ -157,9 +154,15 @@ import DotsVertical from '../components/icons/DotsVertical.vue';
 </template>
 
 <script>
+import { mapActions } from 'pinia';
+import { useUserStore } from '../store/UserStore';
+import DotsVertical from '../components/icons/DotsVertical.vue';
 import categoriesJson from '../data/categories.json';
 
 export default {
+  components: {
+    DotsVertical,
+  },
   data() {
     return {
       temaSelecionado: undefined,
@@ -176,6 +179,7 @@ export default {
   computed: {
   },
   methods: {
+    ...mapActions(useUserStore, ['clearCredentials']),
     adicionarAssunto() {
       this.temaSelecionado = undefined;
       this.novoTema = '';
@@ -218,6 +222,14 @@ export default {
       currentCategory.name = this.newCategoryName;
 
       this.isRenamingCategory = false;
+    },
+    logout() {
+      this.clearCredentials()
+        .then(() => {
+          this.$router.push({
+            name: 'Login',
+          });
+        });
     },
   },
 };

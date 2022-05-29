@@ -3,21 +3,25 @@
 
 <template>
   <div>
-    <!-- <Login /> -->
-    <!-- <Home /> -->
-    <Category />
+    <div style="text-align: center">
+      <router-link to="/">
+        Home
+      </router-link> |
+      <router-link to="/login">
+        Login
+      </router-link> |
+      <router-link to="/category">
+        Category
+      </router-link>
+    </div>
+    <router-view />
   </div>
 </template>
 <script>
-import Login from './views/Login.vue';
-import Home from './views/Home.vue';
-import Category from './views/Category.vue';
 
 export default {
-  components: {
-    Login,
-    Home,
-    Category,
+  components: {},
+  setup() {
   },
 };
 </script>
