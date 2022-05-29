@@ -37,10 +37,7 @@
         "allowAllPropertiesOnSameLine": false
       }
     ],
-    "object-curly-newline": [
-      "error",
-      "always"
-    ]
+    "no-shadow": "warn"
   },
   "parserOptions": {
     "ecmaVersion": 2022

@@ -1,10 +1,8 @@
-const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const express = require('express');
 const cors = require('cors');
 
-const auth = require('./routes/auth');
-const categories = require('./routes/categories');
+const mountRoutes = require('./routes');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -16,10 +14,7 @@ app.use(express.urlencoded({
   extended: true,
 }));
 
-app.use(
-  auth.router,
-  categories.router,
-);
+mountRoutes(app);
 
 app.use((req, res, next) => {
   res.setHeader('X-Powered-By', 'with he4rt by softawii');
@@ -28,20 +23,6 @@ app.use((req, res, next) => {
 
 app.get('/', (req, res) => {
   res.send('nice to meet you');
-});
-
-function generateAccessToken(username) {
-  return jwt.sign(username, process.env.TOKEN_SECRET, {
-    expiresIn: '1800s',
-  });
-}
-
-app.post('/auth', (req, res) => {
-  const token = generateAccessToken({
-    username: req.body.username,
-  });
-
-  res.json(token);
 });
 
 app.listen(port, () => {

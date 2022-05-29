@@ -7,7 +7,7 @@ const saltRounds = 10;
 
 const router = express.Router();
 
-router.use('/auth', (req, res, next) => {
+router.use('/', (req, res, next) => {
   const requiredParams = ['username', 'password'];
   for (const param of requiredParams) {
     if (!req.body[param]) {
@@ -19,7 +19,7 @@ router.use('/auth', (req, res, next) => {
   next();
 });
 
-router.post('/auth/signin', (req, res) => {
+router.post('/signin', (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
 
@@ -31,7 +31,7 @@ router.post('/auth/signin', (req, res) => {
   }
 });
 
-router.post('/auth/signup', (req, res) => {
+router.post('/signup', (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   bcrypt.hash(password, saltRounds)

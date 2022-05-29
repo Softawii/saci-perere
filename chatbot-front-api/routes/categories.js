@@ -4,7 +4,7 @@ const categories = require('./categories.json');
 
 const router = express.Router();
 
-router.get('/categories', auth.checkAccessToken, (req, res) => {
+router.get('/', auth.checkAccessToken, (req, res) => {
   res.json(categories);
 });
 
