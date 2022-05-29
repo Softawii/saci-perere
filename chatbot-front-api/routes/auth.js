@@ -2,44 +2,47 @@
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const bcrypt = require('bcrypt');
+const db = require('../db');
 
 const saltRounds = 10;
 
 const router = express.Router();
 
-router.use('/', (req, res, next) => {
-  const requiredParams = ['username', 'password'];
-  for (const param of requiredParams) {
-    if (!req.body[param]) {
-      return res.status(400).send({
-        error: `missing ${param} parameter`,
-      });
-    }
-  }
-  next();
-});
-
-router.post('/signin', (req, res) => {
+router.post('/signin', checkAuthParams, (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
 
-  if (password === 'senha') {
-    const token = generateAccessToken({
-      username,
+  db.query('SELECT * FROM chatbot.user WHERE username = $1 LIMIT 1', [username])
+    .then(result => {
+      if (result.rowCount === 0) return res.sendStatus(401);
+      bcrypt.compare(password, result.rows[0].password, (err, result) => {
+        if (result) {
+          const token = generateAccessToken({
+            username,
+          });
+          return res.json(token);
+        }
+        return res.sendStatus(401);
+      });
     });
-    return res.json(token);
-  }
 });
 
-router.post('/signup', (req, res) => {
+router.post('/signup', checkAuthParams, (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   bcrypt.hash(password, saltRounds)
-    .then(hash => res.json({
-      username,
-      password,
-      passwordHash: hash,
-    }));
+    .then(hash => {
+      db.query('INSERT INTO chatbot.user (username, password) VALUES ($1,$2)', [username, hash])
+        .then(result => res.sendStatus(200))
+        .catch(err => {
+          if (err.code === '23505') {
+            return res.status(400).json({
+              error: 'username already in use',
+            });
+          }
+          return res.sendStatus(500);
+        });
+    });
 });
 
 function generateAccessToken(obj) {
@@ -65,6 +68,18 @@ function checkAccessToken(req, res, next) {
     req.userId = decoded.id;
     next();
   });
+}
+
+function checkAuthParams(req, res, next) {
+  const requiredParams = ['username', 'password'];
+  for (const param of requiredParams) {
+    if (!req.body[param]) {
+      return res.status(400).send({
+        error: `missing ${param} parameter`,
+      });
+    }
+  }
+  next();
 }
 
 module.exports = {

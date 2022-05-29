@@ -14,12 +14,12 @@ app.use(express.urlencoded({
   extended: true,
 }));
 
-mountRoutes(app);
-
 app.use((req, res, next) => {
   res.setHeader('X-Powered-By', 'with he4rt by softawii');
   next();
 });
+
+mountRoutes(app);
 
 app.get('/', (req, res) => {
   res.send('nice to meet you');
