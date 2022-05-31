@@ -11,5 +11,5 @@ pool.on('error', (err, client) => {
 });
 
 module.exports = {
-  query: (text, params) => pool.query(text, params),
+  query: (query, params) => pool.query(query, params),
 };

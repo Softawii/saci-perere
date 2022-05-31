@@ -6,11 +6,13 @@ CREATE TABLE IF NOT EXISTS chatbot.user
 (
     id       SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
-    password VARCHAR(60)        NOT NULL
+    password VARCHAR(60)        NOT NULL,
+    name     VARCHAR(60)        NOT NULL,
+    email    VARCHAR(120)       NOT NULL
 );
 
-DROP TABLE IF EXISTS chatbot.preferences;
-CREATE TABLE IF NOT EXISTS chatbot.preferences
+DROP TABLE IF EXISTS chatbot.user_preferences;
+CREATE TABLE IF NOT EXISTS chatbot.user_preferences
 (
     user_id  INTEGER NOT NULL REFERENCES chatbot.user (id),
     favorite INTEGER[]

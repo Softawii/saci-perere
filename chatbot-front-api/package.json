@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "server": "node index.js",
+    "nserver": "nodemon index.js",
     "secret": "node -p \"require('crypto').randomBytes(64).toString('hex')\""
   },
   "dependencies": {

@@ -15,12 +15,20 @@ router.post('/signin', checkAuthParams, (req, res) => {
   db.query('SELECT * FROM chatbot.user WHERE username = $1 LIMIT 1', [username])
     .then(result => {
       if (result.rowCount === 0) return res.sendStatus(401);
-      bcrypt.compare(password, result.rows[0].password, (err, result) => {
+      const user = result.rows[0];
+      bcrypt.compare(password, user.password, (err, result) => {
         if (result) {
+          const exp = Math.floor(Date.now() / 1000) + (60 * 60); // 1h
           const token = generateAccessToken({
+            id: user.id,
+          }, exp);
+          return res.json({
+            name: user.name,
+            email: user.email,
             username,
+            token,
+            expiresAt: exp,
           });
-          return res.json(token);
         }
         return res.sendStatus(401);
       });
@@ -45,9 +53,9 @@ router.post('/signup', checkAuthParams, (req, res) => {
     });
 });
 
-function generateAccessToken(obj) {
-  return jwt.sign(obj, process.env.TOKEN_SECRET, {
-    expiresIn: '5min',
+function generateAccessToken(payload, exp) {
+  return jwt.sign(payload, process.env.TOKEN_SECRET, {
+    expiresIn: exp,
   });
 }
 

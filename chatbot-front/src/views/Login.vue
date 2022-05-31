@@ -81,6 +81,8 @@ import { useGlobalStore } from '../store/GlobalStore';
 
 <script>
 
+import {mapStores} from "pinia";
+
 export default {
   components: {
   },
@@ -124,12 +126,10 @@ export default {
         username,
         password,
       }).then(response => {
-        this.userStore.updateToken(response);
+        this.userStore.setUserData(response.data);
         this.$router.push({
           path: '/',
         });
-        console.log(this.userStore.token);
-        this.loading = false;
       }).catch(err => {
         this.loading = false;
         if (err.response.status === 401) {

@@ -1,11 +1,16 @@
 const express = require('express');
 const auth = require('./auth');
-const categories = require('./categories.json');
+const db = require('../db');
 
 const router = express.Router();
 
 router.get('/', auth.checkAccessToken, (req, res) => {
-  res.json(categories);
+  db.query('SELECT * from chatbot.category')
+    .then(result => {
+      res.json({
+        categories: result.rows,
+      });
+    });
 });
 
 module.exports = {

@@ -1,35 +1,6 @@
 <template>
-  <div id="main" style="min-height: 100vh; min-width: 100vw;">
+  <div id="main">
     <i-container>
-      <i-row center>
-        <i-navbar id="navbar" style="min-width: 99%; margin: 2px 4px;">
-          <i-navbar-brand to="/">
-            <span>
-              Olá, Fulano de Tal
-            </span>
-          </i-navbar-brand>
-          <i-navbar-collapsible id="aaa">
-            <i-nav>
-              <i-nav-item @click="logout">
-                Logout
-              </i-nav-item>
-              <i-nav-item to="/about">
-                Cadastrar Usuário
-              </i-nav-item>
-              <i-nav-item to="/contact">
-                Contact
-              </i-nav-item>
-            </i-nav>
-            <i-input placeholder="Type something..">
-              <template #append>
-                <i-button color="primary">
-                  <i-icon name="ink-search" />
-                </i-button>
-              </template>
-            </i-input>
-          </i-navbar-collapsible>
-        </i-navbar>
-      </i-row>
       <i-row center style="margin: 2px 4px;">
         <i-alert dismissible color="info">
           <template #icon>
@@ -69,20 +40,20 @@
           Categorias:
         </p>
         <i-list-group color="light" style="width: 100%; margin: 0 10px">
-          <i-list-group-item v-for="categoria in categorias" :key="categoria.name">
+          <i-list-group-item v-for="category in categories" :key="category.name">
             <div class="_clearfix">
               <span class="_vertical-align:text-top"> <!-- _float:right -->
-                {{ categoria.name }}
+                {{ category.name }}
               </span>
               <span class="_float:right">
                 <i-dropdown>
                   <DotsVertical />
                   <template #body>
-                    <i-dropdown-item @click="renameCategoryModal(categoria.id)">Editar nome</i-dropdown-item>
+                    <i-dropdown-item @click="renameCategoryModal(category.id)">Editar nome</i-dropdown-item>
                     <i-dropdown-divider />
                     <i-dropdown-item disabled>Sair da categoria</i-dropdown-item>
                     <i-dropdown-divider />
-                    <i-dropdown-item @click="apagarCategoria(categoria.id)">Apagar</i-dropdown-item>
+                    <i-dropdown-item @click="apagarCategoria(category.id)">Apagar</i-dropdown-item>
                   </template>
                 </i-dropdown>
               </span>
@@ -154,10 +125,11 @@
 </template>
 
 <script>
-import { mapActions } from 'pinia';
+import axios from 'axios';
+import { mapActions, mapStores } from 'pinia';
 import { useUserStore } from '../store/UserStore';
+import { useGlobalStore } from '../store/GlobalStore';
 import DotsVertical from '../components/icons/DotsVertical.vue';
-import categoriesJson from '../data/categories.json';
 
 export default {
   components: {
@@ -172,11 +144,22 @@ export default {
       oldCategoryName: undefined,
       newCategoryName: undefined,
       newCategoryId: undefined,
-      categorias: categoriesJson,
+      categories: [],
       categoriasFiltrados: undefined,
     };
   },
   computed: {
+    ...mapStores(useGlobalStore, useUserStore),
+  },
+  beforeMount() {
+    axios.get(`${this.globalStore.apiUrl}/categories`, {
+      headers: {
+        Authorization: `Bearer ${this.userStore.token}`,
+      },
+    })
+      .then(response => {
+        this.categories = response.data.categories;
+      });
   },
   methods: {
     ...mapActions(useUserStore, ['clearCredentials']),
@@ -184,13 +167,13 @@ export default {
       this.temaSelecionado = undefined;
       this.novoTema = '';
       this.isAddingSubject = true;
-      this.categoriasFiltrados = this.categorias.map(categoria => ({
+      this.categoriasFiltrados = this.categories.map(categoria => ({
         id: categoria.id,
         label: categoria.name,
       }));
     },
     nomesTemas(query) {
-      this.categoriasFiltrados = this.categorias.map(categoria => ({
+      this.categoriasFiltrados = this.categories.map(categoria => ({
         id: categoria.id,
         label: categoria.name,
       })).filter(option => option.label.toLowerCase().includes((query || '').toLowerCase()));
@@ -199,18 +182,18 @@ export default {
     adicionarCategoria() {
       this.isAddingSubject = false;
       const name = this.temaSelecionado || this.novoTema;
-      const ultimaCategoria = this.categorias[this.categorias.length - 1];
+      const ultimaCategoria = this.categories[this.categories.length - 1];
       const id = ultimaCategoria.id + 1;
-      this.categorias.push({
+      this.categories.push({
         name,
         id,
       });
     },
     apagarCategoria(id) {
-      this.categorias = this.categorias.filter(categoria => categoria.id !== id);
+      this.categories = this.categories.filter(categoria => categoria.id !== id);
     },
     renameCategoryModal(id) {
-      const currentCategory = this.categorias.filter(categoria => categoria.id === id)[0];
+      const currentCategory = this.categories.filter(categoria => categoria.id === id)[0];
       this.newCategoryName = '';
       this.oldCategoryName = currentCategory.name;
       this.newCategoryId = currentCategory.id;
@@ -218,18 +201,10 @@ export default {
       this.isRenamingCategory = true;
     },
     renameCategory() {
-      const currentCategory = this.categorias.filter(categoria => categoria.id === this.newCategoryId)[0];
+      const currentCategory = this.categories.filter(categoria => categoria.id === this.newCategoryId)[0];
       currentCategory.name = this.newCategoryName;
 
       this.isRenamingCategory = false;
-    },
-    logout() {
-      this.clearCredentials()
-        .then(() => {
-          this.$router.push({
-            name: 'Login',
-          });
-        });
     },
   },
 };
