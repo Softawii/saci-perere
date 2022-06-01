@@ -35,10 +35,15 @@
           <p>Falha ao xxxxxxxxx</p>
         </i-alert>
       </i-row>
+      <div class="_display:flex _justify-content:space-between">
+        <div class="_font-size:xl" style="margin: 10px 10px 0">
+          Categorias:
+        </div>
+        <div class="_align-self:end" style="margin-right: 10px;">
+          <Refresh @click="reloadCategories" />
+        </div>
+      </div>
       <i-row>
-        <p class="_font-size:xl" style="margin: 10px 10px 0">
-          Categorias: <Refresh @click="reloadCategories" />
-        </p>
         <i-list-group color="light" style="width: 100%; margin: 0 10px">
           <i-list-group-item v-for="category in categories" :key="category.name">
             <div class="_clearfix">
