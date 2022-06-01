@@ -37,7 +37,7 @@
       </i-row>
       <i-row>
         <p class="_font-size:xl" style="margin: 10px 10px 0">
-          Categorias:
+          Categorias: <Refresh @click="reloadCategories" />
         </p>
         <i-list-group color="light" style="width: 100%; margin: 0 10px">
           <i-list-group-item v-for="category in categories" :key="category.name">
@@ -62,7 +62,7 @@
         </i-list-group>
       </i-row>
       <i-row center>
-        <div @click="adicionarAssunto">
+        <div @click="addCategoryModal">
           <p class="_font-size:xl" style="margin-bottom: 0">
             Adicionar mais categorias
           </p>
@@ -74,25 +74,24 @@
       <template #header>
         Adicionar nova categoria
       </template>
+      <i-alert v-if="addNewCategoryError" color="danger" style="margin-bottom: 20px">
+        <template #icon>
+          <i-icon name="ink-danger" />
+        </template>
+        <p>{{ addNewCategoryError }}</p>
+      </i-alert>
       <i-form>
-        <!-- <i-form-group>
-          <i-form-label>Entre em uma categoria já existente:</i-form-label>
-          <i-select
-            v-model="temaSelecionado" :options="categoriasFiltrados" autocomplete placeholder="Escolha uma categoria..."
-            :disabled="novoTema.length > 0" :clearable="true" @search="nomesTemas"
-          />
-        </i-form-group> -->
         <i-form-group>
           <i-form-label>Crie uma nova categoria:</i-form-label>
           <i-input
-            v-model="novoTema" placeholder="Nova categoria..." :clearable="true"
-            :disabled="Boolean(temaSelecionado && temaSelecionado.label)"
+            v-model="newCategory" placeholder="Nova categoria..." :clearable="true"
+            :disabled="Boolean(selectedCategory && selectedCategory.label)"
           />
         </i-form-group>
         <i-form-group>
           <i-row center>
-            <i-tooltip :disabled="novoTema.length !== 0" placement="bottom">
-              <i-button :disabled="novoTema.length === 0" :color="novoTema.length === 0 ? 'danger' : 'primary'" @click="adicionarCategoria">
+            <i-tooltip :disabled="newCategory.length !== 0" placement="bottom">
+              <i-button :disabled="newCategory.length === 0" :color="newCategory.length === 0 ? 'danger' : 'primary'" @click="addNewCategory">
                 Confirmar
               </i-button>
               <template #body>
@@ -107,6 +106,12 @@
       <template #header>
         Renomear Categoria
       </template>
+      <i-alert v-if="renamingCategoryError" color="danger" style="margin-bottom: 20px">
+        <template #icon>
+          <i-icon name="ink-danger" />
+        </template>
+        <p>{{ renamingCategoryError }}</p>
+      </i-alert>
       <i-form>
         <i-form-group>
           <i-form-label>Novo nome para {{ oldCategoryName }}:</i-form-label>
@@ -130,67 +135,68 @@ import { mapActions, mapStores } from 'pinia';
 import { useUserStore } from '../store/UserStore';
 import { useGlobalStore } from '../store/GlobalStore';
 import DotsVertical from '../components/icons/DotsVertical.vue';
+import Refresh from '../components/icons/Refresh.vue';
 
 export default {
   components: {
     DotsVertical,
+    Refresh,
   },
   data() {
     return {
-      temaSelecionado: undefined,
-      novoTema: '',
+      selectedCategory: undefined,
+      newCategory: '',
       isAddingSubject: false,
       isRenamingCategory: false,
       oldCategoryName: undefined,
       newCategoryName: undefined,
       newCategoryId: undefined,
       categories: [],
-      categoriasFiltrados: undefined,
+      addNewCategoryError: undefined,
+      renamingCategoryError: undefined,
     };
   },
   computed: {
     ...mapStores(useGlobalStore, useUserStore),
   },
   beforeMount() {
-    axios.get(`${this.globalStore.apiUrl}/categories`, {
-      headers: {
-        Authorization: `Bearer ${this.userStore.token}`,
-      },
-    })
-      .then(response => {
-        this.categories = response.data.categories;
-      });
+    this.reloadCategories();
   },
   methods: {
     ...mapActions(useUserStore, ['clearCredentials']),
-    adicionarAssunto() {
-      this.temaSelecionado = undefined;
-      this.novoTema = '';
+    addCategoryModal() {
+      this.selectedCategory = undefined;
+      this.newCategory = '';
       this.isAddingSubject = true;
-      this.categoriasFiltrados = this.categories.map(categoria => ({
-        id: categoria.id,
-        label: categoria.name,
-      }));
     },
-    nomesTemas(query) {
-      this.categoriasFiltrados = this.categories.map(categoria => ({
-        id: categoria.id,
-        label: categoria.name,
-      })).filter(option => option.label.toLowerCase().includes((query || '').toLowerCase()));
-      return this.categoriasFiltrados;
-    },
-    adicionarCategoria() {
-      this.isAddingSubject = false;
-      const name = this.temaSelecionado || this.novoTema;
-      const ultimaCategoria = this.categories[this.categories.length - 1];
-      const id = ultimaCategoria.id + 1;
-      this.categories.push({
+    addNewCategory() {
+      const name = this.selectedCategory || this.newCategory;
+      axios.post(`${this.globalStore.apiUrl}/categories`, {
+        headers: {
+          Authorization: `Bearer ${this.userStore.token}`,
+        },
         name,
-        id,
+      }).then(() => {
+        this.isAddingSubject = false;
+        this.reloadCategories();
+      }).catch(err => {
+        console.error(err);
+        this.addNewCategoryError = err;
+        this.reloadCategories();
       });
     },
     apagarCategoria(id) {
-      this.categories = this.categories.filter(categoria => categoria.id !== id);
+      axios.post(`${this.globalStore.apiUrl}/categories/delete`, {
+        headers: {
+          Authorization: `Bearer ${this.userStore.token}`,
+        },
+        id,
+      }).then(() => {
+        this.reloadCategories();
+      }).catch(err => {
+        console.error(err);
+        this.reloadCategories();
+      });
     },
     renameCategoryModal(id) {
       const currentCategory = this.categories.filter(categoria => categoria.id === id)[0];
@@ -203,8 +209,29 @@ export default {
     renameCategory() {
       const currentCategory = this.categories.filter(categoria => categoria.id === this.newCategoryId)[0];
       currentCategory.name = this.newCategoryName;
-
-      this.isRenamingCategory = false;
+      axios.post(`${this.globalStore.apiUrl}/categories/rename`, {
+        headers: {
+          Authorization: `Bearer ${this.userStore.token}`,
+        },
+        name: currentCategory.name,
+        id: currentCategory.id,
+      }).then(response => {
+        this.reloadCategories();
+        this.isRenamingCategory = false;
+      }).catch(err => {
+        console.error(err);
+        this.renamingCategoryError = err;
+        this.reloadCategories();
+      });
+    },
+    reloadCategories() {
+      axios.get(`${this.globalStore.apiUrl}/categories`, {
+        headers: {
+          Authorization: `Bearer ${this.userStore.token}`,
+        },
+      }).then(response => {
+        this.categories = response.data.categories;
+      });
     },
   },
 };
