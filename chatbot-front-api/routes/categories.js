@@ -85,7 +85,7 @@ function checkContainsId(req, res, next) {
       error: 'id is not a number',
     });
   }
-  next();
+  return next();
 }
 
 function checkContainsName(req, res, next) {
@@ -94,7 +94,7 @@ function checkContainsName(req, res, next) {
       error: 'missing name',
     });
   }
-  next();
+  return next();
 }
 
 module.exports = {

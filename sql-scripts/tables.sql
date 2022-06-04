@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS chatbot.user
 DROP TABLE IF EXISTS chatbot.user_preferences;
 CREATE TABLE IF NOT EXISTS chatbot.user_preferences
 (
-    user_id  INTEGER NOT NULL REFERENCES chatbot.user (id),
+    user_id  INTEGER NOT NULL REFERENCES chatbot.user (id) ON DELETE CASCADE,
     favorite INTEGER[]
 );
 
@@ -29,14 +29,14 @@ DROP TABLE IF EXISTS chatbot.category_question;
 CREATE TABLE IF NOT EXISTS chatbot.category_question
 (
     id          SERIAL PRIMARY KEY,
-    category_id INTEGER      NOT NULL REFERENCES chatbot.category (id),
+    category_id INTEGER      NOT NULL REFERENCES chatbot.category (id) ON DELETE CASCADE,
     question    VARCHAR(100) NOT NULL
 );
 
 DROP TABLE IF EXISTS chatbot.question_answer;
 CREATE TABLE IF NOT EXISTS chatbot.question_answer
 (
-    question_id INTEGER      NOT NULL REFERENCES chatbot.category_question (id),
+    question_id INTEGER      NOT NULL REFERENCES chatbot.category_question (id) ON DELETE CASCADE,
     answer      VARCHAR(300) NOT NULL
 );
 
