@@ -47,9 +47,11 @@
         <i-list-group color="light" style="width: 100%; margin: 0 10px">
           <i-list-group-item v-for="category in categories" :key="category.name">
             <div class="_clearfix">
-              <span class="_vertical-align:text-top"> <!-- _float:right -->
-                {{ category.name }}
-              </span>
+              <router-link :to="{name: 'Category', params: {id: category.id}}">
+                <span class="_vertical-align:text-top"> <!-- _float:right -->
+                  {{ category.name }}
+                </span>
+              </router-link>
               <span class="_float:right">
                 <i-dropdown>
                   <DotsVertical />

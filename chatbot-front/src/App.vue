@@ -3,7 +3,7 @@
 
 <template>
   <div id="main" style="min-height: 100vh; min-width: 100vw;">
-  <i-container>
+    <i-container>
       <i-navbar v-if="userStore.isAuthenticated" id="navbar" style="min-width: 99%; margin: 0px 2px 4px; background-color: #0077B6;">
         <i-navbar-brand to="/">
           <span style="color: #ffffff; font-weight: bolder;">
@@ -28,9 +28,6 @@
       </router-link> |
       <router-link to="/login">
         Login
-      </router-link> |
-      <router-link to="/category">
-        Category
       </router-link>
     </div>
     <router-view />
@@ -43,15 +40,15 @@ import { useUserStore } from './store/UserStore';
 
 export default {
   components: {},
-  data() {
-    return {
-    };
-  },
   setup() {
     const userStore = useUserStore();
 
     return {
       userStore,
+    };
+  },
+  data() {
+    return {
     };
   },
   computed: {

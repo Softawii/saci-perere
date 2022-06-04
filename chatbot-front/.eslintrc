@@ -49,7 +49,10 @@
       }
     ],
     "no-shadow": "warn",
-    "no-use-before-define": "off"
+    "no-use-before-define": "off",
+    "vue/no-v-for-template-key": "off",
+    "no-restricted-globals": "off",
+    "no-alert": "off"
   },
   "parserOptions": {
     "ecmaVersion": 2022
