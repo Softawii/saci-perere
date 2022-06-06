@@ -35,12 +35,14 @@ router.post('/signin', checkAuthParams, (req, res) => {
     });
 });
 
-router.post('/signup', checkAuthParams, (req, res) => {
+router.post('/signup', checkSignupParams, (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
+  const name = req.body.name;
+  const email = req.body.email;
   bcrypt.hash(password, saltRounds)
     .then(hash => {
-      db.query('INSERT INTO chatbot.user (username, password) VALUES ($1,$2)', [username, hash])
+      db.query('INSERT INTO chatbot.user (username, password, name, email) VALUES ($1,$2,$3,$4)', [username, hash, name, email])
         .then(result => res.sendStatus(200))
         .catch(err => {
           if (err.code === '23505') {
@@ -80,6 +82,18 @@ function checkAccessToken(req, res, next) {
 
 function checkAuthParams(req, res, next) {
   const requiredParams = ['username', 'password'];
+  for (const param of requiredParams) {
+    if (!req.body[param]) {
+      return res.status(400).send({
+        error: `missing ${param} parameter`,
+      });
+    }
+  }
+  next();
+}
+
+function checkSignupParams(req, res, next) {
+  const requiredParams = ['username', 'password', 'name', 'email'];
   for (const param of requiredParams) {
     if (!req.body[param]) {
       return res.status(400).send({
