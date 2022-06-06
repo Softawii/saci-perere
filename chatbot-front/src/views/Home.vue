@@ -3,7 +3,7 @@
     <i-container>
       <div v-for="alert in alertInfo" :key="alert">
         <i-row center style="margin: 2px 4px;">
-          <i-alert dismissible :color="alert.alertType">
+          <i-alert class="_small" dismissible :color="alert.alertType">
             <template #icon>
               <i-icon :name="alert.alertIcon" />
             </template>

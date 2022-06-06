@@ -9,32 +9,37 @@
 }
 
 @include i-alert() {
-    margin-bottom: 2px;
-    max-width: 600px
+    & {
+        margin-bottom: 2px;
+    }
+
+    &._small {
+        max-width: 600px;
+    }
 }
 
 @include i-navbar() {
-    background-color: #0077B6 !important;
+    &.blue {
+        $primary: #0077B6;
+        $primary-hover: #428db6;
+        ----color: #ffffff;
+        background-color: $primary;
+        font-weight: bolder;
 
-    .hamburger-menu {
-        ----background: white !important;
-    }
+        .hamburger-menu {
+            ----background: white;
+        }
 
-    .navbar-collapsible.blue {
-        background-color: #0077B6 !important;
-    }
+        .navbar-collapsible {
+            background-color: $primary;
+        }
 
-    .nav.blue {
-        background-color: #0077B6 !important;
-    }
+        .nav-item {
+            background-color: $primary;
+        }
 
-    .nav-item.blue {
-        color: #ffffff !important;
-        background-color: #0077B6 !important;
-        font-weight: bolder !important;
-    }
-
-    .nav-item.blue:hover {
-        background-color: #428db6 !important;
+        .nav-item:hover {
+            background-color: $primary-hover;
+        }
     }
 }

@@ -2,19 +2,19 @@
   <div>
     <i-navbar v-if="userStore.isAuthenticated" id="navbar" class="blue" style="min-width: 99%; margin: 0px 2px 4px;">
       <i-navbar-brand to="/">
-        <span style="color: #ffffff; font-weight: bolder;">
+        <span style="font-weight: bolder;">
           Olá, {{ userStore.name }}
         </span>
       </i-navbar-brand>
-      <i-navbar-collapsible class="blue _justify-content:flex-end">
+      <i-navbar-collapsible class="_justify-content:flex-end">
         <i-nav>
-          <i-nav-item class="blue" @click="showProfile">
+          <i-nav-item @click="showProfile">
             Perfil
           </i-nav-item>
-          <i-nav-item class="blue" @click="showCreateUserModal">
+          <i-nav-item @click="showCreateUserModal">
             Cadastrar Usuário
           </i-nav-item>
-          <i-nav-item class="blue" @click="logout">
+          <i-nav-item @click="logout">
             Logout
           </i-nav-item>
         </i-nav>
