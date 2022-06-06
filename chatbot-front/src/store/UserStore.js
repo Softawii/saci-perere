@@ -6,6 +6,7 @@ export const useUserStore = defineStore('user', {
     isAuthenticated: false,
     token: undefined,
     name: undefined,
+    username: undefined,
     email: undefined,
   }),
   actions: {
@@ -13,6 +14,7 @@ export const useUserStore = defineStore('user', {
       this.updateToken(data.token);
       this.name = data.name;
       this.email = data.email;
+      this.username = data.username;
     },
     updateToken(token) {
       this.token = token;
