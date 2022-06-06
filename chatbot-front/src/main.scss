@@ -2,13 +2,39 @@
 @import '@inkline/inkline/css/mixins';
 
 :root {
-  --color--primary--h: 195deg;
-  --color--primary--s: 77%;
-  --color--primary--l: 39%;
-  font-family: 'Roboto', sans-serif;
+    --color--primary--h: 195deg;
+    --color--primary--s: 77%;
+    --color--primary--l: 39%;
+    font-family: 'Roboto', sans-serif;
 }
 
 @include i-alert() {
-  margin-bottom: 2px;
-  max-width: 600px
+    margin-bottom: 2px;
+    max-width: 600px
+}
+
+@include i-navbar() {
+    background-color: #0077B6 !important;
+
+    .hamburger-menu {
+        ----background: white !important;
+    }
+
+    .navbar-collapsible.blue {
+        background-color: #0077B6 !important;
+    }
+
+    .nav.blue {
+        background-color: #0077B6 !important;
+    }
+
+    .nav-item.blue {
+        color: #ffffff !important;
+        background-color: #0077B6 !important;
+        font-weight: bolder !important;
+    }
+
+    .nav-item.blue:hover {
+        background-color: #428db6 !important;
+    }
 }

@@ -4,18 +4,18 @@
 <template>
   <div id="main" style="min-height: 100vh; min-width: 100vw;">
     <i-container>
-      <i-navbar v-if="userStore.isAuthenticated" id="navbar" style="min-width: 99%; margin: 0px 2px 4px; background-color: #0077B6;">
+      <i-navbar v-if="userStore.isAuthenticated" id="navbar" class="blue" style="min-width: 99%; margin: 0px 2px 4px;">
         <i-navbar-brand to="/">
           <span style="color: #ffffff; font-weight: bolder;">
             Olá, {{ userStore.name }}
           </span>
         </i-navbar-brand>
-        <i-navbar-collapsible style="background-color: #0077B6;" class="_justify-content:flex-end">
+        <i-navbar-collapsible class="blue _justify-content:flex-end">
           <i-nav>
-            <i-nav-item style="background-color: #0077B6; color: #ffffff; font-weight: bolder;" to="/">
+            <i-nav-item class="blue" to="/">
               Cadastrar Usuário
             </i-nav-item>
-            <i-nav-item style="background-color: #0077B6; color: #ffffff; font-weight: bolder;" @click="logout">
+            <i-nav-item class="blue" @click="logout">
               Logout
             </i-nav-item>
           </i-nav>
