@@ -1,14 +1,14 @@
 <template>
   <i-container>
-    <i-row>
-      <div class="_display:flex _justify-content:space-between">
-        <div class="_font-size:xl" style="margin: 10px 10px 0">
-          Perguntas e respostas:
-        </div>
-        <div class="_align-self:end" style="margin-right: 10px;">
-          <Refresh @click="loadCategory" />
-        </div>
+    <div class="_display:flex _justify-content:space-between">
+      <div class="_font-size:xl" style="margin: 10px 10px 0">
+        Perguntas e respostas:
       </div>
+      <div class="_align-self:end" style="margin-right: 10px;">
+        <Refresh @click="loadCategory" />
+      </div>
+    </div>
+    <i-row>
       <!-- eslint-disable-next-line vue/no-v-for-template-key -->
       <template v-for="question in category.questions" :key="question.question">
         <i-card v-if="question.answers" style="width: 100%; margin: 0 10px 5px">

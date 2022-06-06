@@ -1,40 +1,16 @@
 <template>
   <div id="main">
     <i-container>
-      <i-row center style="margin: 2px 4px;">
-        <i-alert dismissible color="info">
-          <template #icon>
-            <i-icon name="ink-info" />
-          </template>
-          <p>informação não mt importante</p>
-        </i-alert>
-      </i-row>
-      <i-row center style="margin: 2px 4px;">
-        <i-alert dismissible color="success">
-          <template #icon>
-            <i-icon name="ink-check" />
-          </template>
-          <p>xxxxxxxxx com sucesso</p>
-        </i-alert>
-      </i-row>
-
-      <i-row center style="margin: 2px 4px;">
-        <i-alert dismissible color="warning">
-          <template #icon>
-            <i-icon name="ink-warning" />
-          </template>
-          <p>Modelo será treinado em xx minutos</p>
-        </i-alert>
-      </i-row>
-
-      <i-row center style="margin: 2px 4px;">
-        <i-alert dismissible color="danger">
-          <template #icon>
-            <i-icon name="ink-danger" />
-          </template>
-          <p>Falha ao xxxxxxxxx</p>
-        </i-alert>
-      </i-row>
+      <div v-for="alert in alertInfo" :key="alert">
+        <i-row center style="margin: 2px 4px;">
+          <i-alert dismissible :color="alert.alertType">
+            <template #icon>
+              <i-icon :name="alert.alertIcon" />
+            </template>
+            <p>{{ alert.msgBox }}</p>
+          </i-alert>
+        </i-row>
+      </div>
       <div class="_display:flex _justify-content:space-between">
         <div class="_font-size:xl" style="margin: 10px 10px 0">
           Categorias:
@@ -60,7 +36,7 @@
                     <i-dropdown-divider />
                     <i-dropdown-item disabled>Sair da categoria</i-dropdown-item>
                     <i-dropdown-divider />
-                    <i-dropdown-item @click="apagarCategoria(category.id)">Apagar</i-dropdown-item>
+                    <i-dropdown-item @click="apagarCategoria(category.id, category.name)">Apagar</i-dropdown-item>
                   </template>
                 </i-dropdown>
               </span>
@@ -161,6 +137,7 @@ export default {
       categories: [],
       addNewCategoryError: undefined,
       renamingCategoryError: undefined,
+      alertInfo: [],
     };
   },
   computed: {
@@ -186,23 +163,27 @@ export default {
       }).then(() => {
         this.isAddingSubject = false;
         this.reloadCategories();
+        this.alertBox('Nova categoria criada com sucesso!', 'success');
       }).catch(err => {
         console.error(err);
         this.addNewCategoryError = err;
         this.reloadCategories();
       });
     },
-    apagarCategoria(id) {
+    apagarCategoria(id, name) {
       axios.post(`${this.globalStore.apiUrl}/categories/delete`, {
         headers: {
           Authorization: `Bearer ${this.userStore.token}`,
         },
         id,
+        name,
       }).then(() => {
         this.reloadCategories();
+        this.alertBox('Categoria apagada com sucesso!', 'success');
       }).catch(err => {
         console.error(err);
         this.reloadCategories();
+        this.alertBox('Ocorreu um erro ao apagar a categoria.', 'danger');
       });
     },
     renameCategoryModal(id) {
@@ -210,7 +191,6 @@ export default {
       this.newCategoryName = '';
       this.oldCategoryName = currentCategory.name;
       this.newCategoryId = currentCategory.id;
-
       this.isRenamingCategory = true;
     },
     renameCategory() {
@@ -225,6 +205,7 @@ export default {
       }).then(response => {
         this.reloadCategories();
         this.isRenamingCategory = false;
+        this.alertBox('Nome da categoria alterado com sucesso!', 'success');
       }).catch(err => {
         console.error(err);
         this.renamingCategoryError = err;
@@ -238,6 +219,16 @@ export default {
         },
       }).then(response => {
         this.categories = response.data.categories;
+      });
+    },
+    alertBox(msg, type) {
+      let icon;
+      if (type === 'success') icon = 'ink-check';
+      else icon = `ink-${type}`;
+      this.alertInfo.push({
+        msgBox: msg,
+        alertType: type,
+        alertIcon: icon,
       });
     },
   },
