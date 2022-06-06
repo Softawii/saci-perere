@@ -6,14 +6,6 @@
     <i-container>
       <Navbar />
     </i-container>
-    <div style="text-align: center">
-      <router-link to="/">
-        Home
-      </router-link> |
-      <router-link to="/login">
-        Login
-      </router-link>
-    </div>
     <router-view />
   </div>
 </template>
