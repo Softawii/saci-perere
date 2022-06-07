@@ -144,6 +144,7 @@ export default {
     ...mapStores(useGlobalStore, useUserStore),
   },
   beforeMount() {
+    this.loadUserDetails();
     this.reloadCategories();
   },
   methods: {
@@ -217,6 +218,12 @@ export default {
         msgBox: msg,
         alertType: type,
         alertIcon: icon,
+      });
+    },
+    loadUserDetails() {
+      axios.get('/user/details', {
+      }).then(response => {
+        this.userStore.setUserDetails(response.data);
       });
     },
   },

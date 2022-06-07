@@ -126,7 +126,7 @@ export default {
         username,
         password,
       }).then(response => {
-        this.userStore.setUserData(response.data);
+        this.userStore.updateToken(response.data.token);
         this.$router.push({
           path: '/',
         });

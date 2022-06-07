@@ -1,17 +1,17 @@
 /* eslint-disable import/prefer-default-export */
 import { defineStore } from 'pinia';
+import { useStorage } from '@vueuse/core';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    isAuthenticated: false,
-    token: undefined,
+    isAuthenticated: useStorage('isAuthenticated', false),
+    token: useStorage('token', undefined),
     name: undefined,
     username: undefined,
     email: undefined,
   }),
   actions: {
-    setUserData(data) {
-      this.updateToken(data.token);
+    setUserDetails(data) {
       this.name = data.name;
       this.email = data.email;
       this.username = data.username;

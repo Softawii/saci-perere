@@ -3,6 +3,7 @@ const categories = require('./categories');
 const questions = require('./questions');
 const answers = require('./answers');
 const report = require('./report');
+const user = require('./user');
 
 module.exports = app => {
   app.use('/auth', auth.router);
@@ -10,4 +11,5 @@ module.exports = app => {
   app.use('/questions', questions.router);
   app.use('/answers', answers.router);
   app.use('/report', report.router);
+  app.use('/user', user.router);
 };
