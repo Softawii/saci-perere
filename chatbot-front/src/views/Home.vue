@@ -155,10 +155,7 @@ export default {
     },
     addNewCategory() {
       const name = this.selectedCategory || this.newCategory;
-      axios.post(`${this.globalStore.apiUrl}/categories`, {
-        headers: {
-          Authorization: `Bearer ${this.userStore.token}`,
-        },
+      axios.post('/categories', {
         name,
       }).then(() => {
         this.isAddingSubject = false;
@@ -171,10 +168,7 @@ export default {
       });
     },
     apagarCategoria(id, name) {
-      axios.post(`${this.globalStore.apiUrl}/categories/delete`, {
-        headers: {
-          Authorization: `Bearer ${this.userStore.token}`,
-        },
+      axios.post('/delete', {
         id,
         name,
       }).then(() => {
@@ -196,10 +190,7 @@ export default {
     renameCategory() {
       const currentCategory = this.categories.filter(categoria => categoria.id === this.newCategoryId)[0];
       currentCategory.name = this.newCategoryName;
-      axios.post(`${this.globalStore.apiUrl}/categories/rename`, {
-        headers: {
-          Authorization: `Bearer ${this.userStore.token}`,
-        },
+      axios.post('/rename', {
         name: currentCategory.name,
         id: currentCategory.id,
       }).then(response => {
@@ -213,10 +204,7 @@ export default {
       });
     },
     reloadCategories() {
-      axios.get(`${this.globalStore.apiUrl}/categories`, {
-        headers: {
-          Authorization: `Bearer ${this.userStore.token}`,
-        },
+      axios.get('/categories', {
       }).then(response => {
         this.categories = response.data.categories;
       });

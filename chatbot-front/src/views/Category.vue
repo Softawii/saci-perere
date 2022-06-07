@@ -133,10 +133,7 @@ export default {
   },
   methods: {
     loadCategory() {
-      axios.post(`${this.globalStore.apiUrl}/questions`, {
-        headers: {
-          Authorization: `Bearer ${this.userStore.token}`,
-        },
+      axios.post('/questions', {
         id: this.id,
       }).then(response => {
         this.category = response.data;
@@ -144,10 +141,7 @@ export default {
       });
     },
     loadAnswers(questionId) {
-      axios.post(`${this.globalStore.apiUrl}/answers`, {
-        headers: {
-          Authorization: `Bearer ${this.userStore.token}`,
-        },
+      axios.post('/answers', {
         id: questionId,
       }).then(response => {
         this.answers[questionId] = response.data;
@@ -161,9 +155,6 @@ export default {
     },
     addQuestion() {
       axios.post(`${this.globalStore.apiUrl}/questions/create`, {
-        headers: {
-          Authorization: `Bearer ${this.userStore.token}`,
-        },
         id: this.id,
         question: this.newQuestion,
         answer: this.newAnswer,
@@ -179,9 +170,6 @@ export default {
     deleteQuestion(id) {
       if (confirm('Você tem certeza disso?')) {
         axios.post(`${this.globalStore.apiUrl}/questions/delete`, {
-          headers: {
-            Authorization: `Bearer ${this.userStore.token}`,
-          },
           id,
         }).then(() => {
           this.loadCategory();
