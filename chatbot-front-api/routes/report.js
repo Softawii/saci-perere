@@ -10,10 +10,13 @@ router.get('/questions', auth.checkAccessToken, (req, res) => sendReport(req, re
 
 function sendReport(req, res, report) {
   const download = req.query.download === 'true';
+  const parse = req.query.parse === 'true';
   db.query(`SELECT * FROM ${report}() AS result`)
     .then(result => {
-      const jsonStr = result.rows[0].result;
-      const json = JSON.parse(jsonStr);
+      let json = result.rows[0].result;
+      if (parse) {
+        json = JSON.parse(json);
+      }
       if (download) {
         res.setHeader('Content-disposition', `${report}.json`);
       }

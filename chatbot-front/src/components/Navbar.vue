@@ -14,6 +14,12 @@
           <i-nav-item @click="showCreateUserModal">
             Cadastrar Usuário
           </i-nav-item>
+          <i-nav-item @click="showReportsModal">
+            Relatórios
+          </i-nav-item>
+          <i-nav-item @click="toggleThemeMode">
+            Dark/Light
+          </i-nav-item>
           <i-nav-item @click="logout">
             Logout
           </i-nav-item>
@@ -92,20 +98,59 @@
         </i-form-group>
       </i-form>
     </i-modal>
+    <i-modal v-model="isReportsModal">
+      <template #header>
+        Relatórios
+      </template>
+      <i-container>
+        <i-row center>
+          <i-card color="primary" style="width: 100%; margin-bottom: 2px;">
+            <template #header>
+              Completo
+            </template>
+            <i-button-group block>
+              <i-button @click="fullReport(false)">
+                Ver
+              </i-button>
+              <i-button disabled @click="fullReport(true)">
+                Baixar
+              </i-button>
+            </i-button-group>
+          </i-card>
+          <i-card color="secondary" style="width: 100%">
+            <template #header>
+              Perguntas
+            </template>
+            <i-button-group block>
+              <i-button @click="questionsReport(false)">
+                Ver
+              </i-button>
+              <i-button disabled @click="questionsReport(false)">
+                Baixar
+              </i-button>
+            </i-button-group>
+          </i-card>
+        </i-row>
+      </i-container>
+    </i-modal>
   </div>
 </template>
 <script>
 import axios from 'axios';
 import { mapActions, mapStores } from 'pinia';
+import { getCurrentInstance } from 'vue';
 import { useUserStore } from '../store/UserStore';
+import { useGlobalStore } from '../store/GlobalStore';
 
 export default {
   components: {},
   setup() {
     const userStore = useUserStore();
+    const app = getCurrentInstance();
 
     return {
       userStore,
+      app,
     };
   },
   data() {
@@ -177,10 +222,11 @@ export default {
       creatingUserError: undefined,
       newUserForm: this.$inkline.form(formSchemaNewUser),
       profileForm: this.$inkline.form(formSchemaProfile),
+      isReportsModal: true,
     };
   },
   computed: {
-    ...mapStores(useUserStore),
+    ...mapStores(useGlobalStore, useUserStore),
   },
   methods: {
     ...mapActions(useUserStore, ['clearCredentials']),
@@ -217,8 +263,7 @@ export default {
       const name = form.name.value;
       const email = form.email.value;
 
-      const url = this.globalStore.apiUrl;
-      axios.post(`${url}/auth/signup`, {
+      axios.post('/auth/signup', {
         username,
         password,
         name,
@@ -228,6 +273,35 @@ export default {
       }).catch(err => {
         this.creatingUserError = err;
       });
+    },
+    showReportsModal() {
+      this.isReportsModal = true;
+    },
+    fullReport(download) {
+      axios.get(`/report/full?download=${download}&parse=${!download}`)
+        .then(response => {
+          const blob = new Blob([JSON.stringify(response.data)], {
+            type: 'application/json',
+          });
+          const fileUrl = window.URL.createObjectURL(blob);
+          window.open(fileUrl);
+        });
+    },
+    questionsReport(download) {
+      axios.get(`/report/questions?download=${download}&parse=${!download}`)
+        .then(response => {
+          const blob = new Blob([JSON.stringify(response.data)], {
+            type: 'application/json',
+          });
+          const fileUrl = window.URL.createObjectURL(blob);
+          window.open(fileUrl);
+        });
+    },
+    toggleThemeMode() {
+      const app = this.app;
+      const current = app.appContext.config.globalProperties.$inkline.options.colorMode;
+      if (current === 'dark') app.appContext.config.globalProperties.$inkline.options.colorMode = 'light';
+      else app.appContext.config.globalProperties.$inkline.options.colorMode = 'dark';
     },
   },
 };
