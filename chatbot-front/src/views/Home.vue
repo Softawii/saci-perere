@@ -1,5 +1,5 @@
 <template>
-  <div id="main">
+  <div class="_background">
     <i-container>
       <div v-for="alert in alertInfo" :key="alert">
         <i-row center style="margin: 2px 4px;">
@@ -20,7 +20,7 @@
         </div>
       </div>
       <i-row>
-        <i-list-group color="light" style="width: 100%; margin: 0 10px">
+        <i-list-group style="width: 100%; margin: 0 10px">
           <i-list-group-item v-for="category in categories" :key="category.name">
             <div class="_clearfix">
               <router-link :to="{name: 'Category', params: {id: category.id}}">
@@ -231,7 +231,4 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-#main {
-  background-color: #DDE2E4;
-}
 </style>

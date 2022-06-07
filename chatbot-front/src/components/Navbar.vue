@@ -307,7 +307,4 @@ export default {
 };
 </script>
 <style>
-#main {
-  background-color: #DDE2E4;
-}
 </style>

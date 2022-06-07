@@ -104,10 +104,8 @@ import axios from 'axios';
 import { mapActions, mapStores } from 'pinia';
 import { useUserStore } from '../store/UserStore';
 import { useGlobalStore } from '../store/GlobalStore';
-
 import DotsVertical from '../components/icons/DotsVertical.vue';
 import Refresh from '../components/icons/Refresh.vue';
-
 export default {
   components: {
     DotsVertical,
@@ -184,7 +182,4 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-#main {
-  background-color: #DDE2E4;
-}
 </style>

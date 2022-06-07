@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <div id="main" style="min-height: 100vh; min-width: 100vw;">
+  <div class="_background" style="min-height: 100vh; min-width: 100vw;">
     <i-container>
       <Navbar />
     </i-container>
