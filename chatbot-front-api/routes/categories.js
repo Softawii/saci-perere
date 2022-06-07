@@ -13,7 +13,7 @@ router.get('/', auth.checkAccessToken, (req, res) => {
     });
 });
 
-router.post('/', checkContainsName, (req, res) => {
+router.post('/', auth.checkAccessToken, checkContainsName, (req, res) => {
   const params = [req.body.name];
   db.query('SELECT count(*) FROM chatbot.category WHERE category.name = $1', params)
     .then(selectQuery => {
@@ -32,7 +32,7 @@ router.post('/', checkContainsName, (req, res) => {
     });
 });
 
-router.post('/rename', checkContainsName, (req, res) => {
+router.post('/rename', auth.checkAccessToken, checkContainsName, (req, res) => {
   const params = [req.body.name, req.body.id];
   db.query('SELECT count(*) FROM chatbot.category WHERE category.name = $1', [params[0]])
     .then(selectQuery => {
@@ -51,7 +51,7 @@ router.post('/rename', checkContainsName, (req, res) => {
     });
 });
 
-router.post('/delete', checkContainsName, checkContainsId, (req, res) => {
+router.post('/delete', auth.checkAccessToken, checkContainsName, checkContainsId, (req, res) => {
   const params = [req.body.id];
   db.query('SELECT count(*) FROM chatbot.category WHERE category.id = $1', params)
     .then(selectQuery => {

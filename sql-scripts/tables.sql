@@ -82,3 +82,36 @@ CREATE TRIGGER update_last_change_question_answer_trigger
     ON chatbot.question_answer
     FOR EACH STATEMENT
 EXECUTE FUNCTION process_update_last_change();
+
+CREATE OR REPLACE FUNCTION full_report()
+    RETURNS VARCHAR AS
+$result$
+DECLARE
+    result VARCHAR;
+BEGIN
+    SELECT json_agg(row_to_json(questions))
+    INTO result
+    FROM (SELECT question.id,
+                 question.question,
+                 (SELECT json_agg(answers.answer) AS answers
+                  FROM (SELECT answer.answer
+                        from chatbot.question_answer answer
+                        WHERE answer.question_id = question.id) answers)
+          from chatbot.category_question question) questions;
+    RETURN result;
+END;
+$result$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION questions_report()
+    RETURNS VARCHAR AS
+$result$
+DECLARE
+    result VARCHAR;
+BEGIN
+    SELECT json_agg(row_to_json(questions))
+    INTO result
+    FROM (SELECT question.id, question.question
+          from chatbot.category_question question) questions;
+    RETURN result;
+END;
+$result$ LANGUAGE plpgsql;
