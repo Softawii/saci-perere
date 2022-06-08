@@ -71,6 +71,9 @@ function checkAccessToken(req, res, next) {
 
   jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
     if (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.sendStatus(401);
+      }
       console.error(err);
       return res.sendStatus(403);
     }

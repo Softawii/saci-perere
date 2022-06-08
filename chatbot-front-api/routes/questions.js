@@ -4,7 +4,7 @@ const db = require('../db');
 
 const router = express.Router();
 
-router.post('/', checkContainsId, (req, res) => {
+router.post('/', auth.checkAccessToken, checkContainsId, (req, res) => {
   const params = [req.body.id];
   db.query('SELECT id, question FROM chatbot.category_question WHERE category_id = $1', params)
     .then(result => {
@@ -14,7 +14,7 @@ router.post('/', checkContainsId, (req, res) => {
     });
 });
 
-router.post('/create', checkContainsId, checkContainsQuestionAnswer, (req, res) => {
+router.post('/create', auth.checkAccessToken, checkContainsId, checkContainsQuestionAnswer, (req, res) => {
   db.query('INSERT INTO chatbot.category_question (category_id, question) VALUES($1, $2) RETURNING id', [req.body.id, req.body.question])
     .then(result => {
       const questionId = result.rows[0].id;
@@ -27,7 +27,7 @@ router.post('/create', checkContainsId, checkContainsQuestionAnswer, (req, res) 
     });
 });
 
-router.post('/delete', checkContainsId, (req, res) => {
+router.post('/delete', auth.checkAccessToken, checkContainsId, (req, res) => {
   db.query('DELETE FROM chatbot.category_question WHERE id = $1', [req.body.id])
     .then(result => {
       res.json({
