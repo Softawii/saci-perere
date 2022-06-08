@@ -5,7 +5,7 @@
   <div class="_background" style="min-height: 100vh; min-width: 100vw;">
     <i-container>
       <Navbar />
-      <LoginModal v-show="!userStore.isAuthenticated && $route.name !== 'Login'" />
+      <!-- <LoginModal v-show="!userStore.isAuthenticated && $route.name !== 'Login'" /> -->
     </i-container>
     <router-view />
   </div>
@@ -49,12 +49,6 @@ export default {
         const userStore = useUserStore();
         userStore.isAuthenticated = false;
         this.isExpiredToken = true;
-
-        if (!this.$route.redirectedFrom) {
-          return this.$router.push({
-            name: 'Login',
-          });
-        }
 
         return Promise.reject(error);
       }
