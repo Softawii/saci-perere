@@ -23,7 +23,7 @@
         <i-list-group style="width: 100%; margin: 0 10px">
           <i-list-group-item v-for="category in categories" :key="category.name">
             <div class="_clearfix">
-              <router-link :to="{name: 'Category', params: {id: category.id}}">
+              <router-link class="link" :to="{name: 'Category', params: {id: category.id}}">
                 <span class="_vertical-align:text-top"> <!-- _float:right -->
                   {{ category.name }}
                 </span>

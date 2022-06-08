@@ -47,9 +47,14 @@ export default {
     axios.interceptors.response.use(response => response, error => {
       if (error.response.status === 401) {
         const userStore = useUserStore();
-
         userStore.isAuthenticated = false;
         this.isExpiredToken = true;
+
+        if (!this.$route.redirectedFrom) {
+          return this.$router.push({
+            name: 'Login',
+          });
+        }
 
         return Promise.reject(error);
       }

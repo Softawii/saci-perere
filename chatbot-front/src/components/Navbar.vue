@@ -17,8 +17,8 @@
           <i-nav-item @click="showReportsModal">
             Relatórios
           </i-nav-item>
-          <i-nav-item @click="toggleThemeMode">
-            Dark/Light
+          <i-nav-item>
+            <ToggleMode />
           </i-nav-item>
           <i-nav-item @click="logout">
             Logout
@@ -141,9 +141,12 @@ import { mapActions, mapStores } from 'pinia';
 import { getCurrentInstance } from 'vue';
 import { useUserStore } from '../store/UserStore';
 import { useGlobalStore } from '../store/GlobalStore';
+import ToggleMode from './ToggleMode.vue';
 
 export default {
-  components: {},
+  components: {
+    ToggleMode,
+  },
   setup() {
     const userStore = useUserStore();
     const app = getCurrentInstance();

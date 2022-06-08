@@ -6,6 +6,18 @@
     --color--primary--s: 77%;
     --color--primary--l: 39%;
     font-family: 'Roboto', sans-serif;
+
+    .-light {
+        a.link {
+            // color: #90d8f0;
+        }
+    }
+
+    .-dark {
+        a.link {
+            color: #90d8f0;
+        }
+    }
 }
 
 @include i-alert() {
