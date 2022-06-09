@@ -1,0 +1,83 @@
+name: deploy-front
+on:
+  workflow_dispatch:
+
+jobs:
+  build-job:
+    name: Deploy Front
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v2
+
+      - name: 'Wait for SSH'
+        run: |
+          while ! nc -w5 -z ${{ secrets.INSTANCE_IP }} 22; do
+                  sleep 5
+                  echo "SSH not available..."
+          done; echo "SSH ready!"
+
+      - name: 'Check Secrets Folder'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.INSTANCE_IP }}
+          username: ${{ secrets.SSH_USERNAME }}
+          passphrase: ${{ secrets.VM_SSH_PRIVATE_KEY_PASSPHRASE }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          script: |
+            if [ -d /home/${{ secrets.SSH_USERNAME }}/deploys/secrets/ ]; then echo 'Exists'; else exit 1; fi
+
+      - name: 'Stop Front Api'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.INSTANCE_IP }}
+          username: ${{ secrets.SSH_USERNAME }}
+          passphrase: ${{ secrets.VM_SSH_PRIVATE_KEY_PASSPHRASE }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          script: |
+            kill -9 $(lsof -t -i:${{ secrets.DEFAULT_API_PORT }})
+            echo 'Done'
+
+      - name: 'Push Repo'
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.INSTANCE_IP }}
+          username: ${{ secrets.SSH_USERNAME }}
+          passphrase: ${{ secrets.VM_SSH_PRIVATE_KEY_PASSPHRASE }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          source: "./"
+          target: /home/${{ secrets.SSH_USERNAME }}/deploys/${{ github.event.repository.name }}
+
+      - name: 'Start Front API'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.INSTANCE_IP }}
+          username: ${{ secrets.SSH_USERNAME }}
+          passphrase: ${{ secrets.VM_SSH_PRIVATE_KEY_PASSPHRASE }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          script: |
+            export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+            cd /home/${{ secrets.SSH_USERNAME }}/deploys/${{ github.event.repository.name }}/chatbot-front-api
+            rm -rf ./node_modules
+            npm install
+            sudo rsync --ignore-times -a /home/${{ secrets.SSH_USERNAME }}/deploys/secrets/${{ github.event.repository.name }}/chatbot-front-api/ /home/${{ secrets.SSH_USERNAME }}/deploys/${{ github.event.repository.name }}/chatbot-front-api/
+            nohup npm run server > nohup.out 2> nohup.err < /dev/null &
+
+      - name: 'Start Front'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.INSTANCE_IP }}
+          username: ${{ secrets.SSH_USERNAME }}
+          passphrase: ${{ secrets.VM_SSH_PRIVATE_KEY_PASSPHRASE }}
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          script: |
+            export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+            cd /home/${{ secrets.SSH_USERNAME }}/deploys/${{ github.event.repository.name }}/chatbot-front
+            rm -rf ./node_modules ./dist
+            npm install
+            sudo rsync --ignore-times -a /home/${{ secrets.SSH_USERNAME }}/deploys/secrets/${{ github.event.repository.name }}/chatbot-front/ /home/${{ secrets.SSH_USERNAME }}/deploys/${{ github.event.repository.name }}/chatbot-front/
+            npm run build
+            sudo rm -rf /var/www/chatbot-front/html/*
+            sudo rsync --ignore-times -a dist/ /var/www/chatbot-front/html/
