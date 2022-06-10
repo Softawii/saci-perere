@@ -106,6 +106,7 @@ import { useUserStore } from '../store/UserStore';
 import { useGlobalStore } from '../store/GlobalStore';
 import DotsVertical from '../components/icons/DotsVertical.vue';
 import Refresh from '../components/icons/Refresh.vue';
+
 export default {
   components: {
     DotsVertical,
@@ -152,7 +153,7 @@ export default {
       this.isAddingQuestion = true;
     },
     addQuestion() {
-      axios.post(`${this.globalStore.apiUrl}/questions/create`, {
+      axios.post('/questions/create', {
         id: this.id,
         question: this.newQuestion,
         answer: this.newAnswer,
@@ -167,7 +168,7 @@ export default {
     },
     deleteQuestion(id) {
       if (confirm('Você tem certeza disso?')) {
-        axios.post(`${this.globalStore.apiUrl}/questions/delete`, {
+        axios.post('/questions/delete', {
           id,
         }).then(() => {
           this.loadCategory();

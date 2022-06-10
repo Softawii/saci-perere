@@ -103,9 +103,8 @@ export default {
       const username = form.username.value;
       const password = form.password.value;
 
-      const url = this.globalStore.apiUrl;
       this.loading = true;
-      axios.post(`${url}/auth/signin`, {
+      axios.post('/auth/signin', {
         username,
         password,
       }).then(response => {

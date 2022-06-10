@@ -34,10 +34,9 @@ export default {
   beforeMount() {
     axios.interceptors.request.use(config => {
       const userStore = useUserStore();
-      const globalStore = useGlobalStore();
 
       /* eslint-disable no-param-reassign */
-      config.baseURL = globalStore.apiUrl;
+      config.baseURL = import.meta.env.VITE_API_URL;
       config.headers.Authorization = `Bearer ${userStore.token}`;
       config.headers.post['Content-Type'] = 'application/json';
       /* eslint-enable no-param-reassign */
@@ -45,6 +44,7 @@ export default {
     }, error => Promise.reject(error));
 
     axios.interceptors.response.use(response => response, error => {
+      console.error(error);
       if (error.response.status === 401) {
         const userStore = useUserStore();
         userStore.isAuthenticated = false;
