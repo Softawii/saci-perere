@@ -1,12 +1,12 @@
 import json
+from dotenv import load_dotenv, dotenv_values
 from fastapi import FastAPI
 from db.dbConn import PostgresConn
 from model.model import ModelTraining
 from model.chat import Chat
 
-with open("config.json", encoding="utf-8") as settingsJson:
-    settings = json.load(settingsJson)
-
+load_dotenv()
+settings = dotenv_values(".env")
 app = FastAPI()
 
 @app.get("/")

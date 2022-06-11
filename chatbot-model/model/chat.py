@@ -13,12 +13,12 @@ class Chat():
     def __init__(self, data):
         self._data = data
         
-        self._model = keras.models.load_model('chat_model')
+        self._model = keras.models.load_model('./model/checkpoint/chat_model')
 
-        with open('tokenizer.pickle', 'rb') as handle:
+        with open('./model/checkpoint/tokenizer.pickle', 'rb') as handle:
             self._tokenizer = pickle.load(handle)
 
-        with open('label_encoder.pickle', 'rb') as enc:
+        with open('./model/checkpoint/label_encoder.pickle', 'rb') as enc:
             self._lbl_encoder = pickle.load(enc)
 
     def chatting(self, msg):

@@ -58,11 +58,11 @@ class ModelTraining():
         epochs = epochs_value
         history = model.fit(padded_sequences, np.array(training_labels), epochs=epochs)
 
-        model.save("chat_model")
+        model.save("./model/checkpoint/chat_model")
 
-        with open('tokenizer.pickle', 'wb') as handle:
+        with open('./model/checkpoint/tokenizer.pickle', 'wb') as handle:
             pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
             
-        with open('label_encoder.pickle', 'wb') as ecn_file:
+        with open('./model/checkpoint/label_encoder.pickle', 'wb') as ecn_file:
             pickle.dump(lbl_encoder, ecn_file, protocol=pickle.HIGHEST_PROTOCOL)
             
