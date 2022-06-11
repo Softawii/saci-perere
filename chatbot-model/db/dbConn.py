@@ -2,16 +2,24 @@ import psycopg2 as ps
 
 class PostgresConn():
     _conn = None
-    def __init__(self, db, usr, pwd, hostName, prt):
-        self._conn = ps.connect(database=db, user = usr, password = pwd, host = hostName, port = prt)
+    def __init__(self, settings):
+        self._conn = ps.connect(database=settings['database'],
+                                user = settings['user'],
+                                password = settings['password'],
+                                host = settings['host'],
+                                port = settings['port'])
     
-    def get_data(self):
+    def get_full_report(self):
         cur = self._conn.cursor()
-        sql = "SELECT json_agg(row_to_json(questions)) AS result FROM (SELECT question.id, question.question, (SELECT json_agg(answers.answer) AS answers FROM (SELECT answer.answer from chatbot.question_answer answer WHERE answer.question_id = question.id) answers) from chatbot.category_question question) questions"
-
-        cur.execute(sql)
+        cur.execute("SELECT * FROM full_report() AS result")
         results = cur.fetchall()
-        return results
+        return results[0][0]
+
+    def get_questions_report(self):
+        cur = self._conn.cursor()
+        cur.execute("SELECT * FROM questions_report() AS result")
+        results = cur.fetchall()
+        return results[0][0]
     
     def close(self):
         self._conn.close()
