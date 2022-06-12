@@ -21,7 +21,7 @@ class Chat():
         with open('./model/checkpoint/label_encoder.pickle', 'rb') as enc:
             self._lbl_encoder = pickle.load(enc)
 
-    def chatting(self, msg):
+    def make_question(self, msg):
         result = self._model.predict(keras.preprocessing.sequence.pad_sequences(self._tokenizer.texts_to_sequences([msg]),
                                              truncating='post', maxlen=self._max_len))
         id = self._lbl_encoder.inverse_transform([np.argmax(result)])
