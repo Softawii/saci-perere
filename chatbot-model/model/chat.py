@@ -21,12 +21,17 @@ class Chat():
         with open('./model/checkpoint/label_encoder.pickle', 'rb') as enc:
             self._lbl_encoder = pickle.load(enc)
 
-    def make_question(self, msg):
-        result = self._model.predict(keras.preprocessing.sequence.pad_sequences(self._tokenizer.texts_to_sequences([msg]),
+    def make_question(self, question):
+        result = self._model.predict(keras.preprocessing.sequence.pad_sequences(self._tokenizer.texts_to_sequences([question]),
                                              truncating='post', maxlen=self._max_len))
+
         id = self._lbl_encoder.inverse_transform([np.argmax(result)])
         for q in self._data:
             if q['id'] == id:
-                return np.random.choice(q['answers'])
+                return {
+                    "question": question,
+                    "answer": np.random.choice(q['answers']),
+                    "confidence": float(np.max(result))
+                }
 
         return 'Algo de errado não está certo!'
