@@ -4,10 +4,16 @@
 <template>
   <div class="_background" style="min-height: 100vh; min-width: 100vw;">
     <i-container>
-      <Navbar />
+      <transition name="fade" mode="out-in">
+        <Navbar :key="$route.name === 'Login'" />
+      </transition>
       <!-- <LoginModal v-show="!userStore.isAuthenticated && $route.name !== 'Login'" /> -->
     </i-container>
-    <router-view />
+    <router-view v-slot="{ Component }">
+      <transition name="fade" mode="out-in">
+        <component :is="Component" :key="$route.name" />
+      </transition>
+    </router-view>
   </div>
 </template>
 <script>
@@ -60,5 +66,15 @@ export default {
 <style>
 #main {
   background-color: #DDE2E4;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

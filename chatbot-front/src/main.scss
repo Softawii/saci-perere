@@ -20,6 +20,12 @@
     }
 }
 
+@include i-toggle() {
+    & label::before {
+        margin: 0 !important;
+    }
+}
+
 @include i-alert() {
     & {
         margin-bottom: 2px;
@@ -48,6 +54,7 @@
 
         .nav-item {
             background-color: $primary;
+            cursor: pointer;
         }
 
         .nav-item:hover {

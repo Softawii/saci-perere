@@ -42,9 +42,9 @@ import { useGlobalStore } from '../store/GlobalStore';
         </i-alert>
       </i-row>
       <i-row center style="">
-        <i-form v-model="form" @submit="submit">
-          <i-form-group>
-            <i-input name="username" placeholder="Usuário">
+        <i-form v-model="form" @submit="submit" :color="'light'">
+          <i-form-group :color="'inherit'">
+            <i-input name="username" placeholder="Usuário" >
               <template #prefix>
                 <AccountIcon />
               </template>
@@ -52,7 +52,7 @@ import { useGlobalStore } from '../store/GlobalStore';
             <i-form-error for="username" />
           </i-form-group>
 
-          <i-form-group>
+          <i-form-group :color="'inherit'">
             <i-input :type="isPasswordVisible? 'text' :'password'" name="password" placeholder="Senha">
               <template #prefix>
                 <LockIcon />
