@@ -1,6 +1,10 @@
 import numpy as np
 import pickle
 import tensorflow as tf
+import nltk
+import string
+from unidecode import unidecode
+from nltk.corpus import stopwords
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Embedding, GlobalAveragePooling1D
@@ -12,22 +16,27 @@ class ModelTraining():
     _data = None
     def __init__(self, data, epochs) :
         self._data = data
+        self._stop_words = set(stopwords.words('portuguese'))
         self.__training(epochs)
+
+    def __removingStopWords(self, phrase : str):
+        tokens = nltk.word_tokenize(unidecode(phrase))
+        return [token.lower() for token in tokens if token.lower() not in self._stop_words and token not in string.punctuation]
 
     def __training(self, epochs_value):
         training_sentences = []
         training_labels = []
         labels = []
-        responses = []
 
-        for question in self._data:
-            training_sentences.append(question['question'])
+
+        for question in self._data:            
+            training_sentences.append(self.__removingStopWords(question['question']))
             training_labels.append(question['id'])
-            responses.append(question['answers'])
 
             if question['id'] not in labels:
                 labels.append(question['id'])
-        
+
+        print(training_sentences)
         num_classes = len(labels)
 
         lbl_encoder = LabelEncoder()
