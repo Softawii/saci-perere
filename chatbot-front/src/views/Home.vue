@@ -191,7 +191,7 @@ export default {
     renameCategory() {
       const currentCategory = this.categories.filter(categoria => categoria.id === this.newCategoryId)[0];
       currentCategory.name = this.newCategoryName;
-      axios.post('/rename', {
+      axios.post('/categories/rename', {
         name: currentCategory.name,
         id: currentCategory.id,
       }).then(response => {

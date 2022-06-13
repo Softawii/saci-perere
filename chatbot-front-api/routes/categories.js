@@ -5,7 +5,7 @@ const db = require('../db');
 const router = express.Router();
 
 router.get('/', auth.checkAccessToken, (req, res) => {
-  db.query('SELECT * FROM chatbot.category')
+  db.query('SELECT * FROM chatbot.category ORDER BY name')
     .then(result => {
       res.json({
         categories: result.rows,
