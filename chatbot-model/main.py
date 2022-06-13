@@ -33,7 +33,7 @@ def create_app():
     @app.get("/train-model")
     async def update(request: Request):
         report = await db.get_full_report()
-        ModelTraining(json.loads(report), 300)
+        ModelTraining(json.loads(report), 5000)
 
         return {
             "message": "Modelo treinado"
