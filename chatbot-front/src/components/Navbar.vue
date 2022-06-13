@@ -1,6 +1,6 @@
 <template>
   <div>
-    <i-navbar v-if="(userStore.isAuthenticated || userStore.name) && $route.name !== 'Login'" id="navbar" class="blue" style="min-width: 99%; margin: 0px 2px 4px;">
+    <i-navbar v-if="(userStore.isAuthenticated && userStore.name) && $route.name !== 'Login'" id="navbar" class="blue" style="min-width: 99%; margin: 0px 2px 4px;">
       <i-navbar-brand to="/">
         <span style="font-weight: bolder;">
           Olá, {{ userStore.name }}

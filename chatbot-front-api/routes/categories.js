@@ -4,7 +4,7 @@ const db = require('../db');
 
 const router = express.Router();
 
-router.get('/', auth.checkAccessToken, (req, res) => {
+router.get('/', (req, res) => {
   db.query('SELECT * FROM chatbot.category ORDER BY name')
     .then(result => {
       res.json({

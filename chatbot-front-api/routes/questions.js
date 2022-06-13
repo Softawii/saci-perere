@@ -4,7 +4,7 @@ const db = require('../db');
 
 const router = express.Router();
 
-router.post('/', auth.checkAccessToken, checkContainsId, (req, res) => {
+router.post('/', checkContainsId, (req, res) => {
   const params = [req.body.id];
   db.query('SELECT id, question FROM chatbot.category_question WHERE category_id = $1', params)
     .then(result => {

@@ -26,6 +26,14 @@ const router = createRouter({
         auth: true,
       },
     },
+    {
+      path: '/faq/',
+      name: 'FAQ',
+      component: () => import('../views/OpenFAQ.vue'),
+      meta: {
+        auth: false,
+      },
+    },
   ],
 });
 

@@ -73,6 +73,11 @@ import { useGlobalStore } from '../store/GlobalStore';
               <i-loader v-else />
             </i-button>
           </i-form-group>
+          <i-form-group class="_margin-x:auto" style="max-width: 200px;">
+            <i-button id="FAQ" color="secondary" :to="{ name: 'FAQ'}">
+              FAQ
+            </i-button>
+          </i-form-group>
         </i-form>
       </i-row>
     </i-container>
@@ -151,7 +156,7 @@ export default {
   background-color: #023E8A;
 }
 
-#sign-in {
+#sign-in, #FAQ {
   border-width: 2px;
   border-color: white;
   width: 200px;
