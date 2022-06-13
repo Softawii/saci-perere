@@ -4,5 +4,14 @@ import { defineStore } from 'pinia';
 export const useGlobalStore = defineStore('global', {
   state: () => ({
     apiUrl: import.meta.env.VITE_API_URL,
+    alerts: [],
   }),
+  actions: {
+    addAlert(alert) {
+      this.alerts.push(alert);
+    },
+    clearAlerts() {
+      this.alerts = [];
+    },
+  },
 });

@@ -76,18 +76,22 @@
         <i-form-group>
           <i-form-label>Nome:</i-form-label>
           <i-input name="name" required placeholder="Nome" />
+          <i-form-error for="name" />
         </i-form-group>
         <i-form-group>
           <i-form-label>Usuário:</i-form-label>
           <i-input name="username" required placeholder="Nome de usuário" />
+          <i-form-error for="username" />
         </i-form-group>
         <i-form-group>
           <i-form-label>E-mail:</i-form-label>
           <i-input name="email" required placeholder="Seu e-mail" />
+          <i-form-error for="email" />
         </i-form-group>
         <i-form-group>
           <i-form-label>Senha:</i-form-label>
-          <i-input name="password" required placeholder="Digite sua nova senha ou deixe em branco" />
+          <i-input name="password" type="password" required placeholder="Digite sua nova senha" />
+          <i-form-error for="password" />
         </i-form-group>
         <i-form-group>
           <i-row center>
@@ -142,6 +146,7 @@ import { getCurrentInstance } from 'vue';
 import { useUserStore } from '../store/UserStore';
 import { useGlobalStore } from '../store/GlobalStore';
 import ToggleMode from './ToggleMode.vue';
+import Validator from '../helper/ValidatorHelper';
 
 export default {
   components: {
@@ -157,74 +162,13 @@ export default {
     };
   },
   data() {
-    const formSchemaNewUser = {
-      username: {
-        validators: [
-          {
-            name: 'required',
-          },
-        ],
-      },
-      password: {
-        validators: [
-          {
-            name: 'required',
-          },
-        ],
-      },
-      name: {
-        validators: [
-          {
-            name: 'required',
-          },
-        ],
-      },
-      email: {
-        validators: [
-          {
-            name: 'required',
-          },
-        ],
-      },
-    };
-    const formSchemaProfile = {
-      username: {
-        validators: [
-          {
-            name: 'required',
-          },
-        ],
-      },
-      password: {
-        validators: [
-          {
-            name: 'required',
-          },
-        ],
-      },
-      name: {
-        validators: [
-          {
-            name: 'required',
-          },
-        ],
-      },
-      email: {
-        validators: [
-          {
-            name: 'required',
-          },
-        ],
-      },
-    };
-
     return {
       isShowingProfile: false,
       isCreatingUser: false,
       editProfileError: undefined,
       creatingUserError: undefined,
-      newUserForm: this.$inkline.form(formSchemaNewUser),
-      profileForm: this.$inkline.form(formSchemaProfile),
+      newUserForm: this.$inkline.form(Validator.userSchema()),
+      profileForm: this.$inkline.form(Validator.userSchema()),
       isReportsModal: false,
     };
   },
@@ -233,6 +177,7 @@ export default {
   },
   methods: {
     ...mapActions(useUserStore, ['clearCredentials']),
+    ...mapActions(useGlobalStore, ['addAlert']),
     logout() {
       this.clearCredentials()
         .then(() => {
@@ -242,6 +187,7 @@ export default {
         });
     },
     showProfile() {
+      this.profileForm = this.$inkline.form(Validator.userSchema());
       const form = this.profileForm;
       this.isShowingProfile = true;
       form.name.value = this.userStore.name;
@@ -253,11 +199,9 @@ export default {
       alert('em dev');
     },
     showCreateUserModal() {
+      this.creatingUserError = undefined;
       this.isCreatingUser = true;
-      this.userName = '';
-      this.username = '';
-      this.userEmail = '';
-      this.userPassword = '';
+      this.newUserForm = this.$inkline.form(Validator.userSchema());
     },
     createUser() {
       const form = this.newUserForm;
@@ -266,13 +210,23 @@ export default {
       const name = form.name.value;
       const email = form.email.value;
 
+      if (!form.valid) {
+        this.creatingUserError = 'O formulário possui campos inválidos';
+        return;
+      }
+
       axios.post('/auth/signup', {
         username,
         password,
         name,
         email,
       }).then(response => {
-        this.creatingUserError = 'sucesso';
+        this.isCreatingUser = false;
+        this.addAlert({
+          msgBox: 'Usuário criado com sucesso',
+          alertType: 'success',
+          alertIcon: 'ink-check',
+        });
       }).catch(err => {
         this.creatingUserError = err;
       });

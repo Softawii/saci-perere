@@ -1,7 +1,7 @@
 <template>
   <div class="_background">
     <i-container>
-      <div v-for="alert in alertInfo" :key="alert">
+      <div v-for="alert in globalStore.alerts" :key="alert">
         <i-row center style="margin: 2px 4px;">
           <i-alert class="_small" dismissible :color="alert.alertType">
             <template #icon>
@@ -125,6 +125,12 @@ export default {
     DotsVertical,
     Refresh,
   },
+  setup() {
+    const globalStore = useGlobalStore();
+    return {
+      globalStore,
+    };
+  },
   data() {
     return {
       selectedCategory: undefined,
@@ -137,7 +143,6 @@ export default {
       categories: [],
       addNewCategoryError: undefined,
       renamingCategoryError: undefined,
-      alertInfo: [],
     };
   },
   computed: {
@@ -149,6 +154,7 @@ export default {
   },
   methods: {
     ...mapActions(useUserStore, ['clearCredentials']),
+    ...mapActions(useGlobalStore, ['addAlert']),
     addCategoryModal() {
       this.selectedCategory = undefined;
       this.newCategory = '';
@@ -189,6 +195,7 @@ export default {
       this.isRenamingCategory = true;
     },
     renameCategory() {
+      this.renamingCategoryError = undefined;
       const currentCategory = this.categories.filter(categoria => categoria.id === this.newCategoryId)[0];
       currentCategory.name = this.newCategoryName;
       axios.post('/categories/rename', {
@@ -214,7 +221,7 @@ export default {
       let icon;
       if (type === 'success') icon = 'ink-check';
       else icon = `ink-${type}`;
-      this.alertInfo.push({
+      this.addAlert({
         msgBox: msg,
         alertType: type,
         alertIcon: icon,
