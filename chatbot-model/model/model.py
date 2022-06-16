@@ -1,11 +1,6 @@
-from cmath import log
 import numpy as np
 import pickle
 import tensorflow as tf
-import nltk
-import string
-from unidecode import unidecode
-from nltk.corpus import stopwords
 from tensorflow.keras import metrics, losses
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Embedding, GlobalAveragePooling1D
@@ -13,6 +8,7 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.preprocessing import LabelEncoder
 import datetime
+import util.processing as processing
 
 class ModelTraining():
     _data = None
@@ -20,13 +16,7 @@ class ModelTraining():
         physical_devices = tf.config.list_physical_devices('GPU')
         for device in physical_devices: tf.config.experimental.set_memory_growth(device, True)
         self._data = data
-        self._stop_words = set(stopwords.words('portuguese'))
         self.__training(epochs)
-
-    def __removingStopWords(self, phrase : str):
-        # nltk.download('punkt')
-        tokens = nltk.word_tokenize(unidecode(phrase))
-        return [token.lower() for token in tokens if token.lower() not in self._stop_words and token not in string.punctuation]
 
     def __training(self, epochs_value):
         training_sentences = []
@@ -35,7 +25,7 @@ class ModelTraining():
 
 
         for question in self._data:            
-            training_sentences.append(self.__removingStopWords(question['question']))
+            training_sentences.append(processing.process_input(question['question'])) 
             training_labels.append(question['id'])
 
             if question['id'] not in labels:
@@ -74,8 +64,9 @@ class ModelTraining():
         # log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
+        callback = tf.keras.callbacks.EarlyStopping(monitor='sparse_categorical_accuracy', patience=500)
         epochs = epochs_value
-        history = model.fit(padded_sequences, np.array(training_labels),
+        history = model.fit(padded_sequences, np.array(training_labels), callbacks=[callback],
                             epochs=epochs, # validation_data=(padded_sequences, np.array(training_labels)), callbacks=[tensorboard_callback]
                             )
 
