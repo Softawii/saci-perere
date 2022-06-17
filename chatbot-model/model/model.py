@@ -1,9 +1,8 @@
 import numpy as np
 import pickle
 import tensorflow as tf
-from tensorflow.keras import metrics, losses
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Embedding, GlobalAveragePooling1D
+from tensorflow.keras import metrics, losses, Model
+from tensorflow.keras.layers import Dense, Embedding, GlobalAveragePooling1D, Input, concatenate, Flatten
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.preprocessing import LabelEncoder
@@ -19,18 +18,22 @@ class ModelTraining():
         self.__training(epochs)
 
     def __training(self, epochs_value):
+        word_mean_vec = []
         training_sentences = []
         training_labels = []
         labels = []
 
 
-        for question in self._data:            
-            training_sentences.append(processing.process_input(question['question'])) 
+        for question in self._data:
+            mean_vec = processing.word2vec_model.get_mean_vector(question['question'])
+            training_sentences.append(processing.process_input(question['question']))
             training_labels.append(question['id'])
 
             if question['id'] not in labels:
+                word_mean_vec.append(mean_vec)
                 labels.append(question['id'])
 
+        word_mean_vec = np.array(word_mean_vec)
         num_classes = len(labels)
 
         lbl_encoder = LabelEncoder()
@@ -48,13 +51,26 @@ class ModelTraining():
         sequences = tokenizer.texts_to_sequences(training_sentences)
         padded_sequences = pad_sequences(sequences, truncating='post', maxlen=max_len)
 
-        model = Sequential()
-        model.add(Embedding(vocab_size, embedding_dim, input_length=max_len))
-        model.add(GlobalAveragePooling1D())
-        model.add(Dense(32, activation='relu'))
-        model.add(Dense(64, activation='relu'))
-        model.add(Dense(32, activation='relu'))
-        model.add(Dense(num_classes, activation='softmax'))
+        input_text = Input(shape=(max_len,), name='input_text')
+        input_vec = Input(shape=(50,), name='input_vec')
+
+        x = Embedding(vocab_size, embedding_dim, input_length=max_len)(input_text)
+        x = GlobalAveragePooling1D()(x)
+        x = Dense(32, activation='relu')(x)
+        x = Dense(32, activation='relu')(x)
+        x = Model(inputs=input_text, outputs=x)
+
+        y = Dense(32, activation='relu')(input_vec)
+        y = Dense(32, activation='relu')(y)
+        y = Model(inputs=input_vec, outputs=y)
+
+        z = concatenate([x.output, y.output])
+        z = Dense(64, activation='relu')(z)
+        z = Dense(num_classes, activation='softmax', name = 'labels')(z)
+
+        model = Model(inputs=[x.input, y.input], outputs=z)
+        # tf.keras.utils.plot_model(model, to_file='model.png', show_shapes=True)
+
         print(model.summary())
 
         model.compile(loss=losses.SparseCategoricalCrossentropy(), 
@@ -65,9 +81,9 @@ class ModelTraining():
         # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
         callback = tf.keras.callbacks.EarlyStopping(monitor='sparse_categorical_accuracy', patience=500)
-        epochs = epochs_value
-        history = model.fit(padded_sequences, np.array(training_labels), callbacks=[callback],
-                            epochs=epochs, # validation_data=(padded_sequences, np.array(training_labels)), callbacks=[tensorboard_callback]
+        history = model.fit({'input_text': padded_sequences, 'input_vec': word_mean_vec}, {'labels':training_labels},
+                            callbacks=[callback], epochs=epochs_value,
+                            # validation_data=(padded_sequences, np.array(training_labels)), callbacks=[tensorboard_callback]
                             )
 
         model.save("./model/checkpoint/chat_model")

@@ -1,7 +1,9 @@
 from unidecode import unidecode
 import spacy
 import nltk
+from gensim.models import KeyedVectors
 
+word2vec_model = KeyedVectors.load_word2vec_format('cbow_s50.txt')
 nlp = spacy.load("pt_core_news_md")
 stemmer = nltk.stem.RSLPStemmer()
 
