@@ -4,6 +4,7 @@ const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionTimeoutMillis: 60000,
+  max: process.env.MAX_CONN || 2,
 });
 
 pool.on('error', (err, client) => {
