@@ -3,7 +3,8 @@ import spacy
 import nltk
 from gensim.models import KeyedVectors
 
-word2vec_model = KeyedVectors.load_word2vec_format('cbow_s50.txt')
+word2vec_dimension = 50
+word2vec_model = KeyedVectors.load_word2vec_format(f'cbow_s{word2vec_dimension}.txt')
 nlp = spacy.load("pt_core_news_md")
 stemmer = nltk.stem.RSLPStemmer()
 

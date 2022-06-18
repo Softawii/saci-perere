@@ -11,29 +11,29 @@ class Chat():
     _lbl_encoder = None
     _max_len = 20
 
-    def __init__(self, data):
+    def init(data):
         physical_devices = tf.config.list_physical_devices('GPU')
         for device in physical_devices: tf.config.experimental.set_memory_growth(device, True)
-        self._data = data
-        self._model = keras.models.load_model('./model/checkpoint/chat_model')
+        Chat._data = data
+        Chat._model = keras.models.load_model('./model/checkpoint/chat_model')
 
         with open('./model/checkpoint/tokenizer.pickle', 'rb') as handle:
-            self._tokenizer = pickle.load(handle)
+            Chat._tokenizer = pickle.load(handle)
 
         with open('./model/checkpoint/label_encoder.pickle', 'rb') as enc:
-            self._lbl_encoder = pickle.load(enc)
+            Chat._lbl_encoder = pickle.load(enc)
 
-    def make_question(self, question_raw):
+    def make_question(question_raw):
         question = processing.process_input(question_raw)
-        padded_sequences = keras.preprocessing.sequence.pad_sequences(self._tokenizer.texts_to_sequences([question]), truncating='post', maxlen=self._max_len)
-        word_mean_vec = processing.word2vec_model.get_mean_vector(question)
-        result = self._model.predict([
+        padded_sequences = keras.preprocessing.sequence.pad_sequences(Chat._tokenizer.texts_to_sequences([question]), truncating='post', maxlen=Chat._max_len)
+        word_mean_vec = np.array([processing.word2vec_model.get_mean_vector(question)])
+        result = Chat._model.predict([
             padded_sequences,
-            np.array([word_mean_vec]),
+            word_mean_vec,
         ])
 
-        id = self._lbl_encoder.inverse_transform([np.argmax(result)])
-        for q in self._data:
+        id = Chat._lbl_encoder.inverse_transform([np.argmax(result)])
+        for q in Chat._data:
             if q['id'] == id:
                 return {
                     "question_raw": question_raw,

@@ -10,6 +10,7 @@ def create_app():
     load_dotenv()
     settings = dotenv_values(".env")
     app, db = FastAPI(), Database(settings)
+    chat = None
 
     @app.middleware("http")
     async def db_session_middleware(request: Request, call_next):
@@ -20,6 +21,8 @@ def create_app():
     @app.on_event("startup")
     async def startup():
         await db.create_pool()
+        report = await db.get_full_report()
+        chat = Chat.init(json.loads(report))
 
     @app.on_event("shutdown")
     async def shutdown():
@@ -28,12 +31,25 @@ def create_app():
 
     @app.get("/")
     async def home(request: Request):
-        return {"message": "Olá mundo!"}
+        return {
+            "message": "Olá mundo!",
+            "endpoints": {
+                "POST": {
+                    "/train-model" : {},
+                    "/question": {
+                        "body": {
+                            "question" : "string"
+                        }
+                    }
+                }
+            }
+        }
 
-    @app.get("/train-model")
+    @app.post("/train-model")
     async def update(request: Request):
         report = await db.get_full_report()
         ModelTraining(json.loads(report), 5000)
+        chat = Chat.init(json.loads(report))
 
         return {
             "message": "Modelo treinado"
@@ -42,9 +58,7 @@ def create_app():
     @app.post("/question")
     async def answer(request: Request, question: Question):
         question = question.question
-        report = await db.get_full_report()
-        chat = Chat(json.loads(report))
-        ans = chat.make_question(question)
+        ans = Chat.make_question(question)
 
         return ans
     

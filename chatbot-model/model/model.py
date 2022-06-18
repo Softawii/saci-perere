@@ -1,13 +1,13 @@
 import numpy as np
 import pickle
 import tensorflow as tf
-from tensorflow.keras import metrics, losses, Model
-from tensorflow.keras.layers import Dense, Embedding, GlobalAveragePooling1D, Input, concatenate, Flatten
+from tensorflow.keras import metrics, losses
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.preprocessing import LabelEncoder
 import datetime
 import util.processing as processing
+from util.model import Model1
 
 class ModelTraining():
     _data = None
@@ -51,38 +51,21 @@ class ModelTraining():
         sequences = tokenizer.texts_to_sequences(training_sentences)
         padded_sequences = pad_sequences(sequences, truncating='post', maxlen=max_len)
 
-        input_text = Input(shape=(max_len,), name='input_text')
-        input_vec = Input(shape=(50,), name='input_vec')
-
-        x = Embedding(vocab_size, embedding_dim, input_length=max_len)(input_text)
-        x = GlobalAveragePooling1D()(x)
-        x = Dense(32, activation='relu')(x)
-        x = Dense(32, activation='relu')(x)
-        x = Model(inputs=input_text, outputs=x)
-
-        y = Dense(32, activation='relu')(input_vec)
-        y = Dense(32, activation='relu')(y)
-        y = Model(inputs=input_vec, outputs=y)
-
-        z = concatenate([x.output, y.output])
-        z = Dense(64, activation='relu')(z)
-        z = Dense(num_classes, activation='softmax', name = 'labels')(z)
-
-        model = Model(inputs=[x.input, y.input], outputs=z)
-        # tf.keras.utils.plot_model(model, to_file='model.png', show_shapes=True)
-
-        print(model.summary())
+        model = Model1.get(num_classes, True, False)
 
         model.compile(loss=losses.SparseCategoricalCrossentropy(), 
                     optimizer=tf.keras.optimizers.Adam(0.00005),
                     metrics=[metrics.SparseCategoricalAccuracy()])
 
-        # log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        # tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+        log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        callbacks = [
+            tf.keras.callbacks.EarlyStopping(monitor='sparse_categorical_accuracy', patience=500),
+            # tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1),
+        ]
 
-        callback = tf.keras.callbacks.EarlyStopping(monitor='sparse_categorical_accuracy', patience=500)
+        tf.set_random_seed(2019)
         history = model.fit({'input_text': padded_sequences, 'input_vec': word_mean_vec}, {'labels':training_labels},
-                            callbacks=[callback], epochs=epochs_value,
+                            callbacks=callbacks, epochs=epochs_value,
                             # validation_data=(padded_sequences, np.array(training_labels)), callbacks=[tensorboard_callback]
                             )
 
