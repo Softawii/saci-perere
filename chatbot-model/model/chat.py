@@ -27,8 +27,10 @@ class Chat():
         question = processing.process_input(question_raw)
         padded_sequences = keras.preprocessing.sequence.pad_sequences(self._tokenizer.texts_to_sequences([question]), truncating='post', maxlen=self._max_len)
         word_mean_vec = processing.word2vec_model.get_mean_vector(question)
-        predict = {'input_text': padded_sequences, 'input_vec': word_mean_vec}
-        result = self._model.predict(np.array([[padded_sequences,word_mean_vec]]))
+        result = self._model.predict([
+            padded_sequences,
+            np.array([word_mean_vec]),
+        ])
 
         id = self._lbl_encoder.inverse_transform([np.argmax(result)])
         for q in self._data:
