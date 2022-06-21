@@ -36,6 +36,12 @@
         </template>
         <p>{{ editProfileError }}</p>
       </i-alert>
+      <i-alert color="warning">
+        <template #icon>
+          <i-icon name="ink-warning" />
+        </template>
+        <p>Preencha apenas o que deseja editar</p>
+      </i-alert>
       <i-form v-model="profileForm">
         <i-form-group>
           <i-form-label>Nome:</i-form-label>
@@ -51,11 +57,11 @@
         </i-form-group>
         <i-form-group>
           <i-form-label>Senha:</i-form-label>
-          <i-input name="password" placeholder="Digite sua nova senha ou deixe em branco" />
+          <i-input name="password" placeholder="Digite sua nova senha" />
         </i-form-group>
         <i-form-group>
           <i-row center>
-            <i-button color="primary" @click="updateProfile">
+            <i-button color="secondary" @click="updateProfile">
               Atualizar Dados Pessoais
             </i-button>
           </i-row>
@@ -95,7 +101,7 @@
         </i-form-group>
         <i-form-group>
           <i-row center>
-            <i-button color="primary" @click="createUser">
+            <i-button color="secondary" @click="createUser">
               Cadastrar Novo Usuário
             </i-button>
           </i-row>
@@ -196,7 +202,37 @@ export default {
       form.password.value = '';
     },
     updateProfile() {
-      alert('em dev');
+      const form = this.profileForm;
+      const body = {};
+      for (const field of ['name', 'username', 'email', 'password']) {
+        const fieldValue = form[field].value;
+        if (fieldValue.trim()) {
+          body[field] = fieldValue.trim();
+        }
+      }
+
+      // if (!form.valid) {
+      //   this.editProfileError = 'O formulário possui campos inválidos';
+      //   return;
+      // }
+
+      if (!Object.keys(body).length) {
+        this.editProfileError = 'Nenhum campo está preenchido';
+        return;
+      }
+
+      axios.post('/user/set-profile', { ...body })
+        .then(response => {
+          this.userStore.setUserDetails(response.data);
+          this.isShowingProfile = false;
+          this.addAlert({
+            msgBox: 'Usuário editado com sucesso',
+            alertType: 'success',
+            alertIcon: 'ink-check',
+          });
+        }).catch(err => {
+          this.creatingUserError = err;
+        });
     },
     showCreateUserModal() {
       this.creatingUserError = undefined;
