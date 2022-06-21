@@ -1,31 +1,40 @@
 <template>
   <i-container>
-    <i-row center>
-      <i-button color="primary" :to="{ name: 'Login'}">
-        Login
-      </i-button>
-      <ToggleMode />
+    <i-row center style="margin-top: 20px">
+      <i-button-group>
+        <i-button color="primary" :to="{ name: 'Login'}">
+          Login
+        </i-button>
+        <i-button>
+          <ToggleMode />
+        </i-button>
+      </i-button-group>
     </i-row>
-    <i-row center>
-      <i-input v-model="nameFilter" placeholder="Digite para filtrar as categorias" clearable />
+    <i-row center style="padding: 20px 0">
+      <i-column xs="12" lg="4" style="padding: 10px 5px 0">
+        <i-input v-model="nameFilter" placeholder="Digite para filtrar as categorias" clearable />
+      </i-column>
+      <i-column xs="12" lg="4" style="padding: 10px 5px 0">
+        <i-input v-model="questionFilter" placeholder="Digite para filtrar as perguntas" clearable :disabled="questions.length === 0" />
+      </i-column>
     </i-row>
     <i-row center>
       <i-column>
+        <i-loader v-if="isLoadingCategories" />
         <i-button
-          v-for="category in filteredCategories" :key="category.id" class="_margin-x:1/2 _margin-y:1/2 _white-space:normal" outline
+          v-for="category in filteredCategories"
+          v-else :key="category.id" class="_margin-x:1/2 _margin-y:1/2 _white-space:normal" outline
           color="primary" @click="getQuestions(category.id)"
         >
           {{ category.name }}
         </i-button>
       </i-column>
     </i-row>
-    <i-row center>
-      <i-input v-model="questionFilter" placeholder="Digite para filtrar as perguntas" clearable :disabled="questions.length === 0" />
-    </i-row>
     <i-row>
-      <template v-for="question in filteredQuestions" :key="question.id">
+      <i-loader v-if="isLoadingQuestions" style="margin: auto" />
+      <template v-for="question in filteredQuestions" v-else :key="question.id">
         <i-column sm="12" md="6">
-          <i-card v-if="answers[question.id] && answers[question.id].length > 0" style="width: 100%; margin: 0 10px 5px">
+          <i-card v-if="answers[question.id] && answers[question.id].length > 0" class="faq">
             <template #header>
               {{ question.question }}
             </template>
@@ -35,7 +44,7 @@
               </p>
             </template>
           </i-card>
-          <i-card v-else style="width: 100%; margin: 0 10px 5px">
+          <i-card v-else class="faq">
             <template #header>
               {{ question.question }}
             </template>
@@ -67,6 +76,8 @@ export default {
       answers: {},
       nameFilter: '',
       questionFilter: '',
+      isLoadingCategories: true,
+      isLoadingQuestions: false,
     };
   },
   computed: {
@@ -87,13 +98,16 @@ export default {
       axios.get('/categories', {
       }).then(response => {
         this.categories = response.data.categories;
+        this.isLoadingCategories = false;
       });
     },
     getQuestions(categoryId) {
+      this.isLoadingQuestions = true;
       this.questionFilter = '';
       axios.post('/questions', {
         id: categoryId,
       }).then(response => {
+        this.isLoadingQuestions = false;
         this.questions = response.data.questions;
         this.questions.forEach(question => this.loadAnswers(question.id));
       });

@@ -36,6 +36,14 @@
     }
 }
 
+@include i-card() {
+    &.faq {
+        height: 100%;
+        padding-bottom: 20px;
+        box-shadow: none;
+    }
+}
+
 @include i-navbar() {
     &.blue {
         $primary: #0077B6;
