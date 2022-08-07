@@ -14,11 +14,11 @@ router.post('/', checkContainsId, (req, res) => {
     });
 });
 
-router.post('/create', auth.checkAccessToken, checkContainsId, checkContainsQuestionAnswer, (req, res) => {
-  db.query('INSERT INTO chatbot.category_question (category_id, question) VALUES($1, $2) RETURNING id', [req.body.id, req.body.question])
+router.post('/create', auth.checkAccessToken, checkContainsId, checkContainsQuestionAnswerContext, (req, res) => {
+  db.query('INSERT INTO chatbot.category_question (category_id, question, context) VALUES($1, $2, $3) RETURNING id', [req.body.id, req.body.question, req.body.context])
     .then(result => {
       const questionId = result.rows[0].id;
-      db.query('INSERT INTO chatbot.question_answer (question_id, answer) VALUES($1, $2)', [questionId, req.body.answer])
+      db.query('INSERT INTO chatbot.question_answer (question_id, answer, answer_start) VALUES($1, $2, $3)', [questionId, req.body.answer, req.body.answer_start])
         .then(result => {
           res.json({
             questionId,
@@ -50,8 +50,8 @@ function checkContainsId(req, res, next) {
   return next();
 }
 
-function checkContainsQuestionAnswer(req, res, next) {
-  const requiredParams = ['question', 'answer'];
+function checkContainsQuestionAnswerContext(req, res, next) {
+  const requiredParams = ['question', 'answer', 'answer_start', 'context'];
   for (const param of requiredParams) {
     if (!req.body[param]) {
       return res.status(400).send({

@@ -29,15 +29,17 @@ DROP TABLE IF EXISTS chatbot.category_question;
 CREATE TABLE IF NOT EXISTS chatbot.category_question
 (
     id          SERIAL PRIMARY KEY,
-    category_id INTEGER      NOT NULL REFERENCES chatbot.category (id) ON DELETE CASCADE,
-    question    VARCHAR(100) NOT NULL
+    category_id INTEGER       NOT NULL REFERENCES chatbot.category (id) ON DELETE CASCADE,
+    question    VARCHAR(100)  NOT NULL,
+    context     VARCHAR(1000) NOT NULL
 );
 
 DROP TABLE IF EXISTS chatbot.question_answer;
 CREATE TABLE IF NOT EXISTS chatbot.question_answer
 (
-    question_id INTEGER      NOT NULL REFERENCES chatbot.category_question (id) ON DELETE CASCADE,
-    answer      VARCHAR(300) NOT NULL
+    question_id  INTEGER      NOT NULL REFERENCES chatbot.category_question (id) ON DELETE CASCADE,
+    answer       VARCHAR(300) NOT NULL,
+    answer_start INTEGER      NOT NULL
 );
 
 DROP TABLE IF EXISTS chatbot.system;
