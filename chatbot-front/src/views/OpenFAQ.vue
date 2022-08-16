@@ -1,64 +1,7 @@
 <template>
-  <i-container>
-    <i-row center style="margin-top: 20px">
-      <i-button-group>
-        <i-button color="primary" :to="{ name: 'Login'}">
-          Login
-        </i-button>
-        <i-button>
-          <ToggleMode />
-        </i-button>
-      </i-button-group>
-    </i-row>
-    <i-row center style="padding: 20px 0">
-      <i-column xs="12" lg="4" style="padding: 10px 5px 0">
-        <i-input v-model="nameFilter" placeholder="Digite para filtrar as categorias" clearable />
-      </i-column>
-      <i-column xs="12" lg="4" style="padding: 10px 5px 0">
-        <i-input v-model="questionFilter" placeholder="Digite para filtrar as perguntas" clearable :disabled="questions.length === 0" />
-      </i-column>
-    </i-row>
-    <i-row center>
-      <i-column>
-        <i-loader v-if="isLoadingCategories" />
-        <i-button
-          v-for="category in filteredCategories"
-          v-else :key="category.id" class="_margin-x:1/2 _margin-y:1/2 _white-space:normal" outline
-          color="primary" @click="getQuestions(category.id)"
-        >
-          {{ category.name }}
-        </i-button>
-      </i-column>
-    </i-row>
-    <i-row>
-      <i-loader v-if="isLoadingQuestions" style="margin: auto" />
-      <template v-for="question in filteredQuestions" v-else :key="question.id">
-        <i-column sm="12" md="6">
-          <i-card v-if="answers[question.id] && answers[question.id].length > 0" class="faq">
-            <template #header>
-              {{ question.question }}
-            </template>
-            <template v-if="answers[question.id]">
-              <p v-for="(answer) in answers[question.id]" :key="answer">
-                {{ answer.answer }}
-              </p>
-            </template>
-          </i-card>
-          <i-card v-else class="faq">
-            <template #header>
-              {{ question.question }}
-            </template>
-            <p v-for="(answer,index) of answers[question.id]" :key="answer">
-              <span>
-                - {{ answer.answer }}
-                <hr v-if="!(index === answers[question.id].length - 1)">
-              </span>
-            </p>
-          </i-card>
-        </i-column>
-      </template>
-    </i-row>
-  </i-container>
+  <div>
+    faq
+  </div>
 </template>
 
 <script>

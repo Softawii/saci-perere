@@ -6,9 +6,7 @@
     >
       {{ text }}
     </p>
-    <i-button color="primary" block @click="save">
-      {{ buttonText }}
-    </i-button>
+    <button @click="save">{{ buttonText }}</button>
   </div>
 </template>
 

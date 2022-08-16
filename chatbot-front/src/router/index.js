@@ -37,27 +37,27 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach((to, from, next) => {
-  const userStore = useUserStore();
+// router.beforeEach((to, from, next) => {
+//   const userStore = useUserStore();
 
-  if (to.name === 'Login' && userStore.isAuthenticated) {
-    next({ name: 'Home' });
-  }
+//   if (to.name === 'Login' && userStore.isAuthenticated) {
+//     next({ name: 'Home' });
+//   }
 
-  if (to.matched.some(record => record.meta.auth)) {
-    if (!userStore.isAuthenticated) {
-      next({
-        name: 'Login',
-        query: {
-          unAuthenticated: true,
-        },
-      });
-    } else {
-      next();
-    }
-  } else {
-    next();
-  }
-});
+//   if (to.matched.some(record => record.meta.auth)) {
+//     if (!userStore.isAuthenticated) {
+//       next({
+//         name: 'Login',
+//         query: {
+//           unAuthenticated: true,
+//         },
+//       });
+//     } else {
+//       next();
+//     }
+//   } else {
+//     next();
+//   }
+// });
 
 export default router;

@@ -3,12 +3,26 @@
 
 <template>
   <div class="_background" style="min-height: 100vh; min-width: 100vw;">
-    <i-container>
-      <transition name="fade" mode="out-in">
-        <Navbar :key="$route.name === 'Login'" />
-      </transition>
-      <!-- <LoginModal v-show="!userStore.isAuthenticated && $route.name !== 'Login'" /> -->
-    </i-container>
+    <router-link to="/">
+      <n-button type="primary">
+        Home
+      </n-button>
+    </router-link>
+    <router-link to="/category">
+      <n-button type="primary">
+        Category
+      </n-button>
+    </router-link>
+    <router-link to="/faq">
+      <n-button type="primary">
+        Faq
+      </n-button>
+    </router-link>
+    <router-link to="/login">
+      <n-button type="primary">
+        Login
+      </n-button>
+    </router-link>
     <router-view v-slot="{ Component }">
       <transition name="fade" mode="out-in">
         <component :is="Component" :key="$route.name" />
@@ -18,15 +32,11 @@
 </template>
 <script>
 import axios from 'axios';
-import Navbar from './components/Navbar.vue';
-import LoginModal from './components/LoginModal.vue';
 import { useUserStore } from './store/UserStore';
 import { useGlobalStore } from './store/GlobalStore';
 
 export default {
   components: {
-    Navbar,
-    LoginModal,
   },
   setup() {
     const userStore = useUserStore();
