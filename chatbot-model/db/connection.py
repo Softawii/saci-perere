@@ -1,4 +1,5 @@
 import asyncpg
+
 class Database():
     def __init__(self, settings):
         self.settings = settings
@@ -19,7 +20,17 @@ class Database():
             results = await con.fetch("SELECT * FROM full_report() AS result")
             return results[0][0]
 
-    async def get_questions_report(self):
+    async def get_questions_from_category_id(self, id):
         async with self._pool.acquire() as con:
-            results = await con.fetch("SELECT * FROM questions_report() AS result")
-            return results[0][0]
+            results = await con.fetch("SELECT id, value from saci.question WHERE category_id = ($1)", id)
+            return results
+
+    async def get_answer(self, question_id):
+        async with self._pool.acquire() as con:
+            results = await con.fetch("SELECT value from saci.answer WHERE question_id = ($1)", question_id)
+            return results
+
+    async def get_question(self, id):
+        async with self._pool.acquire() as con:
+            results = await con.fetch("SELECT value from saci.question WHERE id = ($1)", id)
+            return results
