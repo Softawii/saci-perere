@@ -9,16 +9,19 @@
     "secret": "node -p \"require('crypto').randomBytes(64).toString('hex')\""
   },
   "dependencies": {
+    "@prisma/client": "^4.2.1",
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",
+    "dotenv-expand": "^8.0.3",
     "express": "^4.18.1",
-    "jsonwebtoken": "^8.5.1",
-    "pg": "^8.7.3"
+    "express-validator": "^6.14.2",
+    "jsonwebtoken": "^8.5.1"
   },
   "devDependencies": {
     "eslint": "^8.16.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.26.0"
+    "eslint-plugin-import": "^2.26.0",
+    "prisma": "^4.2.1"
   }
 }

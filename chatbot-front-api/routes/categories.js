@@ -1,76 +1,85 @@
 const express = require('express');
 const auth = require('./auth');
-const db = require('../db');
+const { prisma } = require('../db');
 
 const router = express.Router();
 
 router.get('/', (req, res) => {
-  db.query('SELECT * FROM chatbot.category ORDER BY name')
+  prisma.category.findMany()
     .then(result => {
-      res.json({
-        categories: result.rows,
+      res.json(result || []);
+    }).catch(reason => {
+      console.error(reason);
+      res.status(500).json({
+        message: 'failed to fetch categories',
       });
     });
 });
 
 router.post('/', auth.checkAccessToken, checkContainsName, (req, res) => {
-  const params = [req.body.name];
-  db.query('SELECT count(*) FROM chatbot.category WHERE category.name = $1', params)
-    .then(selectQuery => {
-      if (selectQuery.rows[0].count === '1') {
-        res.sendStatus(400);
-      } else {
-        db.query('INSERT INTO chatbot.category (name) VALUES ($1)', params)
-          .then(result => {
-            res.sendStatus(200);
-          })
-          .catch(err => {
-            console.error(err);
-            res.sendStatus(500);
-          });
-      }
-    });
+  prisma.category.create({
+    data: {
+      name: req.body.name,
+    },
+  }).then(result => {
+    res.json(result || {});
+  }).catch(reason => {
+    console.error(reason);
+    if (reason?.code === 'P2002') {
+      res.status(400).json({
+        message: `category '${req.body.name}' already exists`,
+      });
+    } else {
+      res.status(500).json({
+        message: 'failed to create category',
+      });
+    }
+  });
 });
 
 router.post('/rename', auth.checkAccessToken, checkContainsName, (req, res) => {
-  const params = [req.body.name, req.body.id];
-  db.query('SELECT count(*) FROM chatbot.category WHERE category.name = $1', [params[0]])
-    .then(selectQuery => {
-      if (selectQuery.rows[0].count === '1') {
-        res.sendStatus(400);
-      } else {
-        db.query('UPDATE chatbot.category SET name = $1 WHERE id = $2', params)
-          .then(result => {
-            res.sendStatus(200);
-          })
-          .catch(err => {
-            console.error(err);
-            res.sendStatus(500);
-          });
-      }
-    });
+  prisma.category.update({
+    where: {
+      id: req.body.id,
+    },
+    data: {
+      name: req.body.name,
+    },
+  }).then(result => {
+    res.json(result || {});
+  }).catch(reason => {
+    console.error(reason);
+    if (reason?.code === 'P2025') {
+      res.status(400).json({
+        message: 'category does not exist',
+      });
+    } else {
+      res.status(500).json({
+        message: 'failed to rename question',
+      });
+    }
+  });
 });
 
 router.post('/delete', auth.checkAccessToken, checkContainsName, checkContainsId, (req, res) => {
-  const params = [req.body.id];
-  db.query('SELECT count(*) FROM chatbot.category WHERE category.id = $1', params)
-    .then(selectQuery => {
-      if (selectQuery.rows[0].count === '1') {
-        db.query('DELETE FROM chatbot.category category WHERE category.id = $1', params)
-          .then(result => {
-            res.sendStatus(200);
-          })
-          .catch(err => {
-            console.error(err);
-            res.sendStatus(500);
-          });
-      } else {
-        res.status(400)
-          .json({
-            error: 'category not found',
-          });
-      }
-    });
+  prisma.category.delete({
+    where: {
+      id: req.body.id,
+    },
+  }).then(result => {
+    res.sendStatus(200);
+  }).catch(reason => {
+    console.error(reason);
+    if (reason?.code === 'P2025') {
+      res.status(400).json({
+        message: 'category does not exist',
+      });
+    } else {
+      res.status(500).json({
+        message: 'failed to delete question',
+      });
+    }
+  });
 });
 
 function checkContainsId(req, res, next) {

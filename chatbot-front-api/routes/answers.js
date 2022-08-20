@@ -1,15 +1,27 @@
 const express = require('express');
 const auth = require('./auth');
-const db = require('../db');
+const { prisma } = require('../db');
 
 const router = express.Router();
 
 router.post('/', checkContainsId, (req, res) => {
-  const params = [req.body.id];
-  db.query('SELECT question_id as questionId, answer FROM chatbot.question_answer WHERE question_id = $1', params)
-    .then(result => {
-      res.json([...result.rows]);
+  prisma.question.findFirst({
+    where: {
+      id: req.body.id,
+    },
+    include: {
+      answer: true,
+    },
+  }).then(result => {
+    res.json({
+      ...result.answer,
     });
+  }).catch(reason => {
+    console.error(reason);
+    res.status(500).json({
+      message: 'failed to fetch questions',
+    });
+  });
 });
 
 function checkContainsId(req, res, next) {

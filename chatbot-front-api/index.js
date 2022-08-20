@@ -1,11 +1,13 @@
 const dotenv = require('dotenv');
+const dotenvExpand = require('dotenv-expand');
 const express = require('express');
 const cors = require('cors');
 
 const mountRoutes = require('./routes');
 
 const app = express();
-dotenv.config();
+const envs = dotenv.config();
+dotenvExpand.expand(envs);
 const port = process.env.PORT || 3000;
 
 app.use(cors());
