@@ -1,51 +1,36 @@
 <template>
-  <div class="">
-    Home
-    <n-space>
-      <n-button>Default</n-button>
-      <n-button type="tertiary">
-        Tertiary
-      </n-button>
-      <n-button type="primary">
-        Primary
-      </n-button>
-      <n-button type="info">
-        Info
-      </n-button>
-      <n-button type="success">
-        Success
-      </n-button>
-      <n-button type="warning">
-        Warning
-      </n-button>
-      <n-button type="error">
-        Error
-      </n-button>
-    </n-space>
-  </div>
+  <n-space vertical size="large">
+    <n-layout-header>
+      <Navbar />
+    </n-layout-header>
+    <n-layout-content>
+      <Sidebar @menu-updated="show">
+        <CategoryTab @updated="tabUpdated">
+          <CategoryList :type="categoryListType" />
+        </CategoryTab>
+      </Sidebar>
+    </n-layout-content>
+  </n-space>
 </template>
 
 <script>
-import axios from 'axios';
-import { mapActions, mapStores } from 'pinia';
-import { useUserStore } from '../store/UserStore';
-import { useGlobalStore } from '../store/GlobalStore';
-import DotsVertical from '../components/icons/DotsVertical.vue';
-import Refresh from '../components/icons/Refresh.vue';
+import Navbar from '../components/Navbar.vue';
+import Sidebar from '../components/Sidebar.vue';
+import CategoryList from '../components/CategoryList.vue';
+import CategoryTab from '../components/CategoryTab.vue';
 
 export default {
   components: {
-    DotsVertical,
-    Refresh,
+    Sidebar,
+    CategoryList,
+    CategoryTab,
+    Navbar,
   },
   setup() {
-    const globalStore = useGlobalStore();
-    return {
-      globalStore,
-    };
   },
   data() {
     return {
+      categoryListType: 'all',
     };
   },
   computed: {
@@ -53,6 +38,13 @@ export default {
   beforeMount() {
   },
   methods: {
+    show(data) {
+      console.log(data);
+      alert(data);
+    },
+    tabUpdated(key) {
+      this.categoryListType = key;
+    },
   },
 };
 </script>

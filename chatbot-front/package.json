@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@mdi/font": "^7.0.96",
+    "@vicons/ionicons5": "^0.12.0",
     "@vueuse/core": "^9.1.0",
     "axios": "^0.27.2",
     "eslint": "^8.21.0",
