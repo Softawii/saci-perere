@@ -9,6 +9,9 @@ const router = createRouter({
       path: '/login',
       name: 'Login',
       component: () => import('../views/Login.vue'),
+      meta: {
+        label: 'login',
+      },
     },
     {
       path: '/',
@@ -16,6 +19,7 @@ const router = createRouter({
       redirect: to => ({ name: 'Categories' }),
       meta: {
         auth: true,
+        label: 'home',
       },
     },
     {
@@ -24,6 +28,7 @@ const router = createRouter({
       component: () => import('../views/Categories.vue'),
       meta: {
         auth: true,
+        label: 'categories',
       },
     },
     {
@@ -32,6 +37,16 @@ const router = createRouter({
       component: () => import('../views/Category.vue'),
       meta: {
         auth: true,
+        label: 'category',
+      },
+    },
+    {
+      path: '/users',
+      name: 'Users',
+      component: () => import('../views/Users.vue'),
+      meta: {
+        auth: true,
+        label: 'users',
       },
     },
     {
@@ -40,6 +55,7 @@ const router = createRouter({
       component: () => import('../views/OpenFAQ.vue'),
       meta: {
         auth: false,
+        label: 'faq',
       },
     },
   ],

@@ -10,7 +10,7 @@
       >
         <n-menu
           :options="menuOptions"
-          :default-value="'categories'"
+          :value="$route.meta.label"
           :on-update:value="menuUpdated"
         />
       </n-layout-sider>
