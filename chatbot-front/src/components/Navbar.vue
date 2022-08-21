@@ -1,10 +1,9 @@
 <template>
   <n-layout-header bordered class="nav">
     <n-text tag="div" class="logo">
-      <!-- <img src=""> -->
-      <span style="text-align: center;">SACI<br>PeReRe</span>
+      <Logo />
     </n-text>
-    <h2 style="margin: 0 20px 0 auto;">
+    <h2 style="margin: auto 20px auto auto;">
       Olá, fulano!
     </h2>
     <n-popover
@@ -33,10 +32,12 @@ import {
   LogOutOutline as LogOutOutIcon,
   Person as PersonIcon,
 } from '@vicons/ionicons5';
+import Logo from './Logo.vue';
 
 export default {
   components: {
     PersonIcon,
+    Logo,
   },
   data() {
     function renderIcon(icon) {

@@ -13,7 +13,15 @@ const router = createRouter({
     {
       path: '/',
       name: 'Home',
-      component: () => import('../views/Home.vue'),
+      redirect: to => ({ name: 'Categories' }),
+      meta: {
+        auth: true,
+      },
+    },
+    {
+      path: '/categories',
+      name: 'Categories',
+      component: () => import('../views/Categories.vue'),
       meta: {
         auth: true,
       },

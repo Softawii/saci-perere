@@ -8,11 +8,18 @@ export default defineConfig({
     vue(),
     ViteFonts({
       custom: {
-        families: [{
-          name: 'Roboto',
-          local: 'Roboto',
-          src: './src/assets/fonts/Roboto/*.ttf',
-        }],
+        families: [
+          {
+            name: 'Roboto',
+            local: 'Roboto',
+            src: './src/assets/fonts/Roboto/*.ttf',
+          },
+          {
+            name: 'JetBrainsMono',
+            local: 'JetBrainsMono',
+            src: './src/assets/fonts/JetBrainsMono/*.woff2',
+          },
+        ],
         display: 'auto',
         preload: false,
         prefetch: false,
