@@ -2,24 +2,27 @@
 </script>
 
 <template>
-  <div class="_background" style="min-height: 100vh; min-width: 100vw;">
-    <router-view v-slot="{ Component }">
-      <transition name="fade" mode="out-in">
-        <n-space vertical>
-          <n-layout-header>
-            <Navbar />
-          </n-layout-header>
-          <n-layout-content>
-            <Sidebar @menu-updated="changeRoute">
-              <component :is="Component" :key="$route.name" />
-            </Sidebar>
-          </n-layout-content>
-        </n-space>
-      </transition>
-    </router-view>
-  </div>
+  <n-config-provider :theme="darkTheme">
+    <div class="_background" style="height: 100vh; width: 100vw;">
+      <router-view v-slot="{ Component }">
+        <transition name="fade" mode="out-in">
+          <div>
+            <n-layout-header>
+              <Navbar />
+            </n-layout-header>
+            <n-layout-content>
+              <Sidebar @menu-updated="changeRoute">
+                <component :is="Component" :key="$route.name" />
+              </Sidebar>
+            </n-layout-content>
+          </div>
+        </transition>
+      </router-view>
+    </div>
+  </n-config-provider>
 </template>
 <script>
+import { darkTheme } from 'naive-ui';
 import Navbar from './components/Navbar.vue';
 import Sidebar from './components/Sidebar.vue';
 
@@ -29,6 +32,9 @@ export default {
     Sidebar,
   },
   setup() {
+    return {
+      darkTheme,
+    };
   },
   beforeMount() {
   },

@@ -79,12 +79,6 @@ export default {
   font-size: 18px;
 }
 
-.logo > img {
-  margin-right: 12px;
-  height: 32px;
-  width: 32px;
-}
-
 .nav-end {
   display: flex;
   align-items: center;
