@@ -1,6 +1,6 @@
 <template>
   <n-layout-header bordered class="nav">
-    <n-text tag="div" class="logo">
+    <n-text tag="div" class="logo" @click="$router.push('/')">
       <Logo />
     </n-text>
     <h2 style="margin: auto 20px auto auto;">
