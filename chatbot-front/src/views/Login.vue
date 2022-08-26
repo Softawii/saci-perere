@@ -1,37 +1,74 @@
-<script setup>
-import axios from 'axios';
-import { mapStores } from 'pinia';
-import AccountIcon from '../components/icons/Account.vue';
-import LockIcon from '../components/icons/Lock.vue';
-import EyeIcon from '../components/icons/Eye.vue';
-import EyeOffIcon from '../components/icons/EyeOff.vue';
-
-import { useUserStore } from '../store/UserStore';
-import { useGlobalStore } from '../store/GlobalStore';
-</script>
 <template>
-  <div id="main" style="min-height: 100vh; display: flex; align-items: center;">
-  login
+  <div id="container">
+    <Logo style="padding: 20px 0" />
+    <!-- eslint-disable  vue/no-v-model-argument -->
+    <n-form
+      ref="formRef"
+      :model="loginForm"
+      :rules="rules"
+      style="max-width: 300px;"
+    >
+      <n-form-item label="Usuário" path="username">
+        <n-input v-model:value="loginForm.username" placeholder="fulano" />
+      </n-form-item>
+      <n-form-item label="Senha" path="password">
+        <n-input v-model:value="loginForm.password" type="password" show-password-on="click" placeholder="123456" />
+      </n-form-item>
+      <n-form-item :span="24">
+        <n-button type="primary" @click="submit">
+          Fazer Login
+        </n-button>
+      </n-form-item>
+    </n-form>
   </div>
 </template>
 
 <script>
-
-import {mapStores} from "pinia";
+import { ref, computed } from 'vue';
+import Logo from '../components/Logo.vue';
 
 export default {
   components: {
+    Logo,
   },
-  data() {
+  setup() {
+    const formRef = ref(null);
+    const model = ref({
+      username: '',
+      password: '',
+    });
+
     return {
+      formRef,
+      loginForm: model,
+      rules: {
+        password: {
+          required: true,
+          message: 'Insira a senha',
+          trigger: 'blur',
+        },
+        username: {
+          required: true,
+          message: 'Insira o usuário',
+          trigger: 'blur',
+        },
+      },
     };
   },
-  computed: {
-  },
   methods: {
+    submit() {
+      this.$router.push('/');
+    },
   },
 };
 </script>
 
-<style lang="scss" scoped>
+<style>
+#container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 </style>

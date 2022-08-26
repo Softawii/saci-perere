@@ -109,7 +109,7 @@ export default {
       if (key === 'edit-profile') {
         this.showProfileModal = true;
       } else if (key === 'logout') {
-        alert(key);
+        this.$router.push('/login');
       }
     },
   },

@@ -8,7 +8,7 @@
         <transition name="fade" mode="out-in">
           <div>
             <n-layout-header>
-              <Navbar />
+              <Navbar v-if="$route.meta.label !== 'login'" />
             </n-layout-header>
             <n-layout-content>
               <Sidebar @menu-updated="changeRoute">

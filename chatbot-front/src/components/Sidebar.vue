@@ -1,24 +1,29 @@
 <template>
-  <n-space vertical>
-    <n-layout id="sidebar" has-sider>
-      <n-layout-sider
-        bordered
-        collapse-mode="width"
-        :collapsed-width="64"
-        :width="240"
-        show-trigger
-      >
-        <n-menu
-          :options="menuOptions"
-          :value="$route.meta.label"
-          :on-update:value="menuUpdated"
-        />
-      </n-layout-sider>
-      <n-layout>
-        <slot />
+  <div v-if="$route.meta.label !== 'login'">
+    <n-space vertical>
+      <n-layout id="sidebar" has-sider>
+        <n-layout-sider
+          bordered
+          collapse-mode="width"
+          :collapsed-width="64"
+          :width="240"
+          show-trigger
+        >
+          <n-menu
+            :options="menuOptions"
+            :value="$route.meta.label"
+            :on-update:value="menuUpdated"
+          />
+        </n-layout-sider>
+        <n-layout>
+          <slot />
+        </n-layout>
       </n-layout>
-    </n-layout>
-  </n-space>
+    </n-space>
+  </div>
+  <div v-else>
+    <slot />
+  </div>
 </template>
 
 <script>
