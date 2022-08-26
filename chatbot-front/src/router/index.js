@@ -50,6 +50,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/new-user',
+      name: 'NewUser',
+      component: () => import('../views/NewUser.vue'),
+      meta: {
+        auth: true,
+        label: 'new-user',
+      },
+    },
+    {
       path: '/faq/',
       name: 'FAQ',
       component: () => import('../views/OpenFAQ.vue'),
