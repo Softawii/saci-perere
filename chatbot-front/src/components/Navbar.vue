@@ -62,7 +62,9 @@ export default {
   },
 };
 </script>
-<style>
+<style lang="scss" scoped>
+@import '../variables.scss';
+
 .nav {
   --side-padding: 16px;
   display: grid;
@@ -70,6 +72,7 @@ export default {
   grid-template-rows: calc(var(--header-height) - 1px);
   align-items: center;
   padding: 0 var(--side-padding);
+  height: $nav-height;
 }
 
 .logo {

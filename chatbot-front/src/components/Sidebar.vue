@@ -1,6 +1,6 @@
 <template>
   <n-space vertical>
-    <n-layout has-sider style="height: 100vh;">
+    <n-layout id="sidebar" has-sider>
       <n-layout-sider
         bordered
         collapse-mode="width"
@@ -70,4 +70,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '../variables.scss';
+
+#sidebar {
+  height: calc(100vh - $nav-height);
+}
 </style>
