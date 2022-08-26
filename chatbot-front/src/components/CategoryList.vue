@@ -1,6 +1,6 @@
 <template>
   <n-list hoverable clickable>
-    <n-list-item v-for="category in filteredCategories" :key="category.name">
+    <n-list-item v-for="category in filteredCategories" :key="category.name" @click="openCategory(category.id)">
       <n-thing :title="category.name" content-style="margin-top: 10px;">
         <template #description>
           <n-space v-if="category.isFavorite" size="small" style="margin-top: 4px">
@@ -43,16 +43,19 @@ export default {
         name: 'Ações, Programas e Políticas do SUS',
         description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
         isFavorite: true,
+        id: 0,
       },
       {
         name: 'Agenda de Autoridades do Ministério da Saúde',
         description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
         isFavorite: false,
+        id: 1,
       },
       {
         name: 'Assistência Farmacêutica',
         description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
         isFavorite: true,
+        id: 2,
       },
     ];
     return {
@@ -65,6 +68,11 @@ export default {
         if (this.type === 'favorites') return category.isFavorite === true;
         return true;
       });
+    },
+  },
+  methods: {
+    openCategory(id) {
+      this.$router.push(`/category/${id}`);
     },
   },
 };
