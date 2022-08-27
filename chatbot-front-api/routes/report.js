@@ -1,5 +1,6 @@
 const express = require('express');
 const { Prisma } = require('@prisma/client');
+const status = require('http-status');
 const auth = require('./auth');
 const { prisma } = require('../db');
 
@@ -21,7 +22,7 @@ function sendReport(req, res, report) {
       res.send(result[0].result);
     }).catch(reason => {
       console.error(reason);
-      res.status(500).json({
+      res.status(status.INTERNAL_SERVER_ERROR).json({
         message: 'failed to fetch the report',
       });
     });

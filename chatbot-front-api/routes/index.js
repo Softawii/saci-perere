@@ -7,9 +7,9 @@ const user = require('./user');
 
 module.exports = app => {
   app.use('/auth', auth.router);
-  app.use('/categories', categories.router);
-  app.use('/questions', questions.router);
-  app.use('/answers', answers.router);
+  app.use('/category', categories.router);
+  app.use('/question', questions.router);
+  app.use('/answer', answers.router);
   app.use('/report', report.router);
   app.use('/user', user.router);
 };

@@ -1,6 +1,7 @@
 const express = require('express');
+const status = require('http-status');
 const auth = require('./auth');
-const { prisma } = require('../db');
+const { prisma, handleError } = require('../db');
 
 const router = express.Router();
 
@@ -10,7 +11,7 @@ router.get('/', (req, res) => {
       res.json(result || []);
     }).catch(reason => {
       console.error(reason);
-      res.status(500).json({
+      res.status(status.INTERNAL_SERVER_ERROR).json({
         message: 'failed to fetch categories',
       });
     });
@@ -24,82 +25,91 @@ router.post('/', auth.checkAccessToken, checkContainsName, (req, res) => {
   }).then(result => {
     res.json(result || {});
   }).catch(reason => {
-    console.error(reason);
-    if (reason?.code === 'P2002') {
-      res.status(400).json({
-        message: `category '${req.body.name}' already exists`,
+    const message = handleError(reason, 'category');
+    if (message) {
+      res.status(status.BAD_REQUEST).json({
+        message,
       });
     } else {
-      res.status(500).json({
+      console.error(reason);
+      res.status(status.INTERNAL_SERVER_ERROR).json({
         message: 'failed to create category',
       });
     }
   });
 });
 
-router.post('/rename', auth.checkAccessToken, checkContainsName, (req, res) => {
+router.patch('/:id', auth.checkAccessToken, checkContainsIdParam, (req, res) => {
+  const data = {};
+  const columns = ['name', 'description'];
+  for (const column of columns) {
+    if (column in req.body) {
+      data[column] = req.body[column];
+    }
+  }
   prisma.category.update({
     where: {
-      id: req.body.id,
+      id: req.params.id,
     },
-    data: {
-      name: req.body.name,
-    },
+    data,
   }).then(result => {
     res.json(result || {});
   }).catch(reason => {
-    console.error(reason);
-    if (reason?.code === 'P2025') {
-      res.status(400).json({
-        message: 'category does not exist',
+    const message = handleError(reason, 'category');
+    if (message) {
+      res.status(status.BAD_REQUEST).json({
+        message,
       });
     } else {
-      res.status(500).json({
-        message: 'failed to rename question',
+      console.error(reason);
+      res.status(status.INTERNAL_SERVER_ERROR).json({
+        message: 'failed to update category',
       });
     }
   });
 });
 
-router.post('/delete', auth.checkAccessToken, checkContainsId, (req, res) => {
+router.delete('/:id', auth.checkAccessToken, checkContainsIdParam, (req, res) => {
   prisma.category.delete({
     where: {
-      id: req.body.id,
+      id: req.params.id,
     },
-  }).then(result => {
-    res.sendStatus(200);
+  }).then(_result => {
+    res.sendStatus(204);
   }).catch(reason => {
-    console.error(reason);
-    if (reason?.code === 'P2025') {
-      res.status(400).json({
-        message: 'category does not exist',
+    const message = handleError(reason, 'category');
+    if (message) {
+      res.status(status.BAD_REQUEST).json({
+        message,
       });
     } else {
-      res.status(500).json({
-        message: 'failed to delete question',
+      console.error(reason);
+      res.status(status.INTERNAL_SERVER_ERROR).json({
+        message: 'failed to delete category',
       });
     }
   });
 });
 
-function checkContainsId(req, res, next) {
-  if (!req.body.id) {
-    return res.status(400).send({
-      error: 'missing id',
+function checkContainsIdParam(req, res, next) {
+  const id = Number(req.params.id, 10);
+  if (!id) {
+    return res.status(status.BAD_REQUEST).send({
+      error: 'invalid id param',
     });
   }
-  const id = req.body.id;
-  if (Number.isNaN(parseInt(id))) {
-    return res.status(400).send({
+  if (Number.isNaN(id)) {
+    return res.status(status.BAD_REQUEST).send({
       error: 'id is not a number',
     });
   }
+  req.params.id = id;
   return next();
 }
 
 function checkContainsName(req, res, next) {
   if (!req.body.name) {
-    return res.status(400).send({
+    return res.status(status.BAD_REQUEST).send({
       error: 'missing name',
     });
   }

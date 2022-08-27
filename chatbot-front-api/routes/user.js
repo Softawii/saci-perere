@@ -1,10 +1,11 @@
 const express = require('express');
+const status = require('http-status');
 const auth = require('./auth');
 const { prisma } = require('../db');
 
 const router = express.Router();
 
-router.get('/details', auth.checkAccessToken, (req, res) => {
+router.get('/', auth.checkAccessToken, (req, res) => {
   prisma.user.findUnique({
     where: {
       id: req.userId,
@@ -23,13 +24,13 @@ router.get('/details', auth.checkAccessToken, (req, res) => {
     });
   }).catch(reason => {
     console.error(reason);
-    res.status(500).json({
+    res.status(status.INTERNAL_SERVER_ERROR).json({
       message: 'failed to fetch user',
     });
   });
 });
 
-router.post('/set-profile', auth.checkAccessToken, (req, res) => {
+router.patch('/', auth.checkAccessToken, (req, res) => {
   const data = {};
   for (const value of ['name', 'username', 'email']) {
     if (req.body[value]) {
@@ -56,7 +57,7 @@ router.post('/set-profile', auth.checkAccessToken, (req, res) => {
     });
   }).catch(reason => {
     console.error(reason);
-    res.status(500).json({
+    res.status(status.INTERNAL_SERVER_ERROR).json({
       message: 'failed to update user',
     });
   });

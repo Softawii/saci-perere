@@ -1,24 +1,23 @@
 const express = require('express');
+const status = require('http-status');
 const auth = require('./auth');
 const { prisma } = require('../db');
 
 const router = express.Router();
 
-router.post('/', checkContainsId, (req, res) => {
-  prisma.question.findFirst({
+router.get('/:id', checkContainsIdParam, (req, res) => {
+  prisma.answer.findFirst({
     where: {
-      id: req.body.id,
+      id: req.params.id,
     },
     include: {
-      answer: true,
+      questions: req.query?.questions === 'true',
     },
   }).then(result => {
-    res.json({
-      ...result.answer,
-    });
+    res.json(result);
   }).catch(reason => {
     console.error(reason);
-    res.status(500).json({
+    res.status(status.INTERNAL_SERVER_ERROR).json({
       message: 'failed to fetch questions',
     });
   });
@@ -26,16 +25,32 @@ router.post('/', checkContainsId, (req, res) => {
 
 function checkContainsId(req, res, next) {
   if (!req.body.id) {
-    return res.status(400).send({
+    return res.status(status.BAD_GATEWAY).send({
       error: 'missing id',
     });
   }
   const id = req.body.id;
   if (Number.isNaN(parseInt(id))) {
-    return res.status(400).send({
+    return res.status(status.BAD_GATEWAY).send({
       error: 'id is not a number',
     });
   }
+  return next();
+}
+
+function checkContainsIdParam(req, res, next) {
+  const id = Number(req.params.id, 10);
+  if (!id) {
+    return res.status(status.BAD_REQUEST).send({
+      error: 'invalid id param',
+    });
+  }
+  if (Number.isNaN(id)) {
+    return res.status(status.BAD_REQUEST).send({
+      error: 'id is not a number',
+    });
+  }
+  req.params.id = id;
   return next();
 }
 

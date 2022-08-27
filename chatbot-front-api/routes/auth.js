@@ -2,6 +2,7 @@
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const bcrypt = require('bcrypt');
+const status = require('http-status');
 const { prisma } = require('../db');
 
 const saltRounds = 10;
@@ -18,7 +19,7 @@ router.post('/signin', checkAuthParams, (req, res) => {
     },
   }).then(user => {
     if (!user) {
-      return res.status(403).json({
+      return res.status(status.FORBIDDEN).json({
         message: 'wrong credentials',
       });
     }
@@ -36,11 +37,11 @@ router.post('/signin', checkAuthParams, (req, res) => {
           expiresAt: exp,
         });
       }
-      return res.sendStatus(401);
+      return res.sendStatus(status.UNAUTHORIZED);
     });
   }).catch(reason => {
     console.error(reason);
-    res.status(500).json({
+    res.status(status.INTERNAL_SERVER_ERROR).json({
       message: 'failed to signin',
     });
   });
@@ -68,15 +69,15 @@ router.post('/signup', checkSignupParams, (req, res) => {
               email,
             },
           }).then(() => {
-            res.sendStatus(201);
+            res.sendStatus(status.CREATED);
           }).catch(reason => {
             console.error(reason);
-            res.status(400).json({
+            res.status(status.BAD_REQUEST).json({
               message: 'failed to create user',
             });
           });
         } else {
-          res.status(400).json({
+          res.status(status.BAD_REQUEST).json({
             message: 'username already in use',
           });
         }
@@ -97,16 +98,16 @@ function checkAccessToken(req, res, next) {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    return res.sendStatus(401);
+    return res.sendStatus(status.UNAUTHORIZED);
   }
 
   jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
     if (err) {
       if (err.name === 'TokenExpiredError') {
-        return res.sendStatus(401);
+        return res.sendStatus(status.UNAUTHORIZED);
       }
       console.error(err);
-      return res.sendStatus(403);
+      return res.sendStatus(status.FORBIDDEN);
     }
 
     req.userId = decoded.id;
@@ -118,7 +119,7 @@ function checkAuthParams(req, res, next) {
   const requiredParams = ['username', 'password'];
   for (const param of requiredParams) {
     if (!req.body[param]) {
-      return res.status(400).send({
+      return res.status(status.BAD_REQUEST).send({
         error: `missing ${param} parameter`,
       });
     }
@@ -130,7 +131,7 @@ function checkSignupParams(req, res, next) {
   const requiredParams = ['username', 'password', 'name', 'email'];
   for (const param of requiredParams) {
     if (!req.body[param]) {
-      return res.status(400).send({
+      return res.status(status.BAD_REQUEST).send({
         error: `missing ${param} parameter`,
       });
     }
