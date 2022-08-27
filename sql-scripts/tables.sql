@@ -16,7 +16,8 @@ DROP TABLE IF EXISTS saci.category;
 CREATE TABLE IF NOT EXISTS saci.category
 (
     id   SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description VARCHAR(200)
 );
 
 DROP TABLE IF EXISTS saci.user_favorite;
@@ -38,7 +39,7 @@ CREATE TABLE IF NOT EXISTS saci.question
 (
     id          SERIAL PRIMARY KEY,
     category_id INTEGER      NOT NULL REFERENCES saci.category (id) ON DELETE CASCADE,
-    answer_id   INTEGER      NOT NULL REFERENCES saci.answer (id) ON DELETE CASCADE,
+    answer_id   INTEGER      NOT NULL REFERENCES saci.answer (id) ON DELETE RESTRICT ,
     value       VARCHAR(100) NOT NULL
 );
 

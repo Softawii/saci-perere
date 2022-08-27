@@ -9,19 +9,20 @@ generator client {
 
 model user {
     id        Int        @id @default(autoincrement())
-    username  String
+    username  String     @unique
     password  String
     name      String
     email     String     @unique
-    isadmin   Boolean
+    isadmin   Boolean?
     favorites favorite[]
 }
 
 model category {
-    id        Int        @id @default(autoincrement())
-    name      String     @unique
-    favorites favorite[]
-    questions question[]
+    id          Int        @id @default(autoincrement())
+    name        String     @unique
+    description String?
+    favorites   favorite[]
+    questions   question[]
 }
 
 model favorite {

@@ -2,7 +2,7 @@
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const bcrypt = require('bcrypt');
-const db = require('../db');
+const { prisma } = require('../db');
 
 const saltRounds = 10;
 
@@ -12,27 +12,38 @@ router.post('/signin', checkAuthParams, (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
 
-  db.query('SELECT * FROM chatbot.user WHERE username = $1 LIMIT 1', [username])
-    .then(result => {
-      if (result.rowCount === 0) return res.sendStatus(401);
-      const user = result.rows[0];
-      bcrypt.compare(password, user.password, (err, result) => {
-        if (result) {
-          const exp = Math.floor(Date.now() / 1000) + (60 * 60); // 1h
-          const token = generateAccessToken({
-            id: user.id,
-          }, exp);
-          return res.json({
-            name: user.name,
-            email: user.email,
-            username,
-            token,
-            expiresAt: exp,
-          });
-        }
-        return res.sendStatus(401);
+  prisma.user.findUnique({
+    where: {
+      username,
+    },
+  }).then(user => {
+    if (!user) {
+      return res.status(403).json({
+        message: 'wrong credentials',
       });
+    }
+    bcrypt.compare(password, user.password, (err, result) => {
+      if (result) {
+        const exp = Math.floor(Date.now() / 1000) + (60 * 60); // 1h
+        const token = generateAccessToken({
+          id: user.id,
+        }, exp);
+        return res.json({
+          name: user.name,
+          email: user.email,
+          username,
+          token,
+          expiresAt: exp,
+        });
+      }
+      return res.sendStatus(401);
     });
+  }).catch(reason => {
+    console.error(reason);
+    res.status(500).json({
+      message: 'failed to signin',
+    });
+  });
 });
 
 router.post('/signup', checkSignupParams, (req, res) => {
@@ -42,16 +53,34 @@ router.post('/signup', checkSignupParams, (req, res) => {
   const email = req.body.email;
   bcrypt.hash(password, saltRounds)
     .then(hash => {
-      db.query('INSERT INTO chatbot.user (username, password, name, email) VALUES ($1,$2,$3,$4)', [username, hash, name, email])
-        .then(result => res.sendStatus(200))
-        .catch(err => {
-          if (err.code === '23505') {
-            return res.status(400).json({
-              error: 'username already in use',
+      // TODO: check for username and email
+      prisma.user.findUnique({
+        where: {
+          username,
+        },
+      }).then(user => {
+        if (!user) {
+          prisma.user.create({
+            data: {
+              username,
+              password: hash,
+              name,
+              email,
+            },
+          }).then(() => {
+            res.sendStatus(201);
+          }).catch(reason => {
+            console.error(reason);
+            res.status(400).json({
+              message: 'failed to create user',
             });
-          }
-          return res.sendStatus(500);
-        });
+          });
+        } else {
+          res.status(400).json({
+            message: 'username already in use',
+          });
+        }
+      });
     });
 });
 

@@ -61,7 +61,7 @@ router.post('/rename', auth.checkAccessToken, checkContainsName, (req, res) => {
   });
 });
 
-router.post('/delete', auth.checkAccessToken, checkContainsName, checkContainsId, (req, res) => {
+router.post('/delete', auth.checkAccessToken, checkContainsId, (req, res) => {
   prisma.category.delete({
     where: {
       id: req.body.id,
