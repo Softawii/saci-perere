@@ -22,15 +22,20 @@ class Database():
 
     async def get_questions_from_category_id(self, id):
         async with self._pool.acquire() as con:
-            results = await con.fetch("SELECT id, value from saci.question WHERE category_id = ($1)", id)
+            results = await con.fetch("SELECT id, value, answer_id from saci.question WHERE category_id = ($1)", id)
             return results
 
-    async def get_answer(self, question_id):
+    async def get_answer(self, id):
         async with self._pool.acquire() as con:
-            results = await con.fetch("SELECT value from saci.answer WHERE question_id = ($1)", question_id)
+            results = await con.fetchrow("SELECT value from saci.answer WHERE id = ($1)", id)
             return results
 
     async def get_question(self, id):
         async with self._pool.acquire() as con:
             results = await con.fetch("SELECT value from saci.question WHERE id = ($1)", id)
+            return results
+
+    async def get_categories(self):
+        async with self._pool.acquire() as con:
+            results = await con.fetch("SELECT * from saci.category")
             return results

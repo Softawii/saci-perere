@@ -35,11 +35,16 @@ def create_app():
         questions = [question['value'] for question in questions_db]
         result = await model.batch_compare(question, questions)
         best_list_index = result['question_id']
-        # best = questions_db[best_list_index]
-        result['question_id'] = questions_db[best_list_index]['id']
+        best = questions_db[best_list_index]
+        result['question_id'] = best['id']
         for hit in result['hits']: hit['id'] = questions_db[hit['id']]['id']
+        result['answer'] = (await db.get_answer(best['answer_id']))['value']
 
         return result
+
+    @app.get("/categories")
+    async def answer():
+        return await db.get_categories()
     
     return app
 

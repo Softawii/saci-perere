@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
+
+group 'com.softawii'
+version '0.1'
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io/' }
+}
+
+application {
+    mainClass = 'com.softawii.saciperere.Main'
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+    implementation("net.dv8tion:JDA:5.0.0-alpha.15") {
+        exclude module: 'opus-java'
+    }
+    implementation 'com.github.Softawii:curupira:v0.2.8'
+    implementation 'com.github.Softawii:curupira:v0.2.8:all'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
+}
+
+tasks.register('deploy') {
+    jar {
+        enabled = false
+    }
+    shadowJar {
+        archiveName('SaCiPeReReDiscordBot.jar')
+    }
+    dependsOn 'shadowJar'
+}
+
+test {
+    useJUnitPlatform()
+}
