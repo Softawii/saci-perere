@@ -29,33 +29,7 @@
         </div>
       </n-popover>
     </n-layout-header>
-    <n-modal v-model:show="showProfileModal">
-      <n-card
-        style="width: 600px"
-        title="Perfil"
-        :bordered="false"
-        size="huge"
-        role="dialog"
-        aria-modal="true"
-      >
-        <n-descriptions label-placement="left" :columns="1">
-          <n-descriptions-item label="Nome">
-            {{ user.name }}
-          </n-descriptions-item>
-          <n-descriptions-item label="E-mail">
-            {{ user.email }}
-          </n-descriptions-item>
-          <n-descriptions-item label="Usuário">
-            {{ user.username }}
-          </n-descriptions-item>
-          <n-descriptions-item label="Admin">
-            <n-tag :type="user.isAdmin? 'success' : 'error'">
-              {{ user.isAdmin? 'Sim' : 'Não' }}
-            </n-tag>
-          </n-descriptions-item>
-        </n-descriptions>
-      </n-card>
-    </n-modal>
+    <ProfileModal :show-profile-modal="showProfileModal" :user="user" />
   </div>
 </template>
 
@@ -68,6 +42,7 @@ import {
 } from '@vicons/ionicons5';
 import Logo from './Logo.vue';
 import ToggleMode from './ToggleMode.vue';
+import ProfileModal from './modal/ProfileModal.vue';
 
 const user = {
   username: 'eduardoferro',
@@ -81,6 +56,7 @@ export default {
     PersonIcon,
     Logo,
     ToggleMode,
+    ProfileModal,
   },
   setup() {
     return {
@@ -93,7 +69,7 @@ export default {
     }
     const menuOptions = [
       {
-        label: 'Editar perfil',
+        label: 'Perfil',
         key: 'edit-profile',
         icon: renderIcon(PersonIcon),
       },
