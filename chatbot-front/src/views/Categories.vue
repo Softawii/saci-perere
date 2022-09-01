@@ -1,17 +1,20 @@
 <template>
   <CategoryTab @updated="tabUpdated">
-    <CategoryList :type="categoryListType" />
+    <NewCategory v-if="categoryListType === 'new-category'" />
+    <CategoryList v-else :type="categoryListType" />
   </CategoryTab>
 </template>
 
 <script>
 import CategoryList from '../components/CategoryList.vue';
 import CategoryTab from '../components/CategoryTab.vue';
+import NewCategory from '../components/NewCategory.vue';
 
 export default {
   components: {
     CategoryList,
     CategoryTab,
+    NewCategory,
   },
   setup() {
   },

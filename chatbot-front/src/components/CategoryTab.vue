@@ -4,7 +4,10 @@
       <n-tab-pane name="all" tab="Todas">
         <slot />
       </n-tab-pane>
-      <n-tab-pane name="favorites" tab="Favorites">
+      <n-tab-pane name="favorites" tab="Favoritos">
+        <slot />
+      </n-tab-pane>
+      <n-tab-pane name="new-category" tab="Nova categoria">
         <slot />
       </n-tab-pane>
     </n-tabs>
