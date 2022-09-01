@@ -15,9 +15,12 @@
         <n-input v-model:value="loginForm.password" type="password" show-password-on="click" placeholder="123456" />
       </n-form-item>
       <n-form-item :span="24">
-        <n-button type="primary" @click="submit">
+        <n-button block type="primary" @click="submit">
           Fazer Login
         </n-button>
+      </n-form-item>
+      <n-form-item :span="24">
+        <ToggleMode style="margin: auto;" :size="20" />
       </n-form-item>
     </n-form>
   </div>
@@ -26,10 +29,12 @@
 <script>
 import { ref, computed } from 'vue';
 import Logo from '../components/Logo.vue';
+import ToggleMode from '../components/ToggleMode.vue';
 
 export default {
   components: {
     Logo,
+    ToggleMode,
   },
   setup() {
     const formRef = ref(null);

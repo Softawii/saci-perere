@@ -18,7 +18,7 @@
           <n-auto-complete v-model:value="userForm.email" :options="emailAutoCompleteOptions" type="email" placeholder="fulano@mail.com" />
         </n-form-item-gi>
         <n-form-item-gi :span="24">
-          <n-button type="primary" @click="submit">
+          <n-button type="primary" block @click="submit">
             Validate
           </n-button>
         </n-form-item-gi>

@@ -4,7 +4,8 @@
       <n-text tag="div" class="logo" @click="$router.push('/')">
         <Logo />
       </n-text>
-      <h2 style="margin: auto 20px auto auto;">
+      <ToggleMode style="margin: auto 20px auto auto;" :size="20" />
+      <h2 style="margin: auto 20px auto auto; grid">
         Olá, {{ user.name }}!
       </h2>
       <n-popover
@@ -14,9 +15,11 @@
         trigger="click"
       >
         <template #trigger>
-          <n-icon-wrapper :size="24" :border-radius="10" :color="'#000'" style="margin-left: auto">
-            <PersonIcon />
-          </n-icon-wrapper>
+          <n-button strong secondary circle>
+            <template #icon>
+              <PersonIcon />
+            </template>
+          </n-button>
         </template>
         <div style="overflow: auto; max-height: 79vh">
           <n-menu
@@ -61,9 +64,10 @@ import { NIcon } from 'naive-ui';
 import { h } from 'vue';
 import {
   LogOutOutline as LogOutOutIcon,
-  Person as PersonIcon,
+  PersonOutline as PersonIcon,
 } from '@vicons/ionicons5';
 import Logo from './Logo.vue';
+import ToggleMode from './ToggleMode.vue';
 
 const user = {
   username: 'eduardoferro',
@@ -76,6 +80,7 @@ export default {
   components: {
     PersonIcon,
     Logo,
+    ToggleMode,
   },
   setup() {
     return {
@@ -100,6 +105,7 @@ export default {
     ];
 
     return {
+      PersonIcon,
       menuOptions,
       showProfileModal: false,
     };
@@ -121,7 +127,7 @@ export default {
 .nav {
   --side-padding: 16px;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr auto auto;
   grid-template-rows: calc(var(--header-height) - 1px);
   align-items: center;
   padding: 0 var(--side-padding);
@@ -133,10 +139,5 @@ export default {
   display: flex;
   align-items: center;
   font-size: 18px;
-}
-
-.nav-end {
-  display: flex;
-  align-items: center;
 }
 </style>

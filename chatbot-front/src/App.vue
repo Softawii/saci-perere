@@ -1,8 +1,5 @@
-<script setup>
-</script>
-
 <template>
-  <n-config-provider :theme="darkTheme">
+  <n-config-provider :theme="userStore.isDarkMode ? darkTheme : lightTheme">
     <div class="_background" style="height: 100vh; width: 100vw;">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
@@ -22,9 +19,10 @@
   </n-config-provider>
 </template>
 <script>
-import { darkTheme } from 'naive-ui';
+import { darkTheme, lightTheme } from 'naive-ui';
 import Navbar from './components/Navbar.vue';
 import Sidebar from './components/Sidebar.vue';
+import { useUserStore } from './store/UserStore';
 
 export default {
   components: {
@@ -32,8 +30,13 @@ export default {
     Sidebar,
   },
   setup() {
+    const userStore = useUserStore();
+    console.log(userStore);
+
     return {
       darkTheme,
+      lightTheme,
+      userStore,
     };
   },
   beforeMount() {
