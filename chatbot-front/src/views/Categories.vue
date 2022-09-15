@@ -1,7 +1,7 @@
 <template>
   <CategoryTab @updated="tabUpdated">
-    <NewCategory v-if="categoryListType === 'new-category'" />
-    <CategoryList v-else :type="categoryListType" />
+    <NewCategory v-show="categoryListType === 'new-category'" />
+    <CategoryList v-show="categoryListType === 'all' || categoryListType === 'favorites'" :type="categoryListType" />
   </CategoryTab>
 </template>
 

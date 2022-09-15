@@ -5,6 +5,7 @@ export const useGlobalStore = defineStore('global', {
   state: () => ({
     apiUrl: import.meta.env.VITE_API_URL,
     alerts: [],
+    data: {},
   }),
   actions: {
     addAlert(alert) {
