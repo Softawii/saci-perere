@@ -1,7 +1,12 @@
 <template>
   <!-- eslint-disable  vue/no-v-model-argument -->
   <div id="main">
-    <n-h1>
+    <n-breadcrumb style="padding-top: 10px">
+      <n-breadcrumb-item v-for="item in globalStore.breadcrumbNavigation" :key="item.name" @click="$router.push(item.path)">
+        {{ item.name }}
+      </n-breadcrumb-item>
+    </n-breadcrumb>
+    <n-h1 style="margin-top: 0">
       {{ category.name }}
       <n-tag v-if="category.isFavorite" :bordered="false" type="warning" size="small">
         Favorito
@@ -81,6 +86,7 @@ import {
   DocumentText as DocumentTextIcon,
 } from '@vicons/ionicons5';
 import { useLoadingBar, NIcon } from 'naive-ui';
+import { useGlobalStore } from '../store/GlobalStore';
 
 function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) });
@@ -91,6 +97,7 @@ export default {
     return {
       StarIcon,
       EllipsisVerticalIcon,
+      globalStore: useGlobalStore(),
       loadingBar: useLoadingBar(),
       qaOptions: [
         {
@@ -116,34 +123,15 @@ export default {
       questions: [],
     };
   },
+  watch: {
+    '$route.params.id': function (previous, next) {
+      if (previous !== next) {
+        this.updateData();
+      }
+    },
+  },
   mounted() {
-    const id = this.$route.params.id;
-    const apiUrl = import.meta.env.VITE_API_URL;
-    this.loadingBar.start();
-    axios.get(`${apiUrl}/category/${id}`)
-      .then(res => {
-        this.category = res.data;
-      }).catch(err => {
-        console.error(err);
-      });
-    axios.get(`${apiUrl}/question/?category=${id}`)
-      .then(res => {
-        this.questions = res.data;
-        Promise.all(
-          this.questions.map(question => axios.get(`${apiUrl}/answer/${question.answer_id}?questions=false`)
-            .then(res => {
-              // eslint-disable-next-line no-param-reassign
-              question.answer = res.data.value;
-            })),
-        ).then(() => {
-          this.loadingBar.finish();
-        }).catch(err => {
-          this.loadingBar.error();
-        });
-      }).catch(err => {
-        console.error(err);
-        this.loadingBar.error();
-      });
+    this.updateData();
   },
   methods: {
     handleSelect(key, qa) {
@@ -161,6 +149,35 @@ export default {
     },
     deleteQuestion() {
       alert(`apagou: ${this.currentQA.value}`);
+    },
+    updateData() {
+      const id = this.$route.params.id;
+      const apiUrl = import.meta.env.VITE_API_URL;
+      this.loadingBar.start();
+      axios.get(`${apiUrl}/category/${id}`)
+        .then(res => {
+          this.category = res.data;
+        }).catch(err => {
+          console.error(err);
+        });
+      axios.get(`${apiUrl}/question/?category=${id}`)
+        .then(res => {
+          this.questions = res.data;
+          Promise.all(
+            this.questions.map(question => axios.get(`${apiUrl}/answer/${question.answer_id}?questions=false`)
+              .then(res => {
+              // eslint-disable-next-line no-param-reassign
+                question.answer = res.data.value;
+              })),
+          ).then(() => {
+            this.loadingBar.finish();
+          }).catch(err => {
+            this.loadingBar.error();
+          });
+        }).catch(err => {
+          console.error(err);
+          this.loadingBar.error();
+        });
     },
   },
 };
