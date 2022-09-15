@@ -72,13 +72,19 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, h } from 'vue';
 import axios from 'axios';
 import {
   Star as StarIcon,
   EllipsisVerticalOutline as EllipsisVerticalIcon,
+  Trash as TrashIcon,
+  DocumentText as DocumentTextIcon,
 } from '@vicons/ionicons5';
-import { useLoadingBar } from 'naive-ui';
+import { useLoadingBar, NIcon } from 'naive-ui';
+
+function renderIcon(icon) {
+  return () => h(NIcon, null, { default: () => h(icon) });
+}
 
 export default {
   setup() {
@@ -90,10 +96,12 @@ export default {
         {
           label: 'Apagar',
           key: 'delete',
+          icon: renderIcon(TrashIcon),
         },
         {
           label: 'Editar',
           key: 'edit',
+          icon: renderIcon(DocumentTextIcon),
         },
       ],
       category: ref({}),

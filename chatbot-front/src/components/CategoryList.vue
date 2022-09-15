@@ -32,9 +32,16 @@ import axios from 'axios';
 import {
   Star as StarIcon,
   EllipsisVerticalOutline as EllipsisVerticalIcon,
+  Trash as TrashIcon,
+  DocumentText as DocumentTextIcon,
 } from '@vicons/ionicons5';
-import { useLoadingBar } from 'naive-ui';
+import { useLoadingBar, NIcon } from 'naive-ui';
+import { h } from 'vue';
 import { useGlobalStore } from '../store/GlobalStore';
+
+function renderIcon(icon) {
+  return () => h(NIcon, null, { default: () => h(icon) });
+}
 
 export default {
   components: {
@@ -55,14 +62,17 @@ export default {
         {
           label: 'Apagar',
           key: 'delete',
+          icon: renderIcon(TrashIcon),
         },
         {
           label: 'Editar',
           key: 'edit',
+          icon: renderIcon(DocumentTextIcon),
         },
         {
           label: 'Favorito',
           key: 'favorite',
+          icon: renderIcon(StarIcon),
         },
       ],
     };
