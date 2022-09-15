@@ -1,17 +1,20 @@
 <template>
   <n-data-table
     :columns="columns"
-    :data="data"
+    :data="users"
     :pagination="pagination"
     :bordered="false"
+    :single-line="false"
   />
 </template>
 
 <script>
-import { h, defineComponent } from 'vue';
-import { NButton, NTag } from 'naive-ui';
+import axios from 'axios';
+import { h, ref } from 'vue';
+import { NButton, NTag, useLoadingBar } from 'naive-ui';
+import { useUserStore } from '../store/UserStore';
 
-const createColumns = () => [
+const createColumns = userStore => [
   {
     title: 'ID',
     key: 'id',
@@ -27,6 +30,7 @@ const createColumns = () => [
   {
     title: 'ADMIN',
     key: 'isAdmin',
+    align: 'center',
     render(row) {
       return h(
         NTag,
@@ -40,12 +44,15 @@ const createColumns = () => [
   {
     title: 'Definir como Administrador',
     key: 'set-admin',
+    align: 'center',
     render(row) {
+      const isUserAdmin = userStore.profile?.isAdmin;
       return h(
         NButton,
         {
           size: 'small',
           type: row.isAdmin ? 'success' : 'error',
+          disabled: !isUserAdmin,
           onClick: () => {
             alert(row.isAdmin ? 'Remover permissão' : 'Dar permissão');
           },
@@ -56,34 +63,29 @@ const createColumns = () => [
   },
 ];
 
-const data = [
-  {
-    id: 0,
-    name: 'Eduardo Cabral',
-    username: 'eduardoferro',
-    isAdmin: false,
-  },
-  {
-    id: 1,
-    name: 'Romulo Menezes',
-    username: 'sulumor',
-    isAdmin: true,
-  },
-  {
-    id: 2,
-    name: 'Leandro Alvim',
-    username: 'lalvim',
-    isAdmin: true,
-  },
-];
-
 export default {
   setup() {
+    const userStore = useUserStore();
+
     return {
-      data,
-      columns: createColumns(),
+      userStore,
+      loadingBar: useLoadingBar(),
+      users: ref([]),
+      columns: createColumns(userStore),
       pagination: false,
     };
+  },
+  mounted() {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    this.loadingBar.start();
+    axios.get(`${apiUrl}/user/`)
+      .then(res => {
+        this.users = res.data;
+        this.loadingBar.finish();
+      }).catch(err => {
+        console.error(err);
+        this.loadingBar.error();
+      });
   },
 };
 </script>

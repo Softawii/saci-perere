@@ -5,7 +5,27 @@ const { prisma } = require('../db');
 
 const router = express.Router();
 
-router.get('/', auth.checkAccessToken, (req, res) => {
+router.get('/', (req, res) => {
+  prisma.user.findMany({
+    select: {
+      id: true,
+      username: true,
+      password: false,
+      name: true,
+      email: true,
+      isadmin: true,
+      favorites: false,
+    },
+  }).then(result => res.json(result))
+    .catch(reason => {
+      console.error(reason);
+      res.status(status.INTERNAL_SERVER_ERROR).json({
+        message: 'failed to fetch user',
+      });
+    });
+});
+
+router.get('/profile', auth.checkAccessToken, (req, res) => {
   prisma.user.findUnique({
     where: {
       id: req.userId,
@@ -30,7 +50,7 @@ router.get('/', auth.checkAccessToken, (req, res) => {
   });
 });
 
-router.patch('/', auth.checkAccessToken, (req, res) => {
+router.patch('/profile', auth.checkAccessToken, (req, res) => {
   const data = {};
   for (const value of ['name', 'username', 'email']) {
     if (req.body[value]) {

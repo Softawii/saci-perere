@@ -9,6 +9,7 @@ export const useUserStore = defineStore('user', {
     name: undefined,
     username: undefined,
     email: undefined,
+    profile: {},
     isDarkMode: useStorage('isDarkMode', false),
   }),
   actions: {
