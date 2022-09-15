@@ -95,18 +95,9 @@ export default {
     },
   },
   mounted() {
+    this.$emitter.on('refreshCategories', () => this.updateCategories());
     if (!this.globalStore.data.categories?.length) {
-      const apiUrl = this.globalStore.apiUrl;
-      this.loadingBar.start();
-      axios.get(`${apiUrl}/category`)
-        .then(res => {
-          this.categories = res.data;
-          this.globalStore.data.categories = this.categories;
-          this.loadingBar.finish();
-        }).catch(err => {
-          console.error(err);
-          this.loadingBar.error();
-        });
+      this.updateCategories();
     }
   },
   methods: {
@@ -124,6 +115,19 @@ export default {
       if (key === 'favorite') {
         this.currentCategory.isFavorite = !category.isFavorite;
       }
+    },
+    updateCategories() {
+      const apiUrl = this.globalStore.apiUrl;
+      this.loadingBar.start();
+      axios.get(`${apiUrl}/category`)
+        .then(res => {
+          this.categories = res.data;
+          this.globalStore.data.categories = this.categories;
+          this.loadingBar.finish();
+        }).catch(err => {
+          console.error(err);
+          this.loadingBar.error();
+        });
     },
   },
 };

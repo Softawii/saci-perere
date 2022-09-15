@@ -10,16 +10,25 @@
       <n-tab-pane name="new-category" tab="Nova categoria">
         <slot />
       </n-tab-pane>
+      <template #suffix>
+        <RefreshButton @click="refresh" />
+      </template>
     </n-tabs>
   </n-card>
 </template>
 
 <script>
+import RefreshButton from './RefreshButton.vue';
+
 export default {
+  components: { RefreshButton },
   emits: ['updated'],
   methods: {
     valueUpdated(key) {
       this.$emit('updated', key);
+    },
+    refresh() {
+      this.$emitter.emit('refreshCategories');
     },
   },
 };
