@@ -17,6 +17,21 @@ router.get('/', (req, res) => {
     });
 });
 
+router.get('/:id', checkContainsIdParam, (req, res) => {
+  prisma.category.findUnique({
+    where: {
+      id: req.params.id,
+    },
+  }).then(result => {
+    res.json(result || []);
+  }).catch(reason => {
+    console.error(reason);
+    res.status(status.INTERNAL_SERVER_ERROR).json({
+      message: `failed to fetch category ${req.params.id}`,
+    });
+  });
+});
+
 router.post('/', auth.checkAccessToken, checkContainsName, (req, res) => {
   prisma.category.create({
     data: {
