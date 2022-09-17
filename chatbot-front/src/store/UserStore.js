@@ -7,6 +7,7 @@ export const useUserStore = defineStore('user', {
     isAuthenticated: useStorage('isAuthenticated', false),
     profile: useStorage('profile', {}),
     isDarkMode: useStorage('isDarkMode', true),
+    isFirstLoad: true,
   }),
   actions: {
     async setUserProfile(data) {
