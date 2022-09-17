@@ -154,12 +154,17 @@ export default {
       const id = this.$route.params.id;
       const apiUrl = import.meta.env.VITE_API_URL;
       this.loadingBar.start();
-      axios.get(`${apiUrl}/category/${id}`)
-        .then(res => {
-          this.category = res.data;
-        }).catch(err => {
-          console.error(err);
-        });
+      if (!this.globalStore.data.currentCategory) {
+        axios.get(`${apiUrl}/category/${id}`)
+          .then(res => {
+            this.category = res.data;
+            this.globalStore.setCurrentCategory(this.category);
+          }).catch(err => {
+            console.error(err);
+          });
+      } else {
+        this.category = this.globalStore.data.currentCategory;
+      }
       axios.get(`${apiUrl}/question/?category=${id}`)
         .then(res => {
           this.questions = res.data;

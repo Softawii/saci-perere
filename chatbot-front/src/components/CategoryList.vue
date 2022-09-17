@@ -10,7 +10,7 @@
           </n-button>
         </n-dropdown>
       </template>
-      <n-thing :title="category.name" content-style="margin-top: 10px;" @click="openCategory(category.id)">
+      <n-thing :title="category.name" content-style="margin-top: 10px;" @click="openCategory(category)">
         <template #description>
           <n-space v-if="category.favorite" size="small" style="margin-top: 4px">
             <n-tag :bordered="false" type="warning" size="small">
@@ -102,8 +102,9 @@ export default {
     }
   },
   methods: {
-    openCategory(id) {
-      this.$router.push(`/category/${id}`);
+    openCategory(category) {
+      this.globalStore.setCurrentCategory(category);
+      this.$router.push(`/category/${category.id}`);
     },
     handleSelect(key, category) {
       this.currentCategory = category;

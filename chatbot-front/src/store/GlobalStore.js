@@ -8,6 +8,11 @@ export const useGlobalStore = defineStore('global', {
     data: {},
     breadcrumbNavigation: [],
   }),
+  getters: {
+    getCurrentCategory() {
+      return this.data.currentCategory;
+    },
+  },
   actions: {
     pushNavigation(name, path) {
       this.breadcrumbNavigation.push({
@@ -26,6 +31,9 @@ export const useGlobalStore = defineStore('global', {
     },
     clearAlerts() {
       this.alerts = [];
+    },
+    setCurrentCategory(category) {
+      this.data.currentCategory = category;
     },
   },
 });

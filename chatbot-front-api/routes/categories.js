@@ -36,18 +36,37 @@ router.get('/', (req, res) => {
 });
 
 router.get('/:id', checkContainsIdParam, (req, res) => {
-  prisma.category.findUnique({
-    where: {
-      id: req.params.id,
-    },
-  }).then(result => {
-    res.json(result || []);
-  }).catch(reason => {
-    console.error(reason);
-    res.status(status.INTERNAL_SERVER_ERROR).json({
-      message: `failed to fetch category ${req.params.id}`,
+  const { isAuthenticated, userId } = auth.isUserAuthenticated(req);
+  if (isAuthenticated) {
+    /* eslint-disable indent */
+    prisma.$queryRaw`
+      SELECT c.id, c.name, c.description, CASE WHEN f.user_id IS NOT NULL THEN true ELSE false END AS favorite
+      FROM saci.category c
+      LEFT JOIN saci.user_favorite f ON f.category_id = c.id AND f.user_id = ${userId}
+      WHERE c.id = ${req.params.id};
+    `.then(result => {
+      res.json(result?.[0] || {});
+    }).catch(reason => {
+      console.error(reason);
+      res.status(status.INTERNAL_SERVER_ERROR).json({
+        message: 'failed to fetch category',
+      });
     });
-  });
+    /* eslint-enable indent */
+  } else {
+    prisma.category.findUnique({
+      where: {
+        id: req.params.id,
+      },
+    }).then(result => {
+      res.json(result || []);
+    }).catch(reason => {
+      console.error(reason);
+      res.status(status.INTERNAL_SERVER_ERROR).json({
+        message: `failed to fetch category ${req.params.id}`,
+      });
+    });
+  }
 });
 
 router.post('/', auth.checkAccessToken, checkContainsName, (req, res) => {
