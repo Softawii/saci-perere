@@ -14,55 +14,6 @@ import { h, ref } from 'vue';
 import { NButton, NTag, useLoadingBar } from 'naive-ui';
 import { useUserStore } from '../store/UserStore';
 
-const createColumns = userStore => [
-  {
-    title: 'ID',
-    key: 'id',
-  },
-  {
-    title: 'Nome',
-    key: 'name',
-  },
-  {
-    title: 'Username',
-    key: 'username',
-  },
-  {
-    title: 'ADMIN',
-    key: 'isAdmin',
-    align: 'center',
-    render(row) {
-      return h(
-        NTag,
-        {
-          type: row.isAdmin ? 'success' : 'error',
-          textContent: row.isAdmin ? 'Sim' : 'Não',
-        },
-      );
-    },
-  },
-  {
-    title: 'Definir como Administrador',
-    key: 'set-admin',
-    align: 'center',
-    render(row) {
-      const isUserAdmin = userStore.profile?.isAdmin;
-      return h(
-        NButton,
-        {
-          size: 'small',
-          type: row.isAdmin ? 'success' : 'error',
-          disabled: !isUserAdmin,
-          onClick: () => {
-            alert(row.isAdmin ? 'Remover permissão' : 'Dar permissão');
-          },
-          textContent: row.isAdmin ? 'Remover permissão' : 'Dar permissão',
-        },
-      );
-    },
-  },
-];
-
 export default {
   setup() {
     const userStore = useUserStore();
@@ -71,11 +22,12 @@ export default {
       userStore,
       loadingBar: useLoadingBar(),
       users: ref([]),
-      columns: createColumns(userStore),
+      columns: ref([]),
       pagination: false,
     };
   },
   mounted() {
+    this.columns = this.createColumns();
     const apiUrl = import.meta.env.VITE_API_URL;
     this.loadingBar.start();
     axios.get(`${apiUrl}/user/`)
@@ -86,6 +38,62 @@ export default {
         console.error(err);
         this.loadingBar.error();
       });
+  },
+  methods: {
+    createColumns() {
+      const vm = this;
+      return [
+        {
+          title: 'ID',
+          key: 'id',
+        },
+        {
+          title: 'Nome',
+          key: 'name',
+        },
+        {
+          title: 'Username',
+          key: 'username',
+        },
+        {
+          title: 'ADMIN',
+          key: 'isadmin',
+          align: 'center',
+          render(row) {
+            return h(
+              NTag,
+              {
+                type: row.isadmin ? 'success' : 'error',
+                textContent: row.isadmin ? 'Sim' : 'Não',
+              },
+            );
+          },
+        },
+        {
+          title: 'Definir como Administrador',
+          key: 'set-admin',
+          align: 'center',
+          render(row) {
+            const isUserAdmin = vm.userStore.profile?.isadmin;
+            return h(
+              NButton,
+              {
+                size: 'small',
+                type: row.isadmin ? 'success' : 'error',
+                disabled: !isUserAdmin || row.isadmin || row.email === vm.userStore.profile?.email,
+                onClick: () => {
+                  vm.giveAdmin(row.id);
+                },
+                textContent: row.isadmin ? 'Remover permissão' : 'Dar permissão',
+              },
+            );
+          },
+        },
+      ];
+    },
+    giveAdmin(id) {
+      alert(id);
+    },
   },
 };
 </script>
