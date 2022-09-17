@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { createRouter, createWebHistory } from 'vue-router';
 import { useUserStore } from '../store/UserStore';
 import { useGlobalStore } from '../store/GlobalStore';
@@ -70,27 +71,45 @@ const router = createRouter({
   ],
 });
 
-// router.beforeEach((to, from, next) => {
-//   const userStore = useUserStore();
+router.beforeEach((to, from, next) => {
+  const userStore = useUserStore();
 
-//   if (to.name === 'Login' && userStore.isAuthenticated) {
-//     next({ name: 'Home' });
-//   }
+  if (to.name === 'Login' && userStore.isAuthenticated) {
+    next({ name: 'Home' });
+  }
 
-//   if (to.matched.some(record => record.meta.auth)) {
-//     if (!userStore.isAuthenticated) {
-//       next({
-//         name: 'Login',
-//         query: {
-//           unAuthenticated: true,
-//         },
-//       });
-//     } else {
-//       next();
-//     }
-//   } else {
-//     next();
-//   }
-// });
+  if (to.matched.some(record => record.meta.auth)) {
+    if (!userStore.isAuthenticated) {
+      next({
+        name: 'Login',
+        query: {
+          unAuthenticated: true,
+        },
+      });
+    } else {
+      const API_URL = import.meta.env.VITE_API_URL;
+      console.log(userStore.profile);
+      axios.get(`${API_URL}/user/profile`, {
+        headers: {
+          Authorization: `Bearer ${userStore.profile?.token}`,
+        },
+      }).then(res => {
+        axios.defaults.headers.common.Authorization = `Bearer ${userStore.profile?.token}`;
+        userStore.setUserProfile(res.data);
+        next();
+      }).catch(err => {
+        userStore.clearProfile();
+        next({
+          name: 'Login',
+          query: {
+            unAuthenticated: true,
+          },
+        });
+      });
+    }
+  } else {
+    next();
+  }
+});
 
 export default router;

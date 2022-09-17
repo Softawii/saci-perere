@@ -21,6 +21,7 @@
   </n-config-provider>
 </template>
 <script>
+import axios from 'axios';
 import { darkTheme, lightTheme } from 'naive-ui';
 import Navbar from './components/Navbar.vue';
 import Sidebar from './components/Sidebar.vue';
@@ -33,7 +34,6 @@ export default {
   },
   setup() {
     const userStore = useUserStore();
-    console.log(userStore);
 
     return {
       darkTheme,

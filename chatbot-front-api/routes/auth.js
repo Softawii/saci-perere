@@ -92,8 +92,6 @@ function generateAccessToken(payload, exp) {
 }
 
 function checkAccessToken(req, res, next) {
-  req.userId = 3;
-  return next();
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -113,6 +111,29 @@ function checkAccessToken(req, res, next) {
     req.userId = decoded.id;
     next();
   });
+}
+
+function isUserAuthenticated(req) {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return { isAuthenticated: false };
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+    return {
+      isAuthenticated: true,
+      userId: decoded.id,
+    };
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return { isAuthenticated: false };
+    }
+    console.error(err);
+    return { isAuthenticated: false };
+  }
 }
 
 function checkAuthParams(req, res, next) {
@@ -142,4 +163,5 @@ function checkSignupParams(req, res, next) {
 module.exports = {
   router,
   checkAccessToken,
+  isUserAuthenticated,
 };

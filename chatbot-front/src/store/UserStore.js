@@ -5,25 +5,19 @@ import { useStorage } from '@vueuse/core';
 export const useUserStore = defineStore('user', {
   state: () => ({
     isAuthenticated: useStorage('isAuthenticated', false),
-    token: useStorage('token', undefined),
-    name: undefined,
-    username: undefined,
-    email: undefined,
-    profile: {},
-    isDarkMode: useStorage('isDarkMode', false),
+    profile: useStorage('profile', {}),
+    isDarkMode: useStorage('isDarkMode', true),
   }),
   actions: {
-    setUserDetails(data) {
-      this.name = data.name;
-      this.email = data.email;
-      this.username = data.username;
-    },
-    updateToken(token) {
-      this.token = token;
+    async setUserProfile(data) {
       this.isAuthenticated = true;
+      this.profile = {
+        ...this.profile,
+        ...data,
+      };
     },
-    async clearCredentials() {
-      this.token = undefined;
+    async clearProfile() {
+      this.profile = {};
       this.isAuthenticated = false;
     },
   },
