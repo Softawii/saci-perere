@@ -12,7 +12,7 @@
       </template>
       <n-thing :title="category.name" content-style="margin-top: 10px;" @click="openCategory(category.id)">
         <template #description>
-          <n-space v-if="category.isFavorite" size="small" style="margin-top: 4px">
+          <n-space v-if="category.favorite" size="small" style="margin-top: 4px">
             <n-tag :bordered="false" type="warning" size="small">
               Favorito
               <template #icon>
@@ -35,7 +35,7 @@ import {
   Trash as TrashIcon,
   DocumentText as DocumentTextIcon,
 } from '@vicons/ionicons5';
-import { useLoadingBar, NIcon } from 'naive-ui';
+import { useLoadingBar, useMessage, NIcon } from 'naive-ui';
 import { h } from 'vue';
 import { useGlobalStore } from '../store/GlobalStore';
 
@@ -58,6 +58,7 @@ export default {
       EllipsisVerticalIcon,
       globalStore: useGlobalStore(),
       loadingBar: useLoadingBar(),
+      message: useMessage(),
       categoryOptions: [
         {
           label: 'Apagar',
@@ -89,7 +90,7 @@ export default {
         return [];
       }
       return this.globalStore.data.categories.filter(category => {
-        if (this.type === 'favorites') return category.isFavorite === true;
+        if (this.type === 'favorites') return category.favorite === true;
         return true;
       });
     },
@@ -113,7 +114,27 @@ export default {
         this.showDeleteModal = true;
       }
       if (key === 'favorite') {
-        this.currentCategory.isFavorite = !category.isFavorite;
+        if (category.favorite) {
+          const apiUrl = this.globalStore.apiUrl;
+          axios.delete(`${apiUrl}/category/favorite/${category.id}`)
+            .then(res => {
+              this.message.success('Categoria definida como favorita');
+            }).catch(err => {
+              this.message.error('Ocorreu um erro ao adicionar uma categoria como favorita');
+            }).finally(() => {
+              this.updateCategories();
+            });
+        } else {
+          const apiUrl = this.globalStore.apiUrl;
+          axios.post(`${apiUrl}/category/favorite/${category.id}`)
+            .then(res => {
+              this.message.success('Categoria definida como favorita');
+            }).catch(err => {
+              this.message.error('Ocorreu um erro ao adicionar uma categoria como favorita');
+            }).finally(() => {
+              this.updateCategories();
+            });
+        }
       }
     },
     updateCategories() {

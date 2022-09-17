@@ -8,7 +8,7 @@
     </n-breadcrumb>
     <n-h1 style="margin-top: 0">
       {{ category.name }}
-      <n-tag v-if="category.isFavorite" :bordered="false" type="warning" size="small">
+      <n-tag v-if="category.favorite" :bordered="false" type="warning" size="small">
         Favorito
         <template #icon>
           <n-icon :component="StarIcon" />
@@ -125,7 +125,7 @@ export default {
   },
   watch: {
     '$route.params.id': function (previous, next) {
-      if (previous !== next) {
+      if (next && previous && previous !== next) {
         this.updateData();
       }
     },

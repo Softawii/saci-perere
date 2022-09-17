@@ -6,8 +6,14 @@ const { prisma, handleError } = require('../db');
 const router = express.Router();
 
 router.get('/', (req, res) => {
-  prisma.category.findMany()
-    .then(result => {
+  const { isAuthenticated, userId } = auth.isUserAuthenticated(req);
+  if (isAuthenticated) {
+    /* eslint-disable indent */
+    prisma.$queryRaw`
+      SELECT c.id, c.name, c.description, CASE WHEN f.user_id IS NOT NULL THEN true ELSE false END AS favorite
+      FROM saci.category c
+      LEFT OUTER JOIN saci.user_favorite f ON f.category_id = c.id and f.user_id = ${userId};
+    `.then(result => {
       res.json(result || []);
     }).catch(reason => {
       console.error(reason);
@@ -15,6 +21,18 @@ router.get('/', (req, res) => {
         message: 'failed to fetch categories',
       });
     });
+    /* eslint-enable indent */
+  } else {
+    prisma.category.findMany()
+      .then(result => {
+        res.json(result || []);
+      }).catch(reason => {
+        console.error(reason);
+        res.status(status.INTERNAL_SERVER_ERROR).json({
+          message: 'failed to fetch categories',
+        });
+      });
+  }
 });
 
 router.get('/:id', checkContainsIdParam, (req, res) => {
@@ -49,6 +67,61 @@ router.post('/', auth.checkAccessToken, checkContainsName, (req, res) => {
       console.error(reason);
       res.status(status.INTERNAL_SERVER_ERROR).json({
         message: 'failed to create category',
+      });
+    }
+  });
+});
+
+router.post('/favorite/:id', auth.checkAccessToken, checkContainsIdParam, (req, res) => {
+  prisma.user_favorite.create({
+    data: {
+      category: {
+        connect: {
+          id: req.params.id,
+        },
+      },
+      user: {
+        connect: {
+          id: req.userId,
+        },
+      },
+    },
+  }).then(_res => {
+    res.sendStatus(status.CREATED);
+  }).catch(reason => {
+    const message = handleError(reason, 'category|user');
+    if (message) {
+      res.status(status.BAD_REQUEST).json({
+        message,
+      });
+    } else {
+      res.status(status.INTERNAL_SERVER_ERROR).json({
+        message: 'failed to set favorite',
+      });
+    }
+  });
+});
+
+router.delete('/favorite/:id', auth.checkAccessToken, checkContainsIdParam, (req, res) => {
+  prisma.user_favorite.delete({
+    where: {
+      user_id_category_id: {
+        category_id: req.params.id,
+        user_id: req.userId,
+      },
+    },
+  }).then(_res => {
+    res.sendStatus(status.NO_CONTENT);
+  }).catch(reason => {
+    const message = handleError(reason, 'category');
+    if (message) {
+      res.status(status.BAD_REQUEST).json({
+        message,
+      });
+    } else {
+      console.error(reason);
+      res.status(status.INTERNAL_SERVER_ERROR).json({
+        message: 'failed to set favorite',
       });
     }
   });

@@ -14,18 +14,18 @@ model user {
     name      String
     email     String     @unique
     isadmin   Boolean?
-    favorites favorite[]
+    favorites user_favorite[]
 }
 
 model category {
     id          Int        @id @default(autoincrement())
     name        String     @unique
     description String?
-    favorites   favorite[]
+    favorites   user_favorite[]
     questions   question[]
 }
 
-model favorite {
+model user_favorite {
     user_id     Int
     category_id Int
     user        user     @relation(fields: [user_id], references: [id])
