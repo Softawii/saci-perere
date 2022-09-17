@@ -24,7 +24,8 @@ DROP TABLE IF EXISTS saci.user_favorite;
 CREATE TABLE IF NOT EXISTS saci.user_favorite
 (
     user_id     INTEGER NOT NULL REFERENCES saci.user (id) ON DELETE CASCADE,
-    category_id INTEGER NOT NULL REFERENCES saci.category (id) ON DELETE CASCADE
+    category_id INTEGER NOT NULL REFERENCES saci.category (id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, category_id)
 );
 
 DROP TABLE IF EXISTS saci.answer;

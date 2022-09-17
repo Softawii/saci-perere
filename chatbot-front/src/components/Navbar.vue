@@ -6,7 +6,7 @@
       </n-text>
       <ToggleMode style="margin: auto 20px auto auto;" :size="20" />
       <h2 style="margin: auto 20px auto auto; grid">
-        Olá, {{ user.name }}!
+        Olá, {{ userStore.profile.name }}!
       </h2>
       <n-popover
         style="padding: 0;"
@@ -29,13 +29,13 @@
         </div>
       </n-popover>
     </n-layout-header>
-    <ProfileModal :show-profile-modal="showProfileModal" :user="user" />
+    <ProfileModal v-if="showProfileModal" @status="(value) => showProfileModal = value" />
   </div>
 </template>
 
 <script>
 import { NIcon } from 'naive-ui';
-import { h } from 'vue';
+import { h, ref } from 'vue';
 import {
   LogOutOutline as LogOutOutIcon,
   PersonOutline as PersonIcon,
@@ -43,13 +43,7 @@ import {
 import Logo from './Logo.vue';
 import ToggleMode from './ToggleMode.vue';
 import ProfileModal from './modal/ProfileModal.vue';
-
-const user = {
-  username: 'eduardoferro',
-  name: 'eduardo',
-  email: 'eduardo@mail.com',
-  isAdmin: true,
-};
+import { useUserStore } from '../store/UserStore';
 
 export default {
   components: {
@@ -59,8 +53,10 @@ export default {
     ProfileModal,
   },
   setup() {
+    const userStore = useUserStore();
+
     return {
-      user,
+      userStore,
     };
   },
   data() {
@@ -83,7 +79,7 @@ export default {
     return {
       PersonIcon,
       menuOptions,
-      showProfileModal: false,
+      showProfileModal: ref(false),
     };
   },
   methods: {
@@ -91,6 +87,7 @@ export default {
       if (key === 'edit-profile') {
         this.showProfileModal = true;
       } else if (key === 'logout') {
+        this.userStore.clearProfile();
         this.$router.push('/login');
       }
     },

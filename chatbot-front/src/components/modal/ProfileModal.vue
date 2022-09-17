@@ -11,17 +11,17 @@
       <template v-if="mode === 'details'">
         <n-descriptions label-placement="left" :columns="1">
           <n-descriptions-item label="Nome">
-            {{ user.name }}
+            {{ userStore.profile.name }}
           </n-descriptions-item>
           <n-descriptions-item label="E-mail">
-            {{ user.email }}
+            {{ userStore.profile.email }}
           </n-descriptions-item>
           <n-descriptions-item label="Usuário">
-            {{ user.username }}
+            {{ userStore.profile.username }}
           </n-descriptions-item>
           <n-descriptions-item label="Admin">
-            <n-tag :type="user.isAdmin? 'success' : 'error'">
-              {{ user.isAdmin? 'Sim' : 'Não' }}
+            <n-tag :type="userStore.profile.isadmin? 'success' : 'error'">
+              {{ userStore.profile.isadmin? 'Sim' : 'Não' }}
             </n-tag>
           </n-descriptions-item>
         </n-descriptions>
@@ -63,20 +63,15 @@
 </template>
 
 <script>
+import axios from 'axios';
 import { ref, computed } from 'vue';
+import { useLoadingBar, useMessage } from 'naive-ui';
+import { useUserStore } from '../../store/UserStore';
 
 export default {
-  props: {
-    showProfileModal: {
-      type: Boolean,
-      required: true,
-    },
-    user: {
-      type: Object,
-      required: true,
-    },
-  },
+  emits: ['status'],
   setup() {
+    const userStore = useUserStore();
     const formRef = ref(null);
     const model = ref({
       name: '',
@@ -85,6 +80,9 @@ export default {
     });
 
     return {
+      loadingBar: useLoadingBar(),
+      message: useMessage(),
+      userStore,
       formRef,
       userForm: model,
       rules: {
@@ -115,15 +113,19 @@ export default {
   },
   data() {
     return {
+      showProfileModal: true,
       mode: 'details',
     };
   },
   watch: {
+    showProfileModal(newValue) {
+      if (!newValue) this.$emit('status');
+    },
     mode(newValue) {
       if (newValue === 'edit') {
         for (const key of Object.keys(this.userForm)) {
-          if (key in this.user) {
-            this.userForm[key] = this.user[key];
+          if (key in this.userStore.profile) {
+            this.userForm[key] = this.userStore.profile[key];
           }
         }
       }
@@ -131,13 +133,25 @@ export default {
   },
   methods: {
     submit() {
-      console.log(this.formRef.value);
-      this.formRef.value?.validate(
+      this.formRef.validate(
         errors => {
           if (!errors) {
-            alert(this.formRef);
+            this.loadingBar.start();
+            const API_URL = import.meta.env.VITE_API_URL;
+            axios.patch(`${API_URL}/user/profile`, {
+              ...this.formRef.model,
+            }).then(res => {
+              this.userStore.setUserProfile(res.data);
+              this.mode = 'details';
+              this.message.success('Dados atualizados com sucesso');
+              this.loadingBar.finish();
+            }).catch(err => {
+              this.loadingBar.error();
+              console.error(err);
+              this.message.warning('Erro ao atualizar perfil');
+            });
           } else {
-            alert(this.formRef);
+            this.message.warning('Formulário inválido');
           }
         },
       );
