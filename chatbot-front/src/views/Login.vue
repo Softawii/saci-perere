@@ -21,6 +21,9 @@
       <n-button block type="primary" @click="submit">
         Fazer Login
       </n-button>
+      <n-button block type="info" style="margin-top: 4px" @click="$router.push('/faq')">
+        FAQ
+      </n-button>
       <n-form-item :span="24">
         <ToggleMode style="margin: auto;" :size="20" />
       </n-form-item>
@@ -87,7 +90,7 @@ export default {
             this.userStore.setUserProfile(res.data);
             axios.defaults.headers.common.Authorization = `Bearer ${res.data.token}`;
             this.loadingBar.finish();
-            this.$router.push('/');
+            this.$router.push('/categories');
           }).catch(err => {
             const response = err.response;
             if (response.status === 403) {
@@ -109,7 +112,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 #container {
   display: flex;
   flex-direction: column;

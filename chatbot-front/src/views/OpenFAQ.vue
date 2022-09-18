@@ -1,10 +1,30 @@
 <template>
-  <div>
-    faq
+  <div id="container">
+    <n-grid x-gap="6" y-gap="6" cols="s:1 m:5" responsive="screen">
+      <n-gi span="3">
+        <n-input v-model:value="pattern" placeholder="Pesquisar" clearable />
+      </n-gi>
+      <n-gi span="1">
+        <n-button type="primary" block @click="$router.push('/login')">
+          Fazer login
+        </n-button>
+      </n-gi>
+      <n-gi span="1" style="margin: auto">
+        <ToggleMode :size="20" />
+      </n-gi>
+    </n-grid>
+    <n-tree
+      block-line
+      :show-irrelevant-nodes="false"
+      :pattern="pattern"
+      :data="data"
+      :on-load="handleLoad"
+    />
   </div>
 </template>
 
 <script>
+import { ref } from 'vue';
 import axios from 'axios';
 import ToggleMode from '../components/ToggleMode.vue';
 
@@ -14,6 +34,8 @@ export default {
   },
   data() {
     return {
+      pattern: ref(''),
+      data: ref([]),
       categories: [],
       questions: [],
       answers: {},
@@ -33,39 +55,78 @@ export default {
   },
   watch: {
   },
-  beforeMount() {
+  mounted() {
     this.getCategories();
   },
   methods: {
+    handleLoad(node) {
+      if (node.type === 'category') {
+        return this.getQuestions(node);
+      }
+      if (node.type === 'question') {
+        return this.getAnswers(node);
+      }
+      return undefined;
+    },
     getCategories() {
-      axios.get('/categories', {
-      }).then(response => {
-        this.categories = response.data.categories;
-        this.isLoadingCategories = false;
-      });
+      const vm = this;
+      const API_URL = import.meta.env.VITE_API_URL;
+      axios.get(`${API_URL}/category`)
+        .then(res => {
+          vm.data = res.data.map(category => ({
+            key: `category_${category.id}`,
+            label: category.name,
+            isLeaf: false,
+            type: 'category',
+            id: category.id,
+          }));
+        });
     },
-    getQuestions(categoryId) {
-      this.isLoadingQuestions = true;
-      this.questionFilter = '';
-      axios.post('/questions', {
-        id: categoryId,
-      }).then(response => {
-        this.isLoadingQuestions = false;
-        this.questions = response.data.questions;
-        this.questions.forEach(question => this.loadAnswers(question.id));
-      });
+    async getQuestions(categoryNode) {
+      const API_URL = import.meta.env.VITE_API_URL;
+      try {
+        const res = await axios.get(`${API_URL}/question/?category=${categoryNode.id}`);
+        // eslint-disable-next-line no-param-reassign
+        categoryNode.children = res.data.map(question => ({
+          key: `question_${question.id}`,
+          label: question.value,
+          isLeaf: false,
+          type: 'question',
+          id: question.id,
+          answer_id: question.answer_id,
+        }));
+      } catch (e) {
+        console.error(e);
+      }
     },
-    loadAnswers(questionId) {
-      axios.post('/answers', {
-        id: questionId,
-      }).then(response => {
-        this.answers[questionId] = response.data;
-      });
+    async getAnswers(questionNode) {
+      const API_URL = import.meta.env.VITE_API_URL;
+      try {
+        const res = await axios.get(`${API_URL}/answer/${questionNode.answer_id}?questions=false`);
+        const answer = res.data;
+        // eslint-disable-next-line no-param-reassign
+        questionNode.children = [
+          {
+            key: `answer_${answer.id}`,
+            label: answer.value,
+            isLeaf: true,
+            type: 'answer',
+            id: answer.id,
+          },
+        ];
+      } catch (e) {
+        console.error(e);
+      }
     },
   },
 };
 </script>
 
 <style lang="scss" scoped>
-
+#container {
+  height: 100vh;
+  max-width: 600px;
+  margin: auto;
+  padding: 20px 10px;
+}
 </style>

@@ -17,9 +17,9 @@ const router = createRouter({
     {
       path: '/',
       name: 'Home',
-      redirect: to => ({ name: 'Categories' }),
+      component: () => import('../views/OpenFAQ.vue'),
       meta: {
-        auth: true,
+        auth: false,
         label: 'home',
       },
     },
@@ -75,7 +75,7 @@ router.beforeEach((to, from, next) => {
   const userStore = useUserStore();
 
   if (to.name === 'Login' && userStore.isAuthenticated) {
-    next({ name: 'Home' });
+    next({ name: 'Categories' });
   }
 
   if (to.matched.some(record => record.meta.auth)) {

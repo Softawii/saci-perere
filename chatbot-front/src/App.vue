@@ -2,10 +2,15 @@
   <n-config-provider :theme="userStore.isDarkMode ? darkTheme : lightTheme">
     <n-message-provider>
       <n-loading-bar-provider>
-        <div class="_background" style="height: 100vh; width: 100vw;">
+        <div v-if="$route.meta.label" style="height: 100vh; width: 100vw;">
           <router-view v-slot="{ Component }">
             <transition name="fade" mode="out-in">
-              <div>
+              <div v-if="$route.meta.label === 'faq' || $route.meta.label === 'home' ">
+                <n-layout-content>
+                  <component :is="Component" :key="$route.name" />
+                </n-layout-content>
+              </div>
+              <div v-else>
                 <n-layout-header>
                   <Navbar v-if="$route.meta.label !== 'login'" />
                 </n-layout-header>
@@ -51,7 +56,7 @@ export default {
   },
 };
 </script>
-<style>
+<style scoped>
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s ease;
