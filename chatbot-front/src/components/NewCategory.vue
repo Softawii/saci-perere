@@ -3,16 +3,16 @@
     <!-- eslint-disable  vue/no-v-model-argument -->
     <n-form
       ref="formRef"
-      :model="userForm"
+      :model="categoryForm"
       :rules="rules"
       style="margin: auto; max-width: 600px;"
     >
       <n-form-item label="Nome da categoria" path="name">
-        <n-input v-model:value="userForm.name" placeholder="Nome da categoria" />
+        <n-input v-model:value="categoryForm.name" placeholder="Nome da categoria" />
       </n-form-item>
       <n-form-item label="Descrição" path="description">
         <n-input
-          v-model:value="userForm.description" placeholder="Descrição" type="textarea"
+          v-model:value="categoryForm.description" placeholder="Descrição" type="textarea"
           :autosize="{
             minRows: 3
           }"
@@ -42,7 +42,7 @@ export default {
       loadingBar: useLoadingBar(),
       message: useMessage(),
       formRef,
-      userForm: model,
+      categoryForm: model,
       rules: {
         name: {
           required: true,

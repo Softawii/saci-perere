@@ -1,4 +1,5 @@
 <template>
+  <!-- eslint-disable  vue/no-v-model-argument -->
   <div>
     <n-list hoverable clickable>
       <n-list-item v-for="category in filteredCategories" :key="category.name">
@@ -36,6 +37,38 @@
       negative-text="Cancelar"
       @positive-click="deleteCategory"
     />
+    <n-modal v-model:show="showEditModal">
+      <n-card
+        style="width: 600px"
+        :title="currentCategory.name"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+      >
+        <n-form
+          ref="editCategoryFormRef"
+          :model="categoryForm"
+          :rules="categoryFormRules"
+          style="margin: auto; max-width: 600px;"
+        >
+          <n-form-item label="Nome da categoria" path="name">
+            <n-input v-model:value="categoryForm.name" placeholder="Nome da categoria" />
+          </n-form-item>
+          <n-form-item label="Descrição" path="description">
+            <n-input
+              v-model:value="categoryForm.description" placeholder="Descrição" type="textarea"
+              :autosize="{
+                minRows: 3
+              }"
+            />
+          </n-form-item>
+          <n-button type="primary" block @click="submitEditCategory">
+            Salvar
+          </n-button>
+        </n-form>
+      </n-card>
+    </n-modal>
   </div>
 </template>
 
@@ -48,7 +81,7 @@ import {
   DocumentText as DocumentTextIcon,
 } from '@vicons/ionicons5';
 import { useLoadingBar, useMessage, NIcon } from 'naive-ui';
-import { h } from 'vue';
+import { h, ref } from 'vue';
 import { useGlobalStore } from '../store/GlobalStore';
 
 function renderIcon(icon) {
@@ -65,12 +98,31 @@ export default {
     },
   },
   setup() {
+    const editCategoryFormRef = ref(null);
+    const model = ref({
+      name: '',
+      description: '',
+    });
+
     return {
       StarIcon,
       EllipsisVerticalIcon,
       globalStore: useGlobalStore(),
       loadingBar: useLoadingBar(),
       message: useMessage(),
+      editCategoryFormRef,
+      categoryForm: model,
+      categoryFormRules: {
+        name: {
+          required: true,
+          message: 'Insira o nome da categoria',
+          trigger: 'blur',
+        },
+        description: {
+          required: false,
+          trigger: 'blur',
+        },
+      },
       categoryOptions: [
         {
           label: 'Apagar',
@@ -95,6 +147,7 @@ export default {
       categories: [],
       currentCategory: {},
       showDeleteModal: false,
+      showEditModal: false,
     };
   },
   computed: {
@@ -123,6 +176,8 @@ export default {
       this.currentCategory = category;
       if (key === 'edit') {
         this.showEditModal = true;
+        this.categoryForm.name = category.name;
+        this.categoryForm.description = category.description;
       }
       if (key === 'delete') {
         this.showDeleteModal = true;
@@ -180,6 +235,32 @@ export default {
         }).finally(() => {
           this.updateCategories();
         });
+    },
+    submitEditCategory() {
+      this.editCategoryFormRef.validate(
+        errors => {
+          if (!errors) {
+            const API_URL = this.globalStore.apiUrl;
+            this.loadingBar.start();
+            axios.patch(`${API_URL}/category/${this.currentCategory.id}`, {
+              name: this.editCategoryFormRef.model.name,
+              description: this.editCategoryFormRef.model.description || null,
+            }).then(res => {
+              this.message.success(`Categoria ${this.currentCategory.name} atualizada com sucesso`);
+              this.loadingBar.finish();
+              this.showEditModal = false;
+            }).catch(err => {
+              this.message.error(`Erro ao tentar editar a categoria ${this.currentCategory.name}`);
+              console.error(err);
+              this.loadingBar.error();
+            }).finally(() => {
+              this.updateCategories();
+            });
+          } else {
+            // console.log(errors);
+          }
+        },
+      );
     },
   },
 };
