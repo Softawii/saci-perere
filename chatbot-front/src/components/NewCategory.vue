@@ -73,6 +73,8 @@ export default {
               this.loadingBar.error();
               console.error(err);
               this.message.warning('Erro ao criar categoria');
+            }).finally(() => {
+              this.$emitter.emit('refreshCategories');
             });
           } else {
             // console.log(errors);

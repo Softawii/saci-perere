@@ -67,6 +67,7 @@
     <n-modal
       v-model:show="showDeleteModal"
       preset="dialog"
+      type="error"
       title="Apagar pergunta"
       :content="`Você realmente deseja apagar a pergunta: '${currentQA.value}'`"
       positive-text="Apagar"

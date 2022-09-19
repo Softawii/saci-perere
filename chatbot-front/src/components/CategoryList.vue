@@ -1,30 +1,42 @@
 <template>
-  <n-list hoverable clickable>
-    <n-list-item v-for="category in filteredCategories" :key="category.name">
-      <template #suffix>
-        <n-dropdown trigger="hover" :options="categoryOptions" @select="(key) => handleSelect(key, category)">
-          <n-button>
-            <template #icon>
-              <n-icon :component="EllipsisVerticalIcon" />
-            </template>
-          </n-button>
-        </n-dropdown>
-      </template>
-      <n-thing :title="category.name" content-style="margin-top: 10px;" @click="openCategory(category)">
-        <template #description>
-          <n-space v-if="category.favorite" size="small" style="margin-top: 4px">
-            <n-tag :bordered="false" type="warning" size="small">
-              Favorito
+  <div>
+    <n-list hoverable clickable>
+      <n-list-item v-for="category in filteredCategories" :key="category.name">
+        <template #suffix>
+          <n-dropdown trigger="hover" :options="categoryOptions" @select="(key) => handleSelect(key, category)">
+            <n-button>
               <template #icon>
-                <n-icon :component="StarIcon" />
+                <n-icon :component="EllipsisVerticalIcon" />
               </template>
-            </n-tag>
-          </n-space>
+            </n-button>
+          </n-dropdown>
         </template>
-        {{ category.description }}
-      </n-thing>
-    </n-list-item>
-  </n-list>
+        <n-thing :title="category.name" content-style="margin-top: 10px;" @click="openCategory(category)">
+          <template #description>
+            <n-space v-if="category.favorite" size="small" style="margin-top: 4px">
+              <n-tag :bordered="false" type="warning" size="small">
+                Favorito
+                <template #icon>
+                  <n-icon :component="StarIcon" />
+                </template>
+              </n-tag>
+            </n-space>
+          </template>
+          {{ category.description }}
+        </n-thing>
+      </n-list-item>
+    </n-list>
+    <n-modal
+      v-model:show="showDeleteModal"
+      preset="dialog"
+      type="error"
+      title="Apagar categoria"
+      :content="`Você realmente deseja apagar a categoria: '${currentCategory.name}'?`"
+      positive-text="Apagar"
+      negative-text="Cancelar"
+      @positive-click="deleteCategory"
+    />
+  </div>
 </template>
 
 <script>
@@ -82,6 +94,7 @@ export default {
     return {
       categories: [],
       currentCategory: {},
+      showDeleteModal: false,
     };
   },
   computed: {
@@ -146,9 +159,26 @@ export default {
           this.categories = res.data;
           this.globalStore.data.categories = this.categories;
           this.loadingBar.finish();
+          this.message.success('Lista de categorias atualizada');
         }).catch(err => {
           console.error(err);
           this.loadingBar.error();
+          this.message.error('Erro ao tentar atualizar a lista de categorias');
+        });
+    },
+    deleteCategory() {
+      const apiUrl = this.globalStore.apiUrl;
+      this.loadingBar.start();
+      axios.delete(`${apiUrl}/category/${this.currentCategory.id}`)
+        .then(res => {
+          this.message.success(`Categoria ${this.currentCategory.name} apagada com sucesso`);
+          this.loadingBar.finish();
+        }).catch(err => {
+          this.message.error(`Erro ao tentar apagar a categoria ${this.currentCategory.name}`);
+          console.error(err);
+          this.loadingBar.error();
+        }).finally(() => {
+          this.updateCategories();
         });
     },
   },
