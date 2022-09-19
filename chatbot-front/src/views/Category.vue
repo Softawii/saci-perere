@@ -14,6 +14,14 @@
           <n-icon :component="StarIcon" />
         </template>
       </n-tag>
+      <n-button
+        strong secondary circle style="margin-left: 10px;"
+        @click="showCreateQAModal = true"
+      >
+        <template #icon>
+          <n-icon :component="AddCircleIcon" />
+        </template>
+      </n-button>
     </n-h1>
     <n-blockquote>
       {{ category.description }}
@@ -34,6 +42,38 @@
         </n-thing>
       </n-list-item>
     </n-list>
+    <n-modal v-model:show="showCreateQAModal">
+      <n-card
+        style="width: 600px"
+        title="Cadastrar nova Pergunta"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+      >
+        <n-form
+          ref="qaFormRef"
+          :model="qaForm"
+          :rules="qaFormRules"
+          style="margin: auto; max-width: 600px;"
+        >
+          <n-form-item label="Pergunta" path="question">
+            <n-input v-model:value="qaForm.question" placeholder="Pergunta" />
+          </n-form-item>
+          <n-form-item label="Resposta" path="answer">
+            <n-input
+              v-model:value="qaForm.answer" placeholder="Resposta" type="textarea"
+              :autosize="{
+                minRows: 3
+              }"
+            />
+          </n-form-item>
+          <n-button type="primary" block @click="submitNewQA">
+            Salvar
+          </n-button>
+        </n-form>
+      </n-card>
+    </n-modal>
     <n-modal v-model:show="showEditModal">
       <n-card
         style="width: 600px"
@@ -44,17 +84,17 @@
         aria-modal="true"
       >
         <n-form
-          ref="editQuestionFormRef"
-          :model="questionForm"
-          :rules="questionFormRules"
+          ref="qaFormRef"
+          :model="qaForm"
+          :rules="qaFormRules"
           style="margin: auto; max-width: 600px;"
         >
           <n-form-item label="Pergunta" path="question">
-            <n-input v-model:value="questionForm.question" placeholder="Pergunta" />
+            <n-input v-model:value="qaForm.question" placeholder="Pergunta" />
           </n-form-item>
           <n-form-item label="Resposta" path="answer">
             <n-input
-              v-model:value="questionForm.answer" placeholder="Resposta" type="textarea"
+              v-model:value="qaForm.answer" placeholder="Resposta" type="textarea"
               :autosize="{
                 minRows: 3
               }"
@@ -99,6 +139,7 @@ import {
   EllipsisVerticalOutline as EllipsisVerticalIcon,
   Trash as TrashIcon,
   DocumentText as DocumentTextIcon,
+  AddCircle as AddCircleIcon,
 } from '@vicons/ionicons5';
 import { useLoadingBar, useMessage, NIcon } from 'naive-ui';
 import { useGlobalStore } from '../store/GlobalStore';
@@ -109,22 +150,23 @@ function renderIcon(icon) {
 
 export default {
   setup() {
-    const editQuestionFormRef = ref(null);
+    const qaFormRef = ref(null);
     const model = ref({
       name: '',
       description: '',
     });
 
     return {
+      AddCircleIcon,
       StarIcon,
       EllipsisVerticalIcon,
       globalStore: useGlobalStore(),
       loadingBar: useLoadingBar(),
       message: useMessage(),
-      editQuestionFormRef,
-      questionForm: model,
-      questionFormRules: {
-        name: {
+      qaFormRef,
+      qaForm: model,
+      qaFormRules: {
+        question: {
           required: true,
           message: 'Insira a pergunta',
           trigger: 'blur',
@@ -155,6 +197,7 @@ export default {
       showDetailsModal: false,
       showEditModal: false,
       showDeleteModal: false,
+      showCreateQAModal: false,
       currentQA: {},
       questions: [],
     };
@@ -165,6 +208,10 @@ export default {
         this.updateData();
       }
     },
+    showCreateQAModal() {
+      this.qaForm.question = '';
+      this.qaForm.answer = '';
+    },
   },
   mounted() {
     this.updateData();
@@ -174,8 +221,8 @@ export default {
       this.currentQA = qa;
       if (key === 'edit') {
         this.showEditModal = true;
-        this.questionForm.question = qa.value;
-        this.questionForm.answer = qa.answer;
+        this.qaForm.question = qa.value;
+        this.qaForm.answer = qa.answer;
       }
       if (key === 'delete') {
         this.showDeleteModal = true;
@@ -237,20 +284,46 @@ export default {
         });
     },
     submitEditQA() {
-      this.editQuestionFormRef.validate(
+      this.qaFormRef.validate(
         errors => {
           if (!errors) {
             const API_URL = this.globalStore.apiUrl;
             this.loadingBar.start();
             axios.patch(`${API_URL}/question/${this.currentQA.id}`, {
-              question: this.editQuestionFormRef.model.question,
-              answer: this.editQuestionFormRef.model.answer,
+              question: this.qaFormRef.model.question,
+              answer: this.qaFormRef.model.answer,
             }).then(res => {
               this.message.success('Pergunta atualizada com sucesso');
               this.loadingBar.finish();
               this.showEditModal = false;
             }).catch(err => {
               this.message.error('Erro ao tentar editar a pergunta');
+              console.error(err);
+              this.loadingBar.error();
+            }).finally(() => {
+              this.updateData(true);
+            });
+          } else {
+            // console.log(errors);
+          }
+        },
+      );
+    },
+    submitNewQA() {
+      this.qaFormRef.validate(
+        errors => {
+          if (!errors) {
+            const API_URL = this.globalStore.apiUrl;
+            this.loadingBar.start();
+            axios.post(`${API_URL}/question/?category=${this.category.id}`, {
+              question: this.qaFormRef.model.question,
+              answer: this.qaFormRef.model.answer,
+            }).then(res => {
+              this.message.success('Pergunta cadastrada com sucesso');
+              this.loadingBar.finish();
+              this.showCreateQAModal = false;
+            }).catch(err => {
+              this.message.error('Erro ao tentar cadastrar a pergunta');
               console.error(err);
               this.loadingBar.error();
             }).finally(() => {
