@@ -5,6 +5,7 @@
     :pagination="pagination"
     :bordered="false"
     :single-line="false"
+    :scroll-x="600"
   />
 </template>
 
