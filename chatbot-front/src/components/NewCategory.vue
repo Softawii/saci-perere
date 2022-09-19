@@ -7,30 +7,28 @@
       :rules="rules"
       style="margin: auto; max-width: 600px;"
     >
-      <n-grid :span="24" :x-gap="24">
-        <n-form-item-gi :span="24" label="Nome da categoria" path="name">
-          <n-input v-model:value="userForm.name" placeholder="Nome da categoria" />
-        </n-form-item-gi>
-        <n-form-item-gi :span="24" label="Descrição" path="description">
-          <n-input
-            v-model:value="userForm.username" placeholder="Descrição" type="textarea"
-            :autosize="{
-              minRows: 3
-            }"
-          />
-        </n-form-item-gi>
-        <n-form-item-gi :span="24">
-          <n-button type="primary" block @click="submit">
-            Validate
-          </n-button>
-        </n-form-item-gi>
-      </n-grid>
+      <n-form-item label="Nome da categoria" path="name">
+        <n-input v-model:value="userForm.name" placeholder="Nome da categoria" />
+      </n-form-item>
+      <n-form-item label="Descrição" path="description">
+        <n-input
+          v-model:value="userForm.description" placeholder="Descrição" type="textarea"
+          :autosize="{
+            minRows: 3
+          }"
+        />
+      </n-form-item>
+      <n-button type="primary" block @click="submit">
+        Salvar
+      </n-button>
     </n-form>
   </div>
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import axios from 'axios';
+import { useLoadingBar, useMessage } from 'naive-ui';
+import { ref } from 'vue';
 
 export default {
   setup() {
@@ -41,6 +39,8 @@ export default {
     });
 
     return {
+      loadingBar: useLoadingBar(),
+      message: useMessage(),
       formRef,
       userForm: model,
       rules: {
@@ -58,16 +58,27 @@ export default {
   },
   methods: {
     submit() {
-      console.log(this.formRef.value);
-      this.formRef.value?.validate(
+      this.formRef.validate(
         errors => {
           if (!errors) {
-            alert(this.formRef);
+            const API_URL = import.meta.env.VITE_API_URL;
+            this.loadingBar.start();
+            axios.post(`${API_URL}/category`, {
+              name: this.formRef.model.name,
+              description: this.formRef.model.description || null,
+            }).then(res => {
+              this.loadingBar.finish();
+              this.message.success('Categoria criada com sucesso');
+            }).catch(err => {
+              this.loadingBar.error();
+              console.error(err);
+              this.message.warning('Erro ao criar categoria');
+            });
           } else {
-            alert(this.formRef);
+            // console.log(errors);
           }
         },
-      );
+      ).catch(() => {});
     },
   },
 };

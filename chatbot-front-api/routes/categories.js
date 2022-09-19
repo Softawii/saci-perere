@@ -73,6 +73,7 @@ router.post('/', auth.checkAccessToken, checkContainsName, (req, res) => {
   prisma.category.create({
     data: {
       name: req.body.name,
+      description: req.body.description || null,
     },
   }).then(result => {
     res.json(result || {});
