@@ -3,6 +3,7 @@ from fastapi import FastAPI, Request
 from db.connection import Database
 from model import Distiluse_Base_Multilingual_Cased_v2 as QA
 from request.model import User_Question
+import asyncio
 
 def create_app():
     load_dotenv()
@@ -40,10 +41,14 @@ def create_app():
         for hit in result['hits']: hit['id'] = questions_db[hit['id']]['id']
         result['answer'] = (await db.get_answer(best['answer_id']))['value']
 
+        # fire and forget
+        if result['score'] < 0.5:
+            asyncio.ensure_future(db.save_unkwnown_question(question, result['question_id'], result['score']))
+
         return result
 
     @app.get("/categories")
-    async def answer():
+    async def categories():
         return await db.get_categories()
     
     return app

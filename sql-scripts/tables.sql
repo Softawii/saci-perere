@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS saci.user
 DROP TABLE IF EXISTS saci.category;
 CREATE TABLE IF NOT EXISTS saci.category
 (
-    id   SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL,
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(100) UNIQUE NOT NULL,
     description VARCHAR(200)
 );
 
@@ -40,8 +40,17 @@ CREATE TABLE IF NOT EXISTS saci.question
 (
     id          SERIAL PRIMARY KEY,
     category_id INTEGER      NOT NULL REFERENCES saci.category (id) ON DELETE CASCADE,
-    answer_id   INTEGER      NOT NULL REFERENCES saci.answer (id) ON DELETE RESTRICT ,
+    answer_id   INTEGER      NOT NULL REFERENCES saci.answer (id) ON DELETE RESTRICT,
     value       VARCHAR(100) NOT NULL
+);
+
+DROP TABLE IF EXISTS saci.unknown_question;
+CREATE TABLE IF NOT EXISTS saci.unknown_question
+(
+    id                    SERIAL PRIMARY KEY,
+    user_question         VARCHAR(100) NOT NULL,
+    predicted_question_id INTEGER      NOT NULL REFERENCES saci.question (id) ON DELETE RESTRICT,
+    predicted_score       REAL         NOT NULL
 );
 
 CREATE OR REPLACE FUNCTION saci.full_report()

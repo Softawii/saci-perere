@@ -39,3 +39,11 @@ class Database():
         async with self._pool.acquire() as con:
             results = await con.fetch("SELECT * from saci.category")
             return results
+
+    async def save_unkwnown_question(self, user_question, predicted_question_id, predicted_score):
+        async with self._pool.acquire() as con:
+            await con.execute(
+                """
+                INSERT INTO saci.unknown_question(user_question, predicted_question_id, predicted_score)
+                VALUES ($1, $2, $3)
+                """, user_question, predicted_question_id, predicted_score)
