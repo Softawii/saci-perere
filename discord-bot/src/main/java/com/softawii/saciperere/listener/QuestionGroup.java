@@ -3,6 +3,7 @@ package com.softawii.saciperere.listener;
 import com.softawii.curupira.annotations.IArgument;
 import com.softawii.curupira.annotations.ICommand;
 import com.softawii.curupira.annotations.IGroup;
+import com.softawii.curupira.properties.Environment;
 import com.softawii.saciperere.request.model.CategoryResponseBody;
 import com.softawii.saciperere.request.model.ModelResponseBody;
 import com.softawii.saciperere.request.model.QuestionHit;
@@ -25,7 +26,7 @@ import static net.dv8tion.jda.api.interactions.commands.Command.*;
 @IGroup(name = "question", description = "", hidden = true)
 public class QuestionGroup {
 
-    @ICommand(name = "make-question", description = "Faça uma pergunta e tenha uma resposta")
+    @ICommand(name = "make-question", description = "Faça uma pergunta e tenha uma resposta", environment = Environment.BOTH)
     @IArgument(name = "category", description = "Categoria no qual a pergunta será buscada", type = OptionType.STRING, required = true, hasAutoComplete = true)
     @IArgument(name = "question", description = "Pergunta que será feita", type = OptionType.STRING, required = true)
     public static void makeQuestion(SlashCommandInteractionEvent event) {
@@ -54,7 +55,7 @@ public class QuestionGroup {
         event.replyEmbeds(embedBuilder.build()).queue();
     }
 
-    @ICommand(name = "categories", description = "Descubra quais categorias estão disponíveis")
+    @ICommand(name = "categories", description = "Descubra quais categorias estão disponíveis", environment = Environment.BOTH)
     public static void categories(SlashCommandInteractionEvent event) {
         CategoryResponseBody[] categories = ModelUtil.getCategories();
         EmbedBuilder embedBuilder = new EmbedBuilder();
