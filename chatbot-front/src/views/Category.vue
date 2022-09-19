@@ -43,13 +43,27 @@
         role="dialog"
         aria-modal="true"
       >
-        <template #header-extra>
-          Oops!
-        </template>
-        {{ currentQA.answer }}
-        <template #footer>
-          Footer
-        </template>
+        <n-form
+          ref="editQuestionFormRef"
+          :model="questionForm"
+          :rules="questionFormRules"
+          style="margin: auto; max-width: 600px;"
+        >
+          <n-form-item label="Pergunta" path="question">
+            <n-input v-model:value="questionForm.question" placeholder="Pergunta" />
+          </n-form-item>
+          <n-form-item label="Resposta" path="answer">
+            <n-input
+              v-model:value="questionForm.answer" placeholder="Resposta" type="textarea"
+              :autosize="{
+                minRows: 3
+              }"
+            />
+          </n-form-item>
+          <n-button type="primary" block @click="submitEditQA">
+            Salvar
+          </n-button>
+        </n-form>
       </n-card>
     </n-modal>
     <n-modal v-model:show="showDetailsModal">
@@ -86,7 +100,7 @@ import {
   Trash as TrashIcon,
   DocumentText as DocumentTextIcon,
 } from '@vicons/ionicons5';
-import { useLoadingBar, NIcon } from 'naive-ui';
+import { useLoadingBar, useMessage, NIcon } from 'naive-ui';
 import { useGlobalStore } from '../store/GlobalStore';
 
 function renderIcon(icon) {
@@ -95,11 +109,32 @@ function renderIcon(icon) {
 
 export default {
   setup() {
+    const editQuestionFormRef = ref(null);
+    const model = ref({
+      name: '',
+      description: '',
+    });
+
     return {
       StarIcon,
       EllipsisVerticalIcon,
       globalStore: useGlobalStore(),
       loadingBar: useLoadingBar(),
+      message: useMessage(),
+      editQuestionFormRef,
+      questionForm: model,
+      questionFormRules: {
+        name: {
+          required: true,
+          message: 'Insira a pergunta',
+          trigger: 'blur',
+        },
+        answer: {
+          required: true,
+          message: 'Insira a resposta',
+          trigger: 'blur',
+        },
+      },
       qaOptions: [
         {
           label: 'Apagar',
@@ -139,6 +174,8 @@ export default {
       this.currentQA = qa;
       if (key === 'edit') {
         this.showEditModal = true;
+        this.questionForm.question = qa.value;
+        this.questionForm.answer = qa.answer;
       }
       if (key === 'delete') {
         this.showDeleteModal = true;
@@ -151,17 +188,19 @@ export default {
     deleteQuestion() {
       alert(`apagou: ${this.currentQA.value}`);
     },
-    updateData() {
+    updateData(force) {
       const id = this.$route.params.id;
       const apiUrl = import.meta.env.VITE_API_URL;
       this.loadingBar.start();
-      if (!this.globalStore.data.currentCategory) {
+      if (!this.globalStore.data.currentCategory || force) {
         axios.get(`${apiUrl}/category/${id}`)
           .then(res => {
             this.category = res.data;
             this.globalStore.setCurrentCategory(this.category);
+            this.message.success('Perguntas atualizadas com sucesso');
           }).catch(err => {
             console.error(err);
+            this.message.error('Erro ao tentar atualizar as perguntas');
           });
       } else {
         this.category = this.globalStore.data.currentCategory;
@@ -184,6 +223,32 @@ export default {
           console.error(err);
           this.loadingBar.error();
         });
+    },
+    submitEditQA() {
+      this.editQuestionFormRef.validate(
+        errors => {
+          if (!errors) {
+            const API_URL = this.globalStore.apiUrl;
+            this.loadingBar.start();
+            axios.patch(`${API_URL}/question/${this.currentQA.id}`, {
+              question: this.editQuestionFormRef.model.question,
+              answer: this.editQuestionFormRef.model.answer,
+            }).then(res => {
+              this.message.success('Pergunta atualizada com sucesso');
+              this.loadingBar.finish();
+              this.showEditModal = false;
+            }).catch(err => {
+              this.message.error('Erro ao tentar editar a pergunta');
+              console.error(err);
+              this.loadingBar.error();
+            }).finally(() => {
+              this.updateData(true);
+            });
+          } else {
+            // console.log(errors);
+          }
+        },
+      );
     },
   },
 };
