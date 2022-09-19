@@ -186,7 +186,19 @@ export default {
       this.showDetailsModal = true;
     },
     deleteQuestion() {
-      alert(`apagou: ${this.currentQA.value}`);
+      const apiUrl = this.globalStore.apiUrl;
+      this.loadingBar.start();
+      axios.delete(`${apiUrl}/question/${this.currentQA.id}`)
+        .then(res => {
+          this.message.success('Pergunta apagada com sucesso');
+          this.loadingBar.finish();
+        }).catch(err => {
+          this.message.error(`Erro ao tentar apagar a pergunta ${this.currentCategory.name}`);
+          console.error(err);
+          this.loadingBar.error();
+        }).finally(() => {
+          this.updateData(true);
+        });
     },
     updateData(force) {
       const id = this.$route.params.id;
