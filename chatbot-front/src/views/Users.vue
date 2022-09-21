@@ -29,18 +29,21 @@ export default {
   },
   mounted() {
     this.columns = this.createColumns();
-    const apiUrl = import.meta.env.VITE_API_URL;
-    this.loadingBar.start();
-    axios.get(`${apiUrl}/user/`)
-      .then(res => {
-        this.users = res.data;
-        this.loadingBar.finish();
-      }).catch(err => {
-        console.error(err);
-        this.loadingBar.error();
-      });
+    this.updateUsers();
   },
   methods: {
+    updateUsers() {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      this.loadingBar.start();
+      axios.get(`${apiUrl}/user/`)
+        .then(res => {
+          this.users = res.data;
+          this.loadingBar.finish();
+        }).catch(err => {
+          console.error(err);
+          this.loadingBar.error();
+        });
+    },
     createColumns() {
       const vm = this;
       return [
@@ -93,7 +96,17 @@ export default {
       ];
     },
     giveAdmin(id) {
-      alert(id);
+      const apiUrl = import.meta.env.VITE_API_URL;
+      this.loadingBar.start();
+      axios.post(`${apiUrl}/user/give-admin/${id}`)
+        .then(res => {
+          this.loadingBar.finish();
+        }).catch(err => {
+          console.error(err);
+          this.loadingBar.error();
+        }).finally(() => {
+          this.updateUsers();
+        });
     },
   },
 };

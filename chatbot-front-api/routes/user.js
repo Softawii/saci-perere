@@ -62,7 +62,7 @@ router.patch('/profile', auth.checkAccessToken, async (req, res) => {
     const saltRounds = 10;
     data.password = bcrypt.hashSync(req.body.password, saltRounds);
   }
-  if (Object.keys(data) === 0) return res.status(400).json({ message: 'Nenhum campo foi preenchdo' });
+  if (Object.keys(data) === 0) return res.status(400).json({ message: 'Nenhum campo foi preenchido' });
   prisma.user.update({
     where: {
       id: req.userId,
@@ -87,6 +87,57 @@ router.patch('/profile', auth.checkAccessToken, async (req, res) => {
     });
   });
 });
+
+router.post('/give-admin/:id', auth.checkAccessToken, checkContainsIdParam, async (req, res) => {
+  prisma.user.findUnique({
+    where: {
+      id: req.userId,
+    },
+  }).then(result => {
+    if (result.isadmin) {
+      prisma.user.update({
+        where: {
+          id: req.params.id,
+        },
+        data: {
+          isadmin: true,
+        },
+      }).then(result => {
+        res.sendStatus(status.NO_CONTENT);
+      }).catch(reason => {
+        console.error(reason);
+        res.status(status.INTERNAL_SERVER_ERROR).json({
+          message: 'user do not exists to grant admin permission',
+        });
+      });
+    } else {
+      res.status(status.FORBIDDEN).json({
+        message: 'user is not admin to grant admin permission',
+      });
+    }
+  }).catch(reason => {
+    console.error(reason);
+    res.status(status.INTERNAL_SERVER_ERROR).json({
+      message: 'unexpected error',
+    });
+  });
+});
+
+function checkContainsIdParam(req, res, next) {
+  const id = Number(req.params.id, 10);
+  if (!id) {
+    return res.status(status.BAD_REQUEST).send({
+      error: 'invalid id param',
+    });
+  }
+  if (Number.isNaN(id)) {
+    return res.status(status.BAD_REQUEST).send({
+      error: 'id is not a number',
+    });
+  }
+  req.params.id = id;
+  return next();
+}
 
 module.exports = {
   router,
