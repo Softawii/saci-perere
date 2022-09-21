@@ -1,5 +1,6 @@
 const express = require('express');
 const status = require('http-status');
+const bcrypt = require('bcrypt');
 const auth = require('./auth');
 const { prisma } = require('../db');
 
@@ -20,7 +21,7 @@ router.get('/', (req, res) => {
     .catch(reason => {
       console.error(reason);
       res.status(status.INTERNAL_SERVER_ERROR).json({
-        message: 'failed to fetch user',
+        message: 'failed to fetch users',
       });
     });
 });
@@ -50,12 +51,16 @@ router.get('/profile', auth.checkAccessToken, (req, res) => {
   });
 });
 
-router.patch('/profile', auth.checkAccessToken, (req, res) => {
+router.patch('/profile', auth.checkAccessToken, async (req, res) => {
   const data = {};
   for (const value of ['name', 'username', 'email']) {
     if (req.body[value]) {
       data[value] = req.body[value];
     }
+  }
+  if (req.body.password) {
+    const saltRounds = 10;
+    data.password = bcrypt.hashSync(req.body.password, saltRounds);
   }
   if (Object.keys(data) === 0) return res.status(400).json({ message: 'Nenhum campo foi preenchdo' });
   prisma.user.update({

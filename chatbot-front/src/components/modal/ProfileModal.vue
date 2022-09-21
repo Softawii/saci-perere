@@ -44,6 +44,9 @@
           <n-form-item label="E-mail" path="email">
             <n-auto-complete v-model:value="userForm.email" :options="emailAutoCompleteOptions" type="email" placeholder="fulano@mail.com" />
           </n-form-item>
+          <n-form-item label="Senha" path="password">
+            <n-auto-complete v-model:value="userForm.password" type="password" placeholder="Insira para atualizar" />
+          </n-form-item>
           <n-button type="primary" block style="margin-bottom: 10px" @click="submit">
             Atualizar dados
           </n-button>
@@ -94,6 +97,9 @@ export default {
           required: true,
           message: 'Insira o e-mail',
           trigger: 'blur',
+        },
+        password: {
+          required: false,
         },
       },
       emailAutoCompleteOptions: computed(() => ['@gmail.com', '@hotmail.com'].map(suffix => {

@@ -33,11 +33,12 @@ router.post('/signin', checkAuthParams, (req, res) => {
           name: user.name,
           email: user.email,
           username,
+          isadmin: user.isadmin,
           token,
           expiresAt: exp,
         });
       }
-      return res.sendStatus(status.UNAUTHORIZED);
+      return res.sendStatus(status.FORBIDDEN);
     });
   }).catch(reason => {
     console.error(reason);
