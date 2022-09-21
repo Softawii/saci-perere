@@ -83,6 +83,7 @@ import {
 import { useLoadingBar, useMessage, NIcon } from 'naive-ui';
 import { h, ref } from 'vue';
 import { useGlobalStore } from '../store/GlobalStore';
+import { useUserStore } from '../store/UserStore';
 
 function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) });
@@ -98,6 +99,7 @@ export default {
     },
   },
   setup() {
+    const userStore = useUserStore();
     const editCategoryFormRef = ref(null);
     const model = ref({
       name: '',
@@ -128,11 +130,13 @@ export default {
           label: 'Apagar',
           key: 'delete',
           icon: renderIcon(TrashIcon),
+          disabled: !userStore.profile.isadmin,
         },
         {
           label: 'Editar',
           key: 'edit',
           icon: renderIcon(DocumentTextIcon),
+          disabled: !userStore.profile.isadmin,
         },
         {
           label: 'Favorito',

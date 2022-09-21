@@ -1,7 +1,6 @@
 const express = require('express');
 const status = require('http-status');
 const bcrypt = require('bcrypt');
-const auth = require('./auth');
 const { prisma } = require('../db');
 const { checkUserIsAdmin, checkContainsIdParam, checkAccessToken } = require('../util');
 

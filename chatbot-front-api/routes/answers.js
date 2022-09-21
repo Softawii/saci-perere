@@ -1,6 +1,5 @@
 const express = require('express');
 const status = require('http-status');
-const auth = require('./auth');
 const { prisma } = require('../db');
 
 const router = express.Router();

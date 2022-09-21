@@ -7,7 +7,7 @@
       <n-tab-pane name="favorites" tab="Favoritos">
         <slot />
       </n-tab-pane>
-      <n-tab-pane name="new-category" tab="Nova categoria">
+      <n-tab-pane name="new-category" tab="Nova categoria" :disabled="!userStore.profile.isadmin">
         <slot />
       </n-tab-pane>
       <template #suffix>
@@ -18,11 +18,18 @@
 </template>
 
 <script>
+import { useUserStore } from '../store/UserStore';
 import RefreshButton from './RefreshButton.vue';
 
 export default {
   components: { RefreshButton },
   emits: ['updated'],
+  setup() {
+    const userStore = useUserStore();
+    return {
+      userStore,
+    };
+  },
   methods: {
     valueUpdated(key) {
       this.$emit('updated', key);

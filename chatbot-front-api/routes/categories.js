@@ -1,7 +1,9 @@
 const express = require('express');
 const status = require('http-status');
 const { prisma, handleError } = require('../db');
-const { isUserAuthenticated, checkContainsIdParam, checkAccessToken } = require('../util');
+const {
+  isUserAuthenticated, checkContainsIdParam, checkAccessToken, checkUserIsAdmin,
+} = require('../util');
 
 const router = express.Router();
 
@@ -69,7 +71,7 @@ router.get('/:id', checkContainsIdParam, (req, res) => {
   }
 });
 
-router.post('/', checkAccessToken, checkContainsName, (req, res) => {
+router.post('/', checkUserIsAdmin, checkContainsName, (req, res) => {
   prisma.category.create({
     data: {
       name: req.body.name,
@@ -122,7 +124,7 @@ router.post('/favorite/:id', checkAccessToken, checkContainsIdParam, (req, res) 
   });
 });
 
-router.delete('/favorite/:id', checkAccessToken, checkContainsIdParam, (req, res) => {
+router.delete('/favorite/:id', checkUserIsAdmin, checkContainsIdParam, (req, res) => {
   prisma.user_favorite.delete({
     where: {
       user_id_category_id: {
@@ -147,7 +149,7 @@ router.delete('/favorite/:id', checkAccessToken, checkContainsIdParam, (req, res
   });
 });
 
-router.patch('/:id', checkAccessToken, checkContainsIdParam, (req, res) => {
+router.patch('/:id', checkUserIsAdmin, checkContainsIdParam, (req, res) => {
   const data = {};
   const columns = ['name', 'description'];
   for (const column of columns) {
@@ -177,7 +179,7 @@ router.patch('/:id', checkAccessToken, checkContainsIdParam, (req, res) => {
   });
 });
 
-router.delete('/:id', checkAccessToken, checkContainsIdParam, (req, res) => {
+router.delete('/:id', checkUserIsAdmin, checkContainsIdParam, (req, res) => {
   prisma.category.delete({
     where: {
       id: req.params.id,

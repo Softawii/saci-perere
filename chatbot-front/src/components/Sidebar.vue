@@ -34,10 +34,12 @@ import {
   Newspaper as NewspaperIcon,
 } from '@vicons/ionicons5';
 import { h } from 'vue';
+import { useUserStore } from '../store/UserStore';
 
 export default {
   emits: ['menu-updated'],
   setup() {
+    const userStore = useUserStore();
     function renderIcon(icon) {
       return () => h(NIcon, null, { default: () => h(icon) });
     }
@@ -59,6 +61,7 @@ export default {
         key: 'new-user',
         href: '/users',
         icon: renderIcon(PersonAddIcon),
+        disabled: !userStore.profile.isadmin,
       },
     ];
 

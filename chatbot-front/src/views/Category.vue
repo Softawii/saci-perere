@@ -16,6 +16,7 @@
       </n-tag>
       <n-button
         strong secondary circle style="margin-left: 10px;"
+        :disabled="!userStore.profile.isadmin"
         @click="showCreateQAModal = true"
       >
         <template #icon>
@@ -143,6 +144,7 @@ import {
 } from '@vicons/ionicons5';
 import { useLoadingBar, useMessage, NIcon } from 'naive-ui';
 import { useGlobalStore } from '../store/GlobalStore';
+import { useUserStore } from '../store/UserStore';
 
 function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) });
@@ -150,6 +152,7 @@ function renderIcon(icon) {
 
 export default {
   setup() {
+    const userStore = useUserStore();
     const qaFormRef = ref(null);
     const model = ref({
       name: '',
@@ -160,6 +163,7 @@ export default {
       AddCircleIcon,
       StarIcon,
       EllipsisVerticalIcon,
+      userStore,
       globalStore: useGlobalStore(),
       loadingBar: useLoadingBar(),
       message: useMessage(),
@@ -182,11 +186,13 @@ export default {
           label: 'Apagar',
           key: 'delete',
           icon: renderIcon(TrashIcon),
+          disabled: !userStore.profile.isadmin,
         },
         {
           label: 'Editar',
           key: 'edit',
           icon: renderIcon(DocumentTextIcon),
+          disabled: !userStore.profile.isadmin,
         },
       ],
       category: ref({}),

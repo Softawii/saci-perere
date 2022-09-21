@@ -1,7 +1,7 @@
 const express = require('express');
 const status = require('http-status');
 const { prisma, handleError } = require('../db');
-const { checkAccessToken } = require('../util');
+const { checkUserIsAdmin } = require('../util');
 
 const router = express.Router();
 
@@ -20,7 +20,7 @@ router.get('/', checkContainsCategoryId, (req, res) => {
   });
 });
 
-router.post('/', checkAccessToken, checkContainsCategoryId, checkContainsQuestionBody, (req, res) => {
+router.post('/', checkUserIsAdmin, checkContainsCategoryId, checkContainsQuestionBody, (req, res) => {
   prisma.question.create({
     data: {
       value: req.body.question,
@@ -56,7 +56,7 @@ router.post('/', checkAccessToken, checkContainsCategoryId, checkContainsQuestio
   });
 });
 
-router.patch('/:id', checkAccessToken, checkContainsId, checkContainsQuestionBody, (req, res) => {
+router.patch('/:id', checkUserIsAdmin, checkContainsId, checkContainsQuestionBody, (req, res) => {
   prisma.question.update({
     where: {
       id: req.params.id,
@@ -86,7 +86,7 @@ router.patch('/:id', checkAccessToken, checkContainsId, checkContainsQuestionBod
   });
 });
 
-router.delete('/:id', checkAccessToken, checkContainsId, (req, res) => {
+router.delete('/:id', checkUserIsAdmin, checkContainsId, (req, res) => {
   prisma.question.delete({
     where: {
       id: req.params.id,
