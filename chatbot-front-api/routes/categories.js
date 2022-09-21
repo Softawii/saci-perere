@@ -1,12 +1,12 @@
 const express = require('express');
 const status = require('http-status');
-const auth = require('./auth');
 const { prisma, handleError } = require('../db');
+const { isUserAuthenticated, checkContainsIdParam, checkAccessToken } = require('../util');
 
 const router = express.Router();
 
 router.get('/', (req, res) => {
-  const { isAuthenticated, userId } = auth.isUserAuthenticated(req);
+  const { isAuthenticated, userId } = isUserAuthenticated(req);
   if (isAuthenticated) {
     /* eslint-disable indent */
     prisma.$queryRaw`
@@ -36,7 +36,7 @@ router.get('/', (req, res) => {
 });
 
 router.get('/:id', checkContainsIdParam, (req, res) => {
-  const { isAuthenticated, userId } = auth.isUserAuthenticated(req);
+  const { isAuthenticated, userId } = isUserAuthenticated(req);
   if (isAuthenticated) {
     /* eslint-disable indent */
     prisma.$queryRaw`
@@ -69,7 +69,7 @@ router.get('/:id', checkContainsIdParam, (req, res) => {
   }
 });
 
-router.post('/', auth.checkAccessToken, checkContainsName, (req, res) => {
+router.post('/', checkAccessToken, checkContainsName, (req, res) => {
   prisma.category.create({
     data: {
       name: req.body.name,
@@ -92,7 +92,7 @@ router.post('/', auth.checkAccessToken, checkContainsName, (req, res) => {
   });
 });
 
-router.post('/favorite/:id', auth.checkAccessToken, checkContainsIdParam, (req, res) => {
+router.post('/favorite/:id', checkAccessToken, checkContainsIdParam, (req, res) => {
   prisma.user_favorite.create({
     data: {
       category: {
@@ -122,7 +122,7 @@ router.post('/favorite/:id', auth.checkAccessToken, checkContainsIdParam, (req, 
   });
 });
 
-router.delete('/favorite/:id', auth.checkAccessToken, checkContainsIdParam, (req, res) => {
+router.delete('/favorite/:id', checkAccessToken, checkContainsIdParam, (req, res) => {
   prisma.user_favorite.delete({
     where: {
       user_id_category_id: {
@@ -147,7 +147,7 @@ router.delete('/favorite/:id', auth.checkAccessToken, checkContainsIdParam, (req
   });
 });
 
-router.patch('/:id', auth.checkAccessToken, checkContainsIdParam, (req, res) => {
+router.patch('/:id', checkAccessToken, checkContainsIdParam, (req, res) => {
   const data = {};
   const columns = ['name', 'description'];
   for (const column of columns) {
@@ -177,7 +177,7 @@ router.patch('/:id', auth.checkAccessToken, checkContainsIdParam, (req, res) => 
   });
 });
 
-router.delete('/:id', auth.checkAccessToken, checkContainsIdParam, (req, res) => {
+router.delete('/:id', checkAccessToken, checkContainsIdParam, (req, res) => {
   prisma.category.delete({
     where: {
       id: req.params.id,
@@ -198,22 +198,6 @@ router.delete('/:id', auth.checkAccessToken, checkContainsIdParam, (req, res) =>
     }
   });
 });
-
-function checkContainsIdParam(req, res, next) {
-  const id = Number(req.params.id, 10);
-  if (!id) {
-    return res.status(status.BAD_REQUEST).send({
-      error: 'invalid id param',
-    });
-  }
-  if (Number.isNaN(id)) {
-    return res.status(status.BAD_REQUEST).send({
-      error: 'id is not a number',
-    });
-  }
-  req.params.id = id;
-  return next();
-}
 
 function checkContainsName(req, res, next) {
   if (!req.body.name) {

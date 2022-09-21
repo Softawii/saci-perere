@@ -1,7 +1,7 @@
 const express = require('express');
 const status = require('http-status');
-const auth = require('./auth');
 const { prisma, handleError } = require('../db');
+const { checkAccessToken } = require('../util');
 
 const router = express.Router();
 
@@ -20,7 +20,7 @@ router.get('/', checkContainsCategoryId, (req, res) => {
   });
 });
 
-router.post('/', auth.checkAccessToken, checkContainsCategoryId, checkContainsQuestionBody, (req, res) => {
+router.post('/', checkAccessToken, checkContainsCategoryId, checkContainsQuestionBody, (req, res) => {
   prisma.question.create({
     data: {
       value: req.body.question,
@@ -56,7 +56,7 @@ router.post('/', auth.checkAccessToken, checkContainsCategoryId, checkContainsQu
   });
 });
 
-router.patch('/:id', auth.checkAccessToken, checkContainsId, checkContainsQuestionBody, (req, res) => {
+router.patch('/:id', checkAccessToken, checkContainsId, checkContainsQuestionBody, (req, res) => {
   prisma.question.update({
     where: {
       id: req.params.id,
@@ -86,7 +86,7 @@ router.patch('/:id', auth.checkAccessToken, checkContainsId, checkContainsQuesti
   });
 });
 
-router.delete('/:id', auth.checkAccessToken, checkContainsId, (req, res) => {
+router.delete('/:id', checkAccessToken, checkContainsId, (req, res) => {
   prisma.question.delete({
     where: {
       id: req.params.id,

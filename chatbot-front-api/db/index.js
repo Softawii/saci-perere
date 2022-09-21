@@ -20,7 +20,17 @@ const handleError = (error, entity = 'entity') => {
   return undefined;
 };
 
+async function isUserAdmin(id) {
+  const user = await prisma.user.findUnique({
+    where: {
+      id,
+    },
+  });
+  return user.isadmin;
+}
+
 module.exports = {
   prisma,
   handleError,
+  isUserAdmin,
 };
