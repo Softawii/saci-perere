@@ -161,8 +161,14 @@ export default {
       });
     },
   },
+  watch: {
+    // eslint-disable-next-line object-shorthand
+    '$route.name'(to, from) {
+      this.$emitter.off('refreshCategories', this.updateCategories);
+    },
+  },
   mounted() {
-    this.$emitter.on('refreshCategories', () => this.updateCategories());
+    this.$emitter.on('refreshCategories', this.updateCategories);
     if (!this.globalStore.data.categories?.length) {
       this.updateCategories();
     }
