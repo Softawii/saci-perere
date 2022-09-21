@@ -1,34 +1,41 @@
 <template>
-  <div>
+  <div id="container">
     <!-- eslint-disable  vue/no-v-model-argument -->
+    <n-alert
+      v-if="showPassword" title="Senha" type="info" closable
+      style="margin-bottom: 20px;"
+    >
+      <!-- eslint-disable-next-line vue/singleline-html-element-content-newline -->
+      A senha de "{{ userForm.name }}" é <n-tag type="warning"> {{ userPassword }} </n-tag>. <br>
+      Avise para alterar no primeiro acesso
+    </n-alert>
     <n-form
       ref="formRef"
       :model="userForm"
       :rules="rules"
-      style="margin: auto; max-width: 600px;"
+      style="width: 100%; max-width: 500px;"
+      @keyup.enter="submit"
     >
-      <n-grid :span="24" :x-gap="24">
-        <n-form-item-gi :span="12" label="Nome" path="name">
-          <n-input v-model:value="userForm.name" placeholder="Fulano de Tal" />
-        </n-form-item-gi>
-        <n-form-item-gi :span="12" label="Usuário" path="username">
-          <n-input v-model:value="userForm.username" placeholder="fulano" />
-        </n-form-item-gi>
-        <n-form-item-gi :span="24" label="E-mail" path="email">
-          <n-auto-complete v-model:value="userForm.email" :options="emailAutoCompleteOptions" type="email" placeholder="fulano@mail.com" />
-        </n-form-item-gi>
-        <n-form-item-gi :span="24">
-          <n-button type="primary" block @click="submit">
-            Validate
-          </n-button>
-        </n-form-item-gi>
-      </n-grid>
+      <n-form-item label="Nome" path="name">
+        <n-input v-model:value="userForm.name" placeholder="Fulano de Tal" />
+      </n-form-item>
+      <n-form-item label="Usuário" path="username">
+        <n-input v-model:value="userForm.username" placeholder="fulano" />
+      </n-form-item>
+      <n-form-item label="E-mail" path="email">
+        <n-auto-complete v-model:value="userForm.email" :options="emailAutoCompleteOptions" type="email" placeholder="fulano@mail.com" />
+      </n-form-item>
+      <n-button type="primary" block style="margin-top: 10px" @click="submit">
+        Cadastrar
+      </n-button>
     </n-form>
   </div>
 </template>
 
 <script>
+import axios from 'axios';
 import { ref, computed } from 'vue';
+import { useLoadingBar, useMessage } from 'naive-ui';
 
 export default {
   setup() {
@@ -40,8 +47,12 @@ export default {
     });
 
     return {
+      loadingBar: useLoadingBar(),
+      message: useMessage(),
       formRef,
       userForm: model,
+      userPassword: undefined,
+      showPassword: false,
       rules: {
         name: {
           required: true,
@@ -70,21 +81,45 @@ export default {
   },
   methods: {
     submit() {
-      console.log(this.formRef.value);
-      this.formRef.value?.validate(
+      this.formRef.validate(
         errors => {
           if (!errors) {
-            alert(this.formRef);
+            this.loadingBar.start();
+            const API_URL = import.meta.env.VITE_API_URL;
+            axios.post(`${API_URL}/auth/signup`, {
+              username: this.formRef.model.username,
+              email: this.formRef.model.email,
+              name: this.formRef.model.name,
+            }).then(res => {
+              this.loadingBar.finish();
+              this.message.success('Usuário cadastrado com sucesso');
+              this.showPassword = true;
+              this.userPassword = res.data.password;
+            }).catch(err => {
+              this.loadingBar.error();
+              console.error(err);
+              this.message.warning('Erro ao cadastrar usuário');
+            }).finally(() => {
+            });
           } else {
             alert(this.formRef);
           }
         },
-      );
+      ).catch(() => {});
     },
   },
 };
 </script>
 
-<style>
+<style lang="scss" scoped>
+@import '../variables.scss';
 
+#container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - $nav-height);
+  padding: 0 20px;
+}
 </style>

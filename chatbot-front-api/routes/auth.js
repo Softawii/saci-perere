@@ -4,8 +4,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const status = require('http-status');
 const { prisma } = require('../db');
-
-const saltRounds = 10;
+const { generateRandomPassword, hashSaltRounds } = require('../util');
 
 const router = express.Router();
 
@@ -48,17 +47,23 @@ router.post('/signin', checkAuthParams, (req, res) => {
   });
 });
 
-router.post('/signup', checkSignupParams, (req, res) => {
+router.post('/signup', checkAccessToken, checkSignupParams, (req, res) => {
   const username = req.body.username;
-  const password = req.body.password;
+  const password = generateRandomPassword();
   const name = req.body.name;
   const email = req.body.email;
-  bcrypt.hash(password, saltRounds)
+  bcrypt.hash(password, hashSaltRounds)
     .then(hash => {
-      // TODO: check for username and email
-      prisma.user.findUnique({
+      prisma.user.findFirst({
         where: {
-          username,
+          OR: [
+            {
+              username,
+            },
+            {
+              email,
+            },
+          ],
         },
       }).then(user => {
         if (!user) {
@@ -70,7 +75,14 @@ router.post('/signup', checkSignupParams, (req, res) => {
               email,
             },
           }).then(() => {
-            res.sendStatus(status.CREATED);
+            res
+              .status(status.CREATED)
+              .json({
+                username,
+                password,
+                name,
+                email,
+              });
           }).catch(reason => {
             console.error(reason);
             res.status(status.BAD_REQUEST).json({
@@ -79,7 +91,7 @@ router.post('/signup', checkSignupParams, (req, res) => {
           });
         } else {
           res.status(status.BAD_REQUEST).json({
-            message: 'username already in use',
+            message: 'username or email already in use',
           });
         }
       });
@@ -150,7 +162,7 @@ function checkAuthParams(req, res, next) {
 }
 
 function checkSignupParams(req, res, next) {
-  const requiredParams = ['username', 'password', 'name', 'email'];
+  const requiredParams = ['username', 'name', 'email'];
   for (const param of requiredParams) {
     if (!req.body[param]) {
       return res.status(status.BAD_REQUEST).send({
