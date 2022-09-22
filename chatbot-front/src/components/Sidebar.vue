@@ -32,6 +32,7 @@ import {
   PersonAdd as PersonAddIcon,
   PeopleOutline as PeopleIcon,
   Newspaper as NewspaperIcon,
+  Help as HelpIcon,
 } from '@vicons/ionicons5';
 import { h } from 'vue';
 import { useUserStore } from '../store/UserStore';
@@ -62,6 +63,12 @@ export default {
         href: '/users',
         icon: renderIcon(PersonAddIcon),
         disabled: !userStore.profile.isadmin,
+      },
+      {
+        label: 'Perguntas não respondidas',
+        key: 'unknown-questions',
+        href: '/unknown-questions',
+        icon: renderIcon(HelpIcon),
       },
     ];
 

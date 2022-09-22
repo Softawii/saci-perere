@@ -51,6 +51,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/unknown-questions',
+      name: 'PerguntasNãoRespondidas',
+      component: () => import('../views/UnknownQuestions.vue'),
+      meta: {
+        auth: true,
+        label: 'unknown-questions',
+      },
+    },
+    {
       path: '/new-user',
       name: 'NewUser',
       component: () => import('../views/NewUser.vue'),

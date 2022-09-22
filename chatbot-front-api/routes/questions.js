@@ -1,9 +1,43 @@
 const express = require('express');
 const status = require('http-status');
 const { prisma, handleError } = require('../db');
-const { checkUserIsAdmin } = require('../util');
+const { checkUserIsAdmin, checkAccessToken, checkContainsIdParam } = require('../util');
 
 const router = express.Router();
+
+router.get('/unknown', checkAccessToken, (req, res) => {
+  prisma.unknown_question.findMany()
+    .then(result => {
+      res.json(result || []);
+    }).catch(reason => {
+      console.error(reason);
+      res.status(status.INTERNAL_SERVER_ERROR).json({
+        message: 'failed to fetch unknown questions',
+      });
+    });
+});
+
+router.delete('/unknown/:id', checkUserIsAdmin, checkContainsId, (req, res) => {
+  prisma.unknown_question.delete({
+    where: {
+      id: req.params.id,
+    },
+  }).then(result => {
+    res.sendStatus(status.NO_CONTENT);
+  }).catch(reason => {
+    const message = handleError(reason, 'unknown question');
+    if (message) {
+      res.status(status.BAD_REQUEST).json({
+        message,
+      });
+    } else {
+      console.error(reason);
+      res.status(status.INTERNAL_SERVER_ERROR).json({
+        message: 'failed to delete unknown question',
+      });
+    }
+  });
+});
 
 router.get('/', checkContainsCategoryId, (req, res) => {
   prisma.question.findMany({
@@ -16,6 +50,21 @@ router.get('/', checkContainsCategoryId, (req, res) => {
     console.error(reason);
     res.status(status.INTERNAL_SERVER_ERROR).json({
       message: 'failed to fetch questions',
+    });
+  });
+});
+
+router.get('/:id', checkContainsIdParam, (req, res) => {
+  prisma.question.findUnique({
+    where: {
+      id: req.params.id,
+    },
+  }).then(result => {
+    res.json(result || {});
+  }).catch(reason => {
+    console.error(reason);
+    res.status(status.INTERNAL_SERVER_ERROR).json({
+      message: 'failed to fetch question',
     });
   });
 });

@@ -8,18 +8,18 @@ generator client {
 }
 
 model user {
-    id        Int        @id @default(autoincrement())
-    username  String     @unique
+    id        Int             @id @default(autoincrement())
+    username  String          @unique
     password  String
     name      String
-    email     String     @unique
+    email     String          @unique
     isadmin   Boolean?
     favorites user_favorite[]
 }
 
 model category {
-    id          Int        @id @default(autoincrement())
-    name        String     @unique
+    id          Int             @id @default(autoincrement())
+    name        String          @unique
     description String?
     favorites   user_favorite[]
     questions   question[]
@@ -41,10 +41,19 @@ model answer {
 }
 
 model question {
-    id          Int      @id @default(autoincrement())
-    category_id Int
-    answer_id   Int
-    value       String
-    category    category @relation(fields: [category_id], references: [id])
-    answer      answer   @relation(fields: [answer_id], references: [id])
+    id               Int                @id @default(autoincrement())
+    category_id      Int
+    answer_id        Int
+    value            String
+    category         category           @relation(fields: [category_id], references: [id])
+    answer           answer             @relation(fields: [answer_id], references: [id])
+    unknown_question unknown_question[]
+}
+
+model unknown_question {
+    id                    Int      @id @default(autoincrement())
+    user_question         String
+    predicted_question_id Int
+    predicted_score       Float
+    question              question @relation(fields: [predicted_question_id], references: [id])
 }
