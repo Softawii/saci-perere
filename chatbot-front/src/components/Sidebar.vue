@@ -1,5 +1,5 @@
 <template>
-  <div v-if="$route.meta.label !== 'login'">
+  <div v-if="$route.meta.label !== 'login' && !isMobile">
     <n-space vertical>
       <n-layout id="sidebar" has-sider>
         <n-layout-sider
@@ -27,54 +27,21 @@
 </template>
 
 <script>
-import { NIcon } from 'naive-ui';
-import {
-  PersonAdd as PersonAddIcon,
-  PeopleOutline as PeopleIcon,
-  Newspaper as NewspaperIcon,
-  Help as HelpIcon,
-} from '@vicons/ionicons5';
-import { h } from 'vue';
-import { useUserStore } from '../store/UserStore';
+import { ref } from 'vue';
+import MenuOptions from '../helper/MenuOptions';
 
 export default {
   emits: ['menu-updated'],
   setup() {
-    const userStore = useUserStore();
-    function renderIcon(icon) {
-      return () => h(NIcon, null, { default: () => h(icon) });
-    }
-    const menuOptions = [
-      {
-        label: 'Categorias',
-        key: 'categories',
-        href: '/categories',
-        icon: renderIcon(NewspaperIcon),
-      },
-      {
-        label: 'Usuários',
-        key: 'users',
-        href: '/users',
-        icon: renderIcon(PeopleIcon),
-      },
-      {
-        label: 'Cadastrar Usuário',
-        key: 'new-user',
-        href: '/users',
-        icon: renderIcon(PersonAddIcon),
-        disabled: !userStore.profile.isadmin,
-      },
-      {
-        label: 'Perguntas não respondidas',
-        key: 'unknown-questions',
-        href: '/unknown-questions',
-        icon: renderIcon(HelpIcon),
-      },
-    ];
-
     return {
-      menuOptions,
+      isMobile: ref(window.innerWidth < 1024),
+      menuOptions: MenuOptions.navOptions(),
     };
+  },
+  mounted() {
+    window.addEventListener('resize', () => {
+      this.isMobile = window.innerWidth < 1024;
+    });
   },
   methods: {
     menuUpdated(key) {

@@ -12,7 +12,7 @@
               </div>
               <div v-else>
                 <n-layout-header>
-                  <Navbar v-if="$route.meta.label !== 'login'" />
+                  <Navbar v-if="$route.meta.label !== 'login'" @menu-updated="changeRoute" />
                 </n-layout-header>
                 <n-layout-content>
                   <Sidebar @menu-updated="changeRoute">

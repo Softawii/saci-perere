@@ -5,7 +5,7 @@ import emitter from './emitter';
 import App from './App.vue';
 import router from './router';
 
-import './main.scss';
+import './variables.scss';
 // eslint-disable-next-line import/no-unresolved
 import 'virtual:fonts.css';
 
