@@ -1,8 +1,8 @@
 <template>
-  <n-config-provider :theme="userStore.isDarkMode ? darkTheme : lightTheme">
+  <n-config-provider :theme="currentMode">
     <n-message-provider>
       <n-loading-bar-provider>
-        <div v-if="$route.meta.label" style="height: 100vh; width: 100vw;">
+        <div v-if="$route.meta.label" style="height: 100vh; width: 100vw;" :style="{backgroundColor: currentMode.common.bodyColor}">
           <router-view v-slot="{ Component }">
             <transition name="fade" mode="out-in">
               <div v-if="$route.meta.label === 'faq' || $route.meta.label === 'home' ">
@@ -28,6 +28,7 @@
   </n-config-provider>
 </template>
 <script>
+import { ref } from 'vue';
 import { darkTheme, lightTheme } from 'naive-ui';
 import Navbar from './components/Navbar.vue';
 import Sidebar from './components/Sidebar.vue';
@@ -45,7 +46,13 @@ export default {
       darkTheme,
       lightTheme,
       userStore,
+      currentMode: ref(darkTheme),
     };
+  },
+  watch: {
+    'userStore.isDarkMode': function (isDarkMode) {
+      this.currentMode = isDarkMode ? darkTheme : lightTheme;
+    },
   },
   beforeMount() {
   },
