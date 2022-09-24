@@ -85,6 +85,7 @@ router.beforeEach((to, from, next) => {
 
   if (to.name === 'Login' && userStore.isAuthenticated) {
     next({ name: 'Categories' });
+    return;
   }
 
   if (to.matched.some(record => record.meta.auth)) {
