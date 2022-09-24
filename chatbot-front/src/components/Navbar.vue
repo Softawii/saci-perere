@@ -1,103 +1,39 @@
 <template>
-  <div class="nav">
-    <div v-if="isMobile" class="mobile">
+  <div>
+    <n-layout-header bordered class="nav">
       <n-text tag="div" class="logo" @click="$router.push('/')">
         <Logo />
       </n-text>
-      <n-popover
-        style="padding: 0"
-        placement="bottom-end"
-        display-directive="show"
-        trigger="click"
-      >
-        <template #trigger>
-          <n-icon size="20" style="margin: 0 20px 0 auto;">
-            <MenuIcon />
-          </n-icon>
-        </template>
-        <div style="overflow: auto; max-height: 79vh">
-          <n-menu
-            :value="$route.meta.label"
-            :options="menuOptions"
-            :on-update:value="navMenuUpdated"
-          />
-        </div>
-      </n-popover>
-      <n-popover
-        style="padding: 0;"
-        placement="bottom-end"
-        display-directive="show"
-        trigger="click"
-      >
-        <template #trigger>
-          <n-button strong secondary circle>
-            <template #icon>
-              <PersonIcon />
-            </template>
-          </n-button>
-        </template>
-        <div style="overflow: auto; max-height: 79vh">
-          <n-menu
-            :options="navUserMenuOptions"
-            :on-update:value="userMenuUpdated"
-          />
-        </div>
-      </n-popover>
-    </div>
-    <div v-else>
-      <n-layout-header bordered class="desktop">
-        <n-text tag="div" class="logo" @click="$router.push('/')">
-          <Logo />
-        </n-text>
-        <ToggleMode style="margin: auto 20px auto auto;" :size="20" />
-        <h2 style="margin: auto 20px auto auto; grid">
-          Olá, {{ userStore.profile.name }}!
-        </h2>
-        <n-popover
-          style="padding: 0;"
-          placement="bottom-end"
-          display-directive="show"
-          trigger="click"
-        >
-          <template #trigger>
-            <n-button strong secondary circle>
-              <template #icon>
-                <PersonIcon />
-              </template>
-            </n-button>
-          </template>
-          <div style="overflow: auto; max-height: 79vh">
-            <n-menu
-              :options="navUserMenuOptions"
-              :on-update:value="userMenuUpdated"
-            />
-          </div>
-        </n-popover>
-      </n-layout-header>
-    </div>
+      <ToggleMode style="margin: auto 20px auto auto;" :size="20" />
+      <div v-if="isMobile" style="margin: auto 20px auto auto">
+        <MenuPopover @value-updated="navMenuUpdated" />
+      </div>
+      <h2 v-else style="margin: auto 20px auto auto">
+        Olá, {{ userStore.profile.name }}!
+      </h2>
+      <ProfilePopover @value-updated="userMenuUpdated" />
+    </n-layout-header>
     <ProfileModal v-if="showProfileModal" @status="(value) => showProfileModal = value" />
   </div>
 </template>
 
 <script>
 import { ref } from 'vue';
-import {
-  PersonOutline as PersonIcon,
-  MenuOutline as MenuIcon,
-} from '@vicons/ionicons5';
 import Logo from './Logo.vue';
 import ToggleMode from './ToggleMode.vue';
 import ProfileModal from './modal/ProfileModal.vue';
+import ProfilePopover from './popover/ProfilePopover.vue';
+import MenuPopover from './popover/MenuPopover.vue';
 import { useUserStore } from '../store/UserStore';
 import MenuOptions from '../helper/MenuOptions';
 
 export default {
   components: {
-    PersonIcon,
     Logo,
     ToggleMode,
     ProfileModal,
-    MenuIcon,
+    ProfilePopover,
+    MenuPopover,
   },
   emits: ['menu-updated'],
   setup() {
@@ -111,7 +47,6 @@ export default {
   },
   data() {
     return {
-      navUserMenuOptions: MenuOptions.navUserMenuOptions,
       showProfileModal: ref(false),
     };
   },
@@ -140,23 +75,16 @@ export default {
 
 .nav {
   height: $nav-height;
-}
-
-.nav .desktop {
-  --side-padding: 16px;
   display: grid;
   grid-template-columns: auto 1fr auto auto;
   grid-template-rows: calc(var(--header-height) - 1px);
   align-items: center;
-  padding: 0 var(--side-padding);
-}
-.nav .mobile {
-  --side-padding: 8px;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  grid-template-rows: calc(var(--header-height) - 1px);
-  align-items: center;
-  padding: 0 var(--side-padding);
+  --x-padding: 16px;
+  padding: 0 var(--x-padding);
+  &.mobile {
+  --x-padding: 8px;
+  padding: 0 var(--x-padding);
+  }
 }
 
 .logo {
