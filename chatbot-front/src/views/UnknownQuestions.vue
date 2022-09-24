@@ -1,42 +1,47 @@
 <template>
   <div id="container">
-    <n-thing v-for="question in questions" :key="question.id">
-      <template #header>
-        ID: {{ question.id }}
-      </template>
-      <template #header-extra>
-        <n-tooltip trigger="hover">
-          <template #trigger>
-            <n-popconfirm
-              positive-text="Apagar"
-              negative-text="Cancelar"
-              :positive-button-props="{'type':'error'}"
-              @positive-click="deleteQuestion(question.id)"
-            >
-              <template #trigger>
-                <n-button
-                  circle size="small" type="error" :disabled="!userStore.profile.isadmin"
-                >
-                  <template #icon>
-                    <CloseCircleIcon />
-                  </template>
-                </n-button>
-              </template>
-              Realmente deseja apagar?
-            </n-popconfirm>
-          </template>
-          Apagar
-        </n-tooltip>
-      </template>
-      <template #description>
-        Pergunta do usuário: {{ question.user_question }}
-      </template>
-      Pergunta do encontrada: {{ question.predicted_question || `Pergunta de ID '${question.predicted_question_id}' não encontrada` }}
-      <template #footer>
-        Score: <n-tag>{{ question.predicted_score }}</n-tag>
-        <n-divider />
-      </template>
-    </n-thing>
+    <template v-if="questions?.length === 0">
+      <n-empty description="Nenhuma pergunta não respondida cadastrada" />
+    </template>
+    <template v-else-if="questions">
+      <n-thing v-for="question in questions" :key="question.id">
+        <template #header>
+          ID: {{ question.id }}
+        </template>
+        <template #header-extra>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-popconfirm
+                positive-text="Apagar"
+                negative-text="Cancelar"
+                :positive-button-props="{'type':'error'}"
+                @positive-click="deleteQuestion(question.id)"
+              >
+                <template #trigger>
+                  <n-button
+                    circle size="small" type="error" :disabled="!userStore.profile.isadmin"
+                  >
+                    <template #icon>
+                      <CloseCircleIcon />
+                    </template>
+                  </n-button>
+                </template>
+                Realmente deseja apagar?
+              </n-popconfirm>
+            </template>
+            Apagar
+          </n-tooltip>
+        </template>
+        <template #description>
+          Pergunta do usuário: {{ question.user_question }}
+        </template>
+        Pergunta do encontrada: {{ question.predicted_question || `Pergunta de ID '${question.predicted_question_id}' não encontrada` }}
+        <template #footer>
+          Score: <n-tag>{{ question.predicted_score }}</n-tag>
+          <n-divider />
+        </template>
+      </n-thing>
+    </template>
   </div>
 </template>
 
@@ -56,7 +61,7 @@ export default defineComponent({
       userStore: useUserStore(),
       message: useMessage(),
       loadingBar: useLoadingBar(),
-      questions: ref([]),
+      questions: ref(),
     };
   },
   mounted() {

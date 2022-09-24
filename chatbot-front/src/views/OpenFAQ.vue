@@ -1,4 +1,5 @@
 <template>
+  <!-- eslint-disable  vue/no-v-model-argument -->
   <div id="container">
     <n-grid x-gap="6" y-gap="6" cols="s:1 m:5" responsive="screen">
       <n-gi span="3">
@@ -13,7 +14,15 @@
         <ToggleMode :size="20" />
       </n-gi>
     </n-grid>
+    <n-result
+      v-if="noCategories"
+      title="Que pena"
+      description="Nenhuma categoria cadastrada"
+    >
+      <template #icon />
+    </n-result>
     <n-tree
+      v-else
       block-line
       :show-irrelevant-nodes="false"
       :pattern="pattern"
@@ -26,6 +35,7 @@
 <script>
 import { ref } from 'vue';
 import axios from 'axios';
+import { useLoadingBar, useMessage } from 'naive-ui';
 import ToggleMode from '../components/ToggleMode.vue';
 
 export default {
@@ -34,26 +44,12 @@ export default {
   },
   data() {
     return {
+      loadingBar: useLoadingBar(),
+      message: useMessage(),
       pattern: ref(''),
       data: ref([]),
-      categories: [],
-      questions: [],
-      answers: {},
-      nameFilter: '',
-      questionFilter: '',
-      isLoadingCategories: true,
-      isLoadingQuestions: false,
+      noCategories: false,
     };
-  },
-  computed: {
-    filteredCategories() {
-      return this.categories.filter(category => category.name.toLowerCase().startsWith(this.nameFilter.toLowerCase()));
-    },
-    filteredQuestions() {
-      return this.questions.filter(question => question.question.toLowerCase().startsWith(this.questionFilter.toLowerCase()));
-    },
-  },
-  watch: {
   },
   mounted() {
     this.getCategories();
@@ -71,8 +67,14 @@ export default {
     getCategories() {
       const vm = this;
       const API_URL = import.meta.env.VITE_API_URL;
+      this.loadingBar.start();
       axios.get(`${API_URL}/category`)
         .then(res => {
+          this.loadingBar.finish();
+          if (!res.data?.length) {
+            this.noCategories = true;
+            return;
+          }
           vm.data = res.data.map(category => ({
             key: `category_${category.id}`,
             label: category.name,
@@ -80,11 +82,16 @@ export default {
             type: 'category',
             id: category.id,
           }));
+        }).catch(err => {
+          this.message.error('Erro ao obter as categorias');
+          console.error(err);
+          this.loadingBar.error();
         });
     },
     async getQuestions(categoryNode) {
       const API_URL = import.meta.env.VITE_API_URL;
       try {
+        this.loadingBar.start();
         const res = await axios.get(`${API_URL}/question/?category=${categoryNode.id}`);
         // eslint-disable-next-line no-param-reassign
         categoryNode.children = res.data.map(question => ({
@@ -97,6 +104,8 @@ export default {
         }));
       } catch (e) {
         console.error(e);
+        this.message.error('Erro ao obter as perguntas');
+        this.loadingBar.error();
       }
     },
     async getAnswers(questionNode) {

@@ -36,6 +36,11 @@ export default {
       menuOptions: MenuOptions.navOptions(false),
     };
   },
+  data() {
+    return {
+      animated: false,
+    };
+  },
   methods: {
     onValueUpdated(key) {
       this.$emit('value-updated', key);
@@ -43,7 +48,3 @@ export default {
   },
 };
 </script>
-
-<style>
-
-</style>
