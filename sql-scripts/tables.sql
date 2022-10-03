@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS saci.question
 (
     id          SERIAL PRIMARY KEY,
     category_id INTEGER      NOT NULL REFERENCES saci.category (id) ON DELETE CASCADE,
-    answer_id   INTEGER      NOT NULL REFERENCES saci.answer (id) ON DELETE RESTRICT,
+    answer_id   INTEGER      NOT NULL REFERENCES saci.answer (id) ON DELETE CASCADE,
     value       VARCHAR(100) NOT NULL
 );
 
