@@ -4,7 +4,8 @@
   ],
   "env": {
     "es2022": true,
-    "browser": true
+    "browser": true,
+    "jest": true
   },
   "rules": {
     "indent": [
