@@ -1,8 +1,9 @@
 const express = require('express');
 const status = require('http-status');
+const { param, body } = require('express-validator');
 const { prisma, handleError } = require('../db');
 const {
-  isUserAuthenticated, checkContainsIdParam, checkAccessToken, checkUserIsAdmin,
+  isUserAuthenticated, checkAccessToken, checkUserIsAdmin,
 } = require('../util');
 
 const router = express.Router();
@@ -37,7 +38,7 @@ router.get('/', (req, res) => {
   }
 });
 
-router.get('/:id', checkContainsIdParam, (req, res) => {
+router.get('/:id', param('id').isInt().toInt(10), (req, res) => {
   const { isAuthenticated, userId } = isUserAuthenticated(req);
   if (isAuthenticated) {
     /* eslint-disable indent */
@@ -71,7 +72,7 @@ router.get('/:id', checkContainsIdParam, (req, res) => {
   }
 });
 
-router.post('/', checkUserIsAdmin, checkContainsName, (req, res) => {
+router.post('/', checkUserIsAdmin, body('name').isString(), body('description').isString().optional({ nullable: true }), (req, res) => {
   prisma.category.create({
     data: {
       name: req.body.name,
@@ -94,7 +95,7 @@ router.post('/', checkUserIsAdmin, checkContainsName, (req, res) => {
   });
 });
 
-router.post('/favorite/:id', checkAccessToken, checkContainsIdParam, (req, res) => {
+router.post('/favorite/:id', checkAccessToken, param('id').isInt().toInt(10), (req, res) => {
   prisma.user_favorite.create({
     data: {
       category: {
@@ -124,7 +125,7 @@ router.post('/favorite/:id', checkAccessToken, checkContainsIdParam, (req, res) 
   });
 });
 
-router.delete('/favorite/:id', checkUserIsAdmin, checkContainsIdParam, (req, res) => {
+router.delete('/favorite/:id', checkUserIsAdmin, param('id').isInt().toInt(10), (req, res) => {
   prisma.user_favorite.delete({
     where: {
       user_id_category_id: {
@@ -149,7 +150,7 @@ router.delete('/favorite/:id', checkUserIsAdmin, checkContainsIdParam, (req, res
   });
 });
 
-router.patch('/:id', checkUserIsAdmin, checkContainsIdParam, (req, res) => {
+router.patch('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), (req, res) => {
   const data = {};
   const columns = ['name', 'description'];
   for (const column of columns) {
@@ -179,7 +180,7 @@ router.patch('/:id', checkUserIsAdmin, checkContainsIdParam, (req, res) => {
   });
 });
 
-router.delete('/:id', checkUserIsAdmin, checkContainsIdParam, (req, res) => {
+router.delete('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), (req, res) => {
   prisma.category.delete({
     where: {
       id: req.params.id,
@@ -200,15 +201,6 @@ router.delete('/:id', checkUserIsAdmin, checkContainsIdParam, (req, res) => {
     }
   });
 });
-
-function checkContainsName(req, res, next) {
-  if (!req.body.name) {
-    return res.status(status.BAD_REQUEST).send({
-      error: 'missing name',
-    });
-  }
-  return next();
-}
 
 module.exports = {
   router,

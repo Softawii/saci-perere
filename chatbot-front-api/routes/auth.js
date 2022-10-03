@@ -3,14 +3,15 @@ const jwt = require('jsonwebtoken');
 const express = require('express');
 const bcrypt = require('bcrypt');
 const status = require('http-status');
+const { body } = require('express-validator');
 const { prisma } = require('../db');
 const {
-  generateRandomPassword, hashSaltRounds, checkAccessToken, isUserAuthenticated,
+  generateRandomPassword, hashSaltRounds, checkAccessToken,
 } = require('../util');
 
 const router = express.Router();
 
-router.post('/signin', checkAuthParams, (req, res) => {
+router.post('/signin', body(['username', 'password']).isString(), (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
 
@@ -49,7 +50,7 @@ router.post('/signin', checkAuthParams, (req, res) => {
   });
 });
 
-router.post('/signup', checkAccessToken, checkSignupParams, (req, res) => {
+router.post('/signup', checkAccessToken, body(['username', 'name']).isString(), body('email').isEmail(), (req, res) => {
   const username = req.body.username;
   const password = generateRandomPassword();
   const name = req.body.name;
@@ -104,30 +105,6 @@ function generateAccessToken(payload, exp) {
   return jwt.sign(payload, process.env.TOKEN_SECRET, {
     expiresIn: exp,
   });
-}
-
-function checkAuthParams(req, res, next) {
-  const requiredParams = ['username', 'password'];
-  for (const param of requiredParams) {
-    if (!req.body[param]) {
-      return res.status(status.BAD_REQUEST).send({
-        error: `missing ${param} parameter`,
-      });
-    }
-  }
-  next();
-}
-
-function checkSignupParams(req, res, next) {
-  const requiredParams = ['username', 'name', 'email'];
-  for (const param of requiredParams) {
-    if (!req.body[param]) {
-      return res.status(status.BAD_REQUEST).send({
-        error: `missing ${param} parameter`,
-      });
-    }
-  }
-  next();
 }
 
 module.exports = {
