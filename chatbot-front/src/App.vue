@@ -1,73 +1,69 @@
-<script setup>
-</script>
-
 <template>
-  <div class="_background" style="min-height: 100vh; min-width: 100vw;">
-    <i-container>
-      <transition name="fade" mode="out-in">
-        <Navbar :key="$route.name === 'Login'" />
-      </transition>
-      <!-- <LoginModal v-show="!userStore.isAuthenticated && $route.name !== 'Login'" /> -->
-    </i-container>
-    <router-view v-slot="{ Component }">
-      <transition name="fade" mode="out-in">
-        <component :is="Component" :key="$route.name" />
-      </transition>
-    </router-view>
-  </div>
+  <n-config-provider :theme="currentMode">
+    <n-message-provider>
+      <n-loading-bar-provider>
+        <div v-if="$route.meta.label" style="height: 100vh; width: 100vw;" :style="{backgroundColor: currentMode.common.bodyColor}">
+          <router-view v-slot="{ Component }">
+            <transition name="fade" mode="out-in">
+              <div v-if="$route.meta.label === 'faq' || $route.meta.label === 'home' ">
+                <n-layout-content>
+                  <component :is="Component" :key="$route.name" />
+                </n-layout-content>
+              </div>
+              <div v-else>
+                <n-layout-header>
+                  <Navbar v-if="$route.meta.label !== 'login'" @menu-updated="changeRoute" />
+                </n-layout-header>
+                <n-layout-content>
+                  <Sidebar @menu-updated="changeRoute">
+                    <component :is="Component" :key="$route.name" />
+                  </Sidebar>
+                </n-layout-content>
+              </div>
+            </transition>
+          </router-view>
+        </div>
+      </n-loading-bar-provider>
+    </n-message-provider>
+  </n-config-provider>
 </template>
 <script>
-import axios from 'axios';
+import { ref } from 'vue';
+import { darkTheme, lightTheme } from 'naive-ui';
 import Navbar from './components/Navbar.vue';
-import LoginModal from './components/LoginModal.vue';
+import Sidebar from './components/Sidebar.vue';
 import { useUserStore } from './store/UserStore';
-import { useGlobalStore } from './store/GlobalStore';
 
 export default {
   components: {
     Navbar,
-    LoginModal,
+    Sidebar,
   },
   setup() {
     const userStore = useUserStore();
-    const globalStore = useGlobalStore();
 
     return {
+      darkTheme,
+      lightTheme,
       userStore,
-      globalStore,
+      currentMode: ref(darkTheme),
     };
   },
+  watch: {
+    'userStore.isDarkMode': function (isDarkMode) {
+      this.currentMode = isDarkMode ? darkTheme : lightTheme;
+    },
+  },
   beforeMount() {
-    axios.interceptors.request.use(config => {
-      const userStore = useUserStore();
-
-      /* eslint-disable no-param-reassign */
-      config.baseURL = import.meta.env.VITE_API_URL;
-      config.headers.Authorization = `Bearer ${userStore.token}`;
-      config.headers.post['Content-Type'] = 'application/json';
-      /* eslint-enable no-param-reassign */
-      return config;
-    }, error => Promise.reject(error));
-
-    axios.interceptors.response.use(response => response, error => {
-      console.error(error);
-      if (error.response.status === 401) {
-        const userStore = useUserStore();
-        userStore.isAuthenticated = false;
-        this.isExpiredToken = true;
-
-        return Promise.reject(error);
-      }
-      return Promise.reject(error);
-    });
+  },
+  methods: {
+    changeRoute(key) {
+      this.$router.push(`/${key}`);
+    },
   },
 };
 </script>
-<style>
-#main {
-  background-color: #DDE2E4;
-}
-
+<style scoped>
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s ease;

@@ -1,20 +1,26 @@
 <template>
-  <!-- eslint-disable-next-line vue/v-on-event-hyphenation -->
-  <WeatherNight v-if="toggled" @click="toggle" />
-  <WhiteBalanceSunny v-else @click="toggle" />
-  <!-- <i-toggle v-model="toggled" @update:modelValue="toggle" /> -->
+  <n-button strong secondary circle @click="toggle">
+    <template #icon>
+      <n-icon v-if="toggled" :size="size" :component="SunnyIcon" />
+      <n-icon v-else :size="size" :component="MoonIcon" />
+    </template>
+  </n-button>
 </template>
 
 <script>
 import { getCurrentInstance } from 'vue';
-import WeatherNight from './icons/WeatherNight.vue';
-import WhiteBalanceSunny from './icons/WhiteBalanceSunny.vue';
+import {
+  Sunny as SunnyIcon,
+  Moon as MoonIcon,
+} from '@vicons/ionicons5';
 import { useUserStore } from '../store/UserStore';
 
 export default {
-  components: {
-    WeatherNight,
-    WhiteBalanceSunny,
+  props: {
+    size: {
+      type: Number,
+      default: 40,
+    },
   },
   setup() {
     const app = getCurrentInstance();
@@ -23,6 +29,8 @@ export default {
     return {
       userStore,
       app,
+      SunnyIcon,
+      MoonIcon,
     };
   },
   data() {
@@ -32,24 +40,15 @@ export default {
   },
   watch: {
     toggled(novo) {
-      this.set(this.getMode(novo));
       this.userStore.isDarkMode = novo;
     },
   },
   beforeMount() {
     this.toggled = this.userStore.isDarkMode;
-    this.set(this.getMode(this.toggled));
   },
   methods: {
     toggle() {
-      const app = this.app;
-      const current = app.appContext.config.globalProperties.$inkline.options.colorMode;
-      if (current === 'dark') app.appContext.config.globalProperties.$inkline.options.colorMode = 'light';
-      else app.appContext.config.globalProperties.$inkline.options.colorMode = 'dark';
       this.toggled = !this.toggled;
-    },
-    set(mode) {
-      this.app.appContext.config.globalProperties.$inkline.options.colorMode = mode;
     },
     getMode(check) {
       return check ? 'dark' : 'light';

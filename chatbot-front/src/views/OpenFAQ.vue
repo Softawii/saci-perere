@@ -1,68 +1,41 @@
 <template>
-  <i-container>
-    <i-row center style="margin-top: 20px">
-      <i-button-group>
-        <i-button color="primary" :to="{ name: 'Login'}">
-          Login
-        </i-button>
-        <i-button>
-          <ToggleMode />
-        </i-button>
-      </i-button-group>
-    </i-row>
-    <i-row center style="padding: 20px 0">
-      <i-column xs="12" lg="4" style="padding: 10px 5px 0">
-        <i-input v-model="nameFilter" placeholder="Digite para filtrar as categorias" clearable />
-      </i-column>
-      <i-column xs="12" lg="4" style="padding: 10px 5px 0">
-        <i-input v-model="questionFilter" placeholder="Digite para filtrar as perguntas" clearable :disabled="questions.length === 0" />
-      </i-column>
-    </i-row>
-    <i-row center>
-      <i-column>
-        <i-loader v-if="isLoadingCategories" />
-        <i-button
-          v-for="category in filteredCategories"
-          v-else :key="category.id" class="_margin-x:1/2 _margin-y:1/2 _white-space:normal" outline
-          color="primary" @click="getQuestions(category.id)"
-        >
-          {{ category.name }}
-        </i-button>
-      </i-column>
-    </i-row>
-    <i-row>
-      <i-loader v-if="isLoadingQuestions" style="margin: auto" />
-      <template v-for="question in filteredQuestions" v-else :key="question.id">
-        <i-column sm="12" md="6">
-          <i-card v-if="answers[question.id] && answers[question.id].length > 0" class="faq">
-            <template #header>
-              {{ question.question }}
-            </template>
-            <template v-if="answers[question.id]">
-              <p v-for="(answer) in answers[question.id]" :key="answer">
-                {{ answer.answer }}
-              </p>
-            </template>
-          </i-card>
-          <i-card v-else class="faq">
-            <template #header>
-              {{ question.question }}
-            </template>
-            <p v-for="(answer,index) of answers[question.id]" :key="answer">
-              <span>
-                - {{ answer.answer }}
-                <hr v-if="!(index === answers[question.id].length - 1)">
-              </span>
-            </p>
-          </i-card>
-        </i-column>
-      </template>
-    </i-row>
-  </i-container>
+  <!-- eslint-disable  vue/no-v-model-argument -->
+  <div id="container">
+    <n-grid x-gap="6" y-gap="6" cols="s:1 m:5" responsive="screen">
+      <n-gi span="3">
+        <n-input v-model:value="pattern" placeholder="Pesquisar" clearable />
+      </n-gi>
+      <n-gi span="1">
+        <n-button type="primary" block @click="$router.push('/login')">
+          Fazer login
+        </n-button>
+      </n-gi>
+      <n-gi span="1" style="margin: auto">
+        <ToggleMode :size="20" />
+      </n-gi>
+    </n-grid>
+    <n-result
+      v-if="noCategories"
+      title="Que pena"
+      description="Nenhuma categoria cadastrada"
+    >
+      <template #icon />
+    </n-result>
+    <n-tree
+      v-else
+      block-line
+      :show-irrelevant-nodes="false"
+      :pattern="pattern"
+      :data="data"
+      :on-load="handleLoad"
+    />
+  </div>
 </template>
 
 <script>
+import { ref } from 'vue';
 import axios from 'axios';
+import { useLoadingBar, useMessage } from 'naive-ui';
 import ToggleMode from '../components/ToggleMode.vue';
 
 export default {
@@ -71,58 +44,98 @@ export default {
   },
   data() {
     return {
-      categories: [],
-      questions: [],
-      answers: {},
-      nameFilter: '',
-      questionFilter: '',
-      isLoadingCategories: true,
-      isLoadingQuestions: false,
+      loadingBar: useLoadingBar(),
+      message: useMessage(),
+      pattern: ref(''),
+      data: ref([]),
+      noCategories: false,
     };
   },
-  computed: {
-    filteredCategories() {
-      return this.categories.filter(category => category.name.toLowerCase().startsWith(this.nameFilter.toLowerCase()));
-    },
-    filteredQuestions() {
-      return this.questions.filter(question => question.question.toLowerCase().startsWith(this.questionFilter.toLowerCase()));
-    },
-  },
-  watch: {
-  },
-  beforeMount() {
+  mounted() {
     this.getCategories();
   },
   methods: {
+    handleLoad(node) {
+      if (node.type === 'category') {
+        return this.getQuestions(node);
+      }
+      if (node.type === 'question') {
+        return this.getAnswers(node);
+      }
+      return undefined;
+    },
     getCategories() {
-      axios.get('/categories', {
-      }).then(response => {
-        this.categories = response.data.categories;
-        this.isLoadingCategories = false;
-      });
+      const vm = this;
+      const API_URL = import.meta.env.VITE_API_URL;
+      this.loadingBar.start();
+      axios.get(`${API_URL}/category`)
+        .then(res => {
+          this.loadingBar.finish();
+          if (!res.data?.length) {
+            this.noCategories = true;
+            return;
+          }
+          vm.data = res.data.map(category => ({
+            key: `category_${category.id}`,
+            label: category.name,
+            isLeaf: false,
+            type: 'category',
+            id: category.id,
+          }));
+        }).catch(err => {
+          this.message.error('Erro ao obter as categorias');
+          console.error(err);
+          this.loadingBar.error();
+        });
     },
-    getQuestions(categoryId) {
-      this.isLoadingQuestions = true;
-      this.questionFilter = '';
-      axios.post('/questions', {
-        id: categoryId,
-      }).then(response => {
-        this.isLoadingQuestions = false;
-        this.questions = response.data.questions;
-        this.questions.forEach(question => this.loadAnswers(question.id));
-      });
+    async getQuestions(categoryNode) {
+      const API_URL = import.meta.env.VITE_API_URL;
+      try {
+        this.loadingBar.start();
+        const res = await axios.get(`${API_URL}/question/?category=${categoryNode.id}`);
+        // eslint-disable-next-line no-param-reassign
+        categoryNode.children = res.data.map(question => ({
+          key: `question_${question.id}`,
+          label: question.value,
+          isLeaf: false,
+          type: 'question',
+          id: question.id,
+          answer_id: question.answer_id,
+        }));
+      } catch (e) {
+        console.error(e);
+        this.message.error('Erro ao obter as perguntas');
+        this.loadingBar.error();
+      }
     },
-    loadAnswers(questionId) {
-      axios.post('/answers', {
-        id: questionId,
-      }).then(response => {
-        this.answers[questionId] = response.data;
-      });
+    async getAnswers(questionNode) {
+      const API_URL = import.meta.env.VITE_API_URL;
+      try {
+        const res = await axios.get(`${API_URL}/answer/${questionNode.answer_id}?questions=false`);
+        const answer = res.data;
+        // eslint-disable-next-line no-param-reassign
+        questionNode.children = [
+          {
+            key: `answer_${answer.id}`,
+            label: answer.value,
+            isLeaf: true,
+            type: 'answer',
+            id: answer.id,
+          },
+        ];
+      } catch (e) {
+        console.error(e);
+      }
     },
   },
 };
 </script>
 
 <style lang="scss" scoped>
-
+#container {
+  height: 100vh;
+  max-width: 600px;
+  margin: auto;
+  padding: 20px 10px;
+}
 </style>

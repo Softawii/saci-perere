@@ -1,66 +1,55 @@
-import json
 from dotenv import load_dotenv, dotenv_values
 from fastapi import FastAPI, Request
 from db.connection import Database
-from model.model import ModelTraining
-from model.chat import Chat
-from request.model import Question
+from model import Distiluse_Base_Multilingual_Cased_v2 as QA
+from request.model import User_Question
+import asyncio
 
 def create_app():
     load_dotenv()
     settings = dotenv_values(".env")
     app, db = FastAPI(), Database(settings)
-    chat = None
 
     @app.middleware("http")
     async def db_session_middleware(request: Request, call_next):
         request.state.pool = db._pool
+        request.state.model = QA()
         response = await call_next(request)
         return response
 
     @app.on_event("startup")
     async def startup():
+        await QA().compare('', '')
         await db.create_pool()
-        report = await db.get_full_report()
-        chat = Chat.init(json.loads(report))
 
     @app.on_event("shutdown")
     async def shutdown():
         await db.close()
         pass
 
-    @app.get("/")
-    async def home(request: Request):
-        return {
-            "message": "Olá mundo!",
-            "endpoints": {
-                "POST": {
-                    "/train-model" : {},
-                    "/question": {
-                        "body": {
-                            "question" : "string"
-                        }
-                    }
-                }
-            }
-        }
-
-    @app.post("/train-model")
-    async def update(request: Request):
-        report = await db.get_full_report()
-        ModelTraining(json.loads(report), 5000)
-        chat = Chat.init(json.loads(report))
-
-        return {
-            "message": "Modelo treinado"
-        }
-
     @app.post("/question")
-    async def answer(request: Request, question: Question):
-        question = question.question
-        ans = Chat.make_question(question)
+    async def answer(request: Request, user_question: User_Question):
+        question = user_question.question
+        category_id = user_question.category
+        model: QA = request.state.model
+        questions_db = await db.get_questions_from_category_id(category_id)
+        questions = [question['value'] for question in questions_db]
+        result = await model.batch_compare(question, questions)
+        best_list_index = result['question_id']
+        best = questions_db[best_list_index]
+        result['question_id'] = best['id']
+        for hit in result['hits']: hit['id'] = questions_db[hit['id']]['id']
+        result['answer'] = (await db.get_answer(best['answer_id']))['value']
 
-        return ans
+        # fire and forget
+        if result['score'] < 0.5:
+            asyncio.ensure_future(db.save_unkwnown_question(question, result['question_id'], result['score']))
+
+        return result
+
+    @app.get("/categories")
+    async def categories():
+        return await db.get_categories()
     
     return app
 

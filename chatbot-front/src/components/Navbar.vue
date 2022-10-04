@@ -1,303 +1,96 @@
 <template>
   <div>
-    <i-navbar v-if="(userStore.isAuthenticated && userStore.name) && $route.name !== 'Login'" id="navbar" class="blue" style="min-width: 99%; margin: 0px 2px 4px;">
-      <i-navbar-brand to="/">
-        <span style="font-weight: bolder;">
-          Olá, {{ userStore.name }}
-        </span>
-      </i-navbar-brand>
-      <i-navbar-collapsible class="_justify-content:flex-end">
-        <i-nav>
-          <i-nav-item @click="showProfile">
-            Perfil
-          </i-nav-item>
-          <i-nav-item @click="showCreateUserModal">
-            Cadastrar Usuário
-          </i-nav-item>
-          <i-nav-item @click="showReportsModal">
-            Relatórios
-          </i-nav-item>
-          <i-nav-item>
-            <ToggleMode />
-          </i-nav-item>
-          <i-nav-item @click="logout">
-            Logout
-          </i-nav-item>
-        </i-nav>
-      </i-navbar-collapsible>
-    </i-navbar>
-    <i-modal v-model="isShowingProfile">
-      <template #header>
-        Dados Pessoais
-      </template>
-      <i-alert v-if="editProfileError" color="danger" style="margin-bottom: 20px">
-        <template #icon>
-          <i-icon name="ink-danger" />
-        </template>
-        <p>{{ editProfileError }}</p>
-      </i-alert>
-      <i-alert color="warning">
-        <template #icon>
-          <i-icon name="ink-warning" />
-        </template>
-        <p>Preencha apenas o que deseja editar</p>
-      </i-alert>
-      <i-form v-model="profileForm">
-        <i-form-group>
-          <i-form-label>Nome:</i-form-label>
-          <i-input name="name" placeholder="Seu nome" />
-        </i-form-group>
-        <i-form-group>
-          <i-form-label>Usuário:</i-form-label>
-          <i-input name="username" placeholder="Seu nome de usuário" />
-        </i-form-group>
-        <i-form-group>
-          <i-form-label>E-mail:</i-form-label>
-          <i-input name="email" placeholder="Seu e-mail" />
-        </i-form-group>
-        <i-form-group>
-          <i-form-label>Senha:</i-form-label>
-          <i-input name="password" placeholder="Digite sua nova senha" />
-        </i-form-group>
-        <i-form-group>
-          <i-row center>
-            <i-button color="secondary" @click="updateProfile">
-              Atualizar Dados Pessoais
-            </i-button>
-          </i-row>
-        </i-form-group>
-      </i-form>
-    </i-modal>
-    <i-modal v-model="isCreatingUser">
-      <template #header>
-        Dados do Novo Usuário
-      </template>
-      <i-alert v-if="creatingUserError" color="danger" style="margin-bottom: 20px">
-        <template #icon>
-          <i-icon name="ink-danger" />
-        </template>
-        <p>{{ creatingUserError }}</p>
-      </i-alert>
-      <i-form v-model="newUserForm">
-        <i-form-group>
-          <i-form-label>Nome:</i-form-label>
-          <i-input name="name" required placeholder="Nome" />
-          <i-form-error for="name" />
-        </i-form-group>
-        <i-form-group>
-          <i-form-label>Usuário:</i-form-label>
-          <i-input name="username" required placeholder="Nome de usuário" />
-          <i-form-error for="username" />
-        </i-form-group>
-        <i-form-group>
-          <i-form-label>E-mail:</i-form-label>
-          <i-input name="email" required placeholder="Seu e-mail" />
-          <i-form-error for="email" />
-        </i-form-group>
-        <i-form-group>
-          <i-form-label>Senha:</i-form-label>
-          <i-input name="password" type="password" required placeholder="Digite sua nova senha" />
-          <i-form-error for="password" />
-        </i-form-group>
-        <i-form-group>
-          <i-row center>
-            <i-button color="secondary" @click="createUser">
-              Cadastrar Novo Usuário
-            </i-button>
-          </i-row>
-        </i-form-group>
-      </i-form>
-    </i-modal>
-    <i-modal v-model="isReportsModal">
-      <template #header>
-        Relatórios
-      </template>
-      <i-container>
-        <i-row center>
-          <i-card color="primary" style="width: 100%; margin-bottom: 2px;">
-            <template #header>
-              Completo
-            </template>
-            <i-button-group block>
-              <i-button @click="fullReport(false)">
-                Ver
-              </i-button>
-              <i-button disabled @click="fullReport(true)">
-                Baixar
-              </i-button>
-            </i-button-group>
-          </i-card>
-          <i-card color="secondary" style="width: 100%">
-            <template #header>
-              Perguntas
-            </template>
-            <i-button-group block>
-              <i-button @click="questionsReport(false)">
-                Ver
-              </i-button>
-              <i-button disabled @click="questionsReport(false)">
-                Baixar
-              </i-button>
-            </i-button-group>
-          </i-card>
-        </i-row>
-      </i-container>
-    </i-modal>
+    <n-layout-header bordered class="nav">
+      <n-text tag="div" class="logo" @click="$router.push('/')">
+        <Logo />
+      </n-text>
+      <ToggleMode style="margin: auto 20px auto auto;" :size="20" />
+      <div v-if="isMobile" style="margin: auto 20px auto auto">
+        <MenuPopover @value-updated="navMenuUpdated" />
+      </div>
+      <h2 v-else style="margin: auto 20px auto auto">
+        Olá, {{ userStore.profile.name }}!
+      </h2>
+      <ProfilePopover @value-updated="userMenuUpdated" />
+    </n-layout-header>
+    <ProfileModal v-if="showProfileModal" @status="(value) => showProfileModal = value" />
   </div>
 </template>
+
 <script>
-import axios from 'axios';
-import { mapActions, mapStores } from 'pinia';
-import { getCurrentInstance } from 'vue';
-import { useUserStore } from '../store/UserStore';
-import { useGlobalStore } from '../store/GlobalStore';
+import { ref } from 'vue';
+import Logo from './Logo.vue';
 import ToggleMode from './ToggleMode.vue';
-import Validator from '../helper/ValidatorHelper';
+import ProfileModal from './modal/ProfileModal.vue';
+import ProfilePopover from './popover/ProfilePopover.vue';
+import MenuPopover from './popover/MenuPopover.vue';
+import { useUserStore } from '../store/UserStore';
+import MenuOptions from '../helper/MenuOptions';
 
 export default {
   components: {
+    Logo,
     ToggleMode,
+    ProfileModal,
+    ProfilePopover,
+    MenuPopover,
   },
+  emits: ['menu-updated'],
   setup() {
     const userStore = useUserStore();
-    const app = getCurrentInstance();
 
     return {
       userStore,
-      app,
+      isMobile: ref(window.innerWidth < 1024),
+      menuOptions: MenuOptions.navOptions(false),
     };
   },
   data() {
     return {
-      isShowingProfile: false,
-      isCreatingUser: false,
-      editProfileError: undefined,
-      creatingUserError: undefined,
-      newUserForm: this.$inkline.form(Validator.userSchema()),
-      profileForm: this.$inkline.form(Validator.userSchema()),
-      isReportsModal: false,
+      showProfileModal: ref(false),
     };
   },
-  computed: {
-    ...mapStores(useGlobalStore, useUserStore),
+  mounted() {
+    window.addEventListener('resize', () => {
+      this.isMobile = window.innerWidth < 1024;
+    });
   },
   methods: {
-    ...mapActions(useUserStore, ['clearCredentials']),
-    ...mapActions(useGlobalStore, ['addAlert']),
-    logout() {
-      this.clearCredentials()
-        .then(() => {
-          this.$router.push({
-            name: 'Login',
-          });
-        });
-    },
-    showProfile() {
-      this.profileForm = this.$inkline.form(Validator.userSchema());
-      const form = this.profileForm;
-      this.isShowingProfile = true;
-      form.name.value = this.userStore.name;
-      form.username.value = this.userStore.username;
-      form.email.value = this.userStore.email;
-      form.password.value = '';
-    },
-    updateProfile() {
-      const form = this.profileForm;
-      const body = {};
-      for (const field of ['name', 'username', 'email', 'password']) {
-        const fieldValue = form[field].value;
-        if (fieldValue.trim()) {
-          body[field] = fieldValue.trim();
-        }
+    userMenuUpdated(key) {
+      if (key === 'edit-profile') {
+        this.showProfileModal = true;
+      } else if (key === 'logout') {
+        this.userStore.clearProfile();
+        this.$router.push('/login');
       }
-
-      // if (!form.valid) {
-      //   this.editProfileError = 'O formulário possui campos inválidos';
-      //   return;
-      // }
-
-      if (!Object.keys(body).length) {
-        this.editProfileError = 'Nenhum campo está preenchido';
-        return;
-      }
-
-      axios.post('/user/set-profile', { ...body })
-        .then(response => {
-          this.userStore.setUserDetails(response.data);
-          this.isShowingProfile = false;
-          this.addAlert({
-            msgBox: 'Usuário editado com sucesso',
-            alertType: 'success',
-            alertIcon: 'ink-check',
-          });
-        }).catch(err => {
-          this.creatingUserError = err;
-        });
     },
-    showCreateUserModal() {
-      this.creatingUserError = undefined;
-      this.isCreatingUser = true;
-      this.newUserForm = this.$inkline.form(Validator.userSchema());
-    },
-    createUser() {
-      const form = this.newUserForm;
-      const username = form.username.value;
-      const password = form.password.value;
-      const name = form.name.value;
-      const email = form.email.value;
-
-      if (!form.valid) {
-        this.creatingUserError = 'O formulário possui campos inválidos';
-        return;
-      }
-
-      axios.post('/auth/signup', {
-        username,
-        password,
-        name,
-        email,
-      }).then(response => {
-        this.isCreatingUser = false;
-        this.addAlert({
-          msgBox: 'Usuário criado com sucesso',
-          alertType: 'success',
-          alertIcon: 'ink-check',
-        });
-      }).catch(err => {
-        this.creatingUserError = err;
-      });
-    },
-    showReportsModal() {
-      this.isReportsModal = true;
-    },
-    fullReport(download) {
-      axios.get(`/report/full?download=${download}&parse=${!download}`)
-        .then(response => {
-          const blob = new Blob([JSON.stringify(response.data)], {
-            type: 'application/json',
-          });
-          const fileUrl = window.URL.createObjectURL(blob);
-          window.open(fileUrl);
-        });
-    },
-    questionsReport(download) {
-      axios.get(`/report/questions?download=${download}&parse=${!download}`)
-        .then(response => {
-          const blob = new Blob([JSON.stringify(response.data)], {
-            type: 'application/json',
-          });
-          const fileUrl = window.URL.createObjectURL(blob);
-          window.open(fileUrl);
-        });
-    },
-    toggleThemeMode() {
-      const app = this.app;
-      const current = app.appContext.config.globalProperties.$inkline.options.colorMode;
-      if (current === 'dark') app.appContext.config.globalProperties.$inkline.options.colorMode = 'light';
-      else app.appContext.config.globalProperties.$inkline.options.colorMode = 'dark';
+    navMenuUpdated(key) {
+      this.$emit('menu-updated', key);
     },
   },
 };
 </script>
-<style>
+<style lang="scss" scoped>
+@import '../variables.scss';
+
+.nav {
+  height: $nav-height;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  grid-template-rows: calc(var(--header-height) - 1px);
+  align-items: center;
+  --x-padding: 16px;
+  padding: 0 var(--x-padding);
+  &.mobile {
+  --x-padding: 8px;
+  padding: 0 var(--x-padding);
+  }
+}
+
+.logo {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+}
 </style>

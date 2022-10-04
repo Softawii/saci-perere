@@ -1,296 +1,357 @@
 <template>
-  <i-container>
-    <div class="_display:flex _justify-content:space-between">
-      <div class="_font-size:xl" style="margin: 10px 10px 0">
-        Perguntas e respostas:
-      </div>
-      <div class="_align-self:end" style="margin-right: 10px;">
-        <Refresh @click="loadCategory" />
-      </div>
-    </div>
-    <i-row>
-      <!-- eslint-disable-next-line vue/no-v-for-template-key -->
-      <template v-for="question in category.questions" :key="question.question">
-        <i-card v-if="question.answers" style="width: 100%; margin: 0 10px 5px">
-          <template #header>
-            <div class="_clearfix">
-              <span class="_vertical-align:text-top"> <!-- _float:right -->
-                {{ question.question }}
-              </span>
-              <span class="_float:right">
-                <i-dropdown>
-                  <DotsVertical />
-                  <template #body>
-                    <i-dropdown-item>Editar</i-dropdown-item>
-                    <i-dropdown-item @click="deleteQuestion(question.id)">Apagar</i-dropdown-item>
-                  </template>
-                </i-dropdown>
-              </span>
-            </div>
-          </template>
-          <template v-if="question.answers">
-            <p v-for="answer in question.answers" :key="answer">
-              {{ answer }}
-            </p>
-          </template>
-        </i-card>
-        <i-card v-else style="width: 100%; margin: 0 10px 5px">
-          <template #header>
-            <div class="_clearfix">
-              <span class="_vertical-align:text-top"> <!-- _float:right -->
-                {{ question.question }}
-              </span>
-              <span class="_float:right">
-                <i-dropdown>
-                  <DotsVertical />
-                  <template #body>
-                    <i-dropdown-item>Editar</i-dropdown-item>
-                    <i-dropdown-item @click="deleteQuestion(question.id)">Apagar</i-dropdown-item>
-                  </template>
-                </i-dropdown>
-              </span>
-            </div>
-          </template>
-          <p v-for="(answer,index) of answers[question.id]" :key="answer">
-            <span>
-              - {{ answer.answer }}
-              <hr v-if="!(index === answers[question.id].length - 1)">
-            </span>
-          </p>
-        </i-card>
-      </template>
-    </i-row>
-    <i-row center>
-      <div @click="openContextModal">
-        <p class="_font-size:xl" style="margin-bottom: 0">
-          Adicionar mais perguntas
-        </p>
-        <i-icon name="ink-plus" />
-      </div>
-    </i-row>
-    <i-modal v-model="isAddingContext" size="lg">
-      <template #header>
-        Adicionar Contexto
-      </template>
-      <i-alert v-if="addingQuestionError" color="danger" style="margin-bottom: 20px">
+  <!-- eslint-disable  vue/no-v-model-argument -->
+  <div id="main">
+    <n-breadcrumb style="padding-top: 10px">
+      <n-breadcrumb-item v-for="item in globalStore.breadcrumbNavigation" :key="item.name" @click="$router.push(item.path)">
+        {{ item.name }}
+      </n-breadcrumb-item>
+    </n-breadcrumb>
+    <n-h1 style="margin-top: 0">
+      {{ category.name }}
+      <n-tag v-if="category.favorite" :bordered="false" type="warning" size="small">
+        Favorito
         <template #icon>
-          <i-icon name="ink-danger" />
+          <n-icon :component="StarIcon" />
         </template>
-        <p>{{ addingQuestionError }}</p>
-      </i-alert>
-      <i-form v-model="form">
-        <i-form-group>
-          <i-form-label>Contexto:</i-form-label>
-          <i-textarea
-            placeholder="Contexto" name="context"
-            required clearable style="min-height: 100px; max-height: 300px;"
-          />
-        </i-form-group>
-        <i-form-group>
-          <i-form-label>Pergunta:</i-form-label>
-          <i-input
-            placeholder="Pergunta" name="question"
-            required clearable
-          />
-        </i-form-group>
-        <i-form-group>
-          <i-row center>
-            <i-button color="primary" @click="openQuestionModal">
-              Próximo
-            </i-button>
-          </i-row>
-        </i-form-group>
-      </i-form>
-    </i-modal>
-    <i-modal v-model="isAddingQuestion" size="lg">
-      <template #header>
-        Adicionar Pergunta
-      </template>
-      <i-alert v-if="addingQuestionError" color="danger" style="margin-bottom: 20px">
+      </n-tag>
+      <n-button
+        strong secondary circle style="margin-left: 10px;"
+        :disabled="!userStore.profile.isadmin"
+        @click="showCreateQAModal = true"
+      >
         <template #icon>
-          <i-icon name="ink-danger" />
+          <n-icon :component="AddCircleIcon" />
         </template>
-        <p>{{ addingQuestionError }}</p>
-      </i-alert>
-      <i-form v-model="form">
-        <i-form-group>
-          <i-form-label>Contexto:</i-form-label>
-          <Selection
-            :text="form.context.value" :button-text="'Definir resposta'" @selection="setAnswer"
-          />
-        </i-form-group>
-        <i-form-group>
-          <i-form-label>Pergunta:</i-form-label>
-          <i-input
-            v-model="form.question.value" readonly
-          />
-        </i-form-group>
-        <i-form-group>
-          <i-form-label>Resposta:</i-form-label>
-          <i-textarea
-            v-model="newAnswer" placeholder="Resposta" name="answer"
-            readonly style="min-height: 100px; max-height: 300px;"
-          />
-        </i-form-group>
-        <i-form-group>
-          <i-row center>
-            <i-button color="secondary" style="margin-right: 10px;" @click="reopenContextModal">
-              Voltar
-            </i-button>
-            <i-button color="primary" @click="addQuestion">
-              Confirmar
-            </i-button>
-          </i-row>
-        </i-form-group>
-      </i-form>
-    </i-modal>
-  </i-container>
+      </n-button>
+    </n-h1>
+    <n-blockquote>
+      {{ category.description }}
+    </n-blockquote>
+    <n-list v-if="questions.length" id="list" hoverable clickable>
+      <n-list-item v-for="qa in questions" :key="qa.question">
+        <template #suffix>
+          <n-dropdown trigger="hover" :options="qaOptions" @select="(key) => handleSelect(key, qa)">
+            <n-button>
+              <template #icon>
+                <n-icon :component="EllipsisVerticalIcon" />
+              </template>
+            </n-button>
+          </n-dropdown>
+        </template>
+        <n-thing :title="qa.value" content-style="margin-top: 10px;" @click="showDetails(qa)">
+          {{ qa.answer }}
+        </n-thing>
+      </n-list-item>
+    </n-list>
+    <n-modal v-model:show="showCreateQAModal">
+      <n-card
+        style="width: 600px"
+        title="Cadastrar nova Pergunta"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+      >
+        <n-form
+          ref="qaFormRef"
+          :model="qaForm"
+          :rules="qaFormRules"
+          style="margin: auto; max-width: 600px;"
+        >
+          <n-form-item label="Pergunta" path="question">
+            <n-input v-model:value="qaForm.question" placeholder="Pergunta" />
+          </n-form-item>
+          <n-form-item label="Resposta" path="answer">
+            <n-input
+              v-model:value="qaForm.answer" placeholder="Resposta" type="textarea"
+              :autosize="{
+                minRows: 3
+              }"
+            />
+          </n-form-item>
+          <n-button type="primary" block @click="submitNewQA">
+            Salvar
+          </n-button>
+        </n-form>
+      </n-card>
+    </n-modal>
+    <n-modal v-model:show="showEditModal">
+      <n-card
+        style="width: 600px"
+        :title="currentQA.value"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+      >
+        <n-form
+          ref="qaFormRef"
+          :model="qaForm"
+          :rules="qaFormRules"
+          style="margin: auto; max-width: 600px;"
+        >
+          <n-form-item label="Pergunta" path="question">
+            <n-input v-model:value="qaForm.question" placeholder="Pergunta" />
+          </n-form-item>
+          <n-form-item label="Resposta" path="answer">
+            <n-input
+              v-model:value="qaForm.answer" placeholder="Resposta" type="textarea"
+              :autosize="{
+                minRows: 3
+              }"
+            />
+          </n-form-item>
+          <n-button type="primary" block @click="submitEditQA">
+            Salvar
+          </n-button>
+        </n-form>
+      </n-card>
+    </n-modal>
+    <n-modal v-model:show="showDetailsModal">
+      <n-card
+        style="width: 600px"
+        :title="currentQA.value"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+      >
+        {{ currentQA.answer }}
+      </n-card>
+    </n-modal>
+    <n-modal
+      v-model:show="showDeleteModal"
+      preset="dialog"
+      type="error"
+      title="Apagar pergunta"
+      :content="`Você realmente deseja apagar a pergunta: '${currentQA.value}'`"
+      positive-text="Apagar"
+      negative-text="Cancelar"
+      @positive-click="deleteQuestion"
+    />
+  </div>
 </template>
 
 <script>
+import { ref, h } from 'vue';
 import axios from 'axios';
-import { mapActions, mapStores } from 'pinia';
-import { useUserStore } from '../store/UserStore';
+import {
+  Star as StarIcon,
+  EllipsisVerticalOutline as EllipsisVerticalIcon,
+  Trash as TrashIcon,
+  DocumentText as DocumentTextIcon,
+  AddCircle as AddCircleIcon,
+} from '@vicons/ionicons5';
+import { useLoadingBar, useMessage, NIcon } from 'naive-ui';
 import { useGlobalStore } from '../store/GlobalStore';
-import DotsVertical from '../components/icons/DotsVertical.vue';
-import Refresh from '../components/icons/Refresh.vue';
-import Selection from '../components/Selection.vue';
+import { useUserStore } from '../store/UserStore';
+
+function renderIcon(icon) {
+  return () => h(NIcon, null, { default: () => h(icon) });
+}
 
 export default {
-  components: {
-    DotsVertical,
-    Refresh,
-    Selection,
-  },
-  data() {
-    const formSchema = {
-      question: {
-        validators: [
-          {
-            name: 'required',
-          },
-        ],
-      },
-      context: {
-        validators: [
-          {
-            name: 'required',
-          },
-        ],
-      },
-      answer: {
-        validators: [
-          {
-            name: 'required',
-          },
-        ],
-      },
-    };
+  setup() {
+    const userStore = useUserStore();
+    const qaFormRef = ref(null);
+    const model = ref({
+      name: '',
+      description: '',
+    });
 
     return {
-      id: undefined,
-      category: {},
-      answers: {},
-      isAddingContext: false,
-      isAddingQuestion: false,
-      addingQuestionError: undefined,
-      newAnswer: undefined,
-      newAnswerData: undefined,
-      form: this.$inkline.form(formSchema),
+      AddCircleIcon,
+      StarIcon,
+      EllipsisVerticalIcon,
+      userStore,
+      globalStore: useGlobalStore(),
+      loadingBar: useLoadingBar(),
+      message: useMessage(),
+      qaFormRef,
+      qaForm: model,
+      qaFormRules: {
+        question: {
+          required: true,
+          message: 'Insira a pergunta',
+          trigger: 'blur',
+        },
+        answer: {
+          required: true,
+          message: 'Insira a resposta',
+          trigger: 'blur',
+        },
+      },
+      qaOptions: [
+        {
+          label: 'Apagar',
+          key: 'delete',
+          icon: renderIcon(TrashIcon),
+          disabled: !userStore.profile.isadmin,
+        },
+        {
+          label: 'Editar',
+          key: 'edit',
+          icon: renderIcon(DocumentTextIcon),
+          disabled: !userStore.profile.isadmin,
+        },
+      ],
+      category: ref({}),
     };
   },
-  computed: {
-    ...mapStores(useGlobalStore, useUserStore),
+  data() {
+    return {
+      showDetailsModal: false,
+      showEditModal: false,
+      showDeleteModal: false,
+      showCreateQAModal: false,
+      currentQA: {},
+      questions: [],
+    };
   },
-  beforeMount() {
-    this.id = this.$route.params.id;
-    this.loadCategory();
+  watch: {
+    '$route.params.id': function (previous, next) {
+      if (next && previous && previous !== next) {
+        this.updateData();
+      }
+    },
+    showCreateQAModal() {
+      this.qaForm.question = '';
+      this.qaForm.answer = '';
+    },
+  },
+  mounted() {
+    this.updateData();
   },
   methods: {
-    loadCategory() {
-      axios.post('/questions', {
-        id: this.id,
-      }).then(response => {
-        this.category = response.data;
-        this.category.questions.forEach(question => this.loadAnswers(question.id));
-      });
-    },
-    loadAnswers(questionId) {
-      axios.post('/answers', {
-        id: questionId,
-      }).then(response => {
-        this.answers[questionId] = response.data;
-      });
-    },
-    openQuestionModal() {
-      const form = this.form;
-      if (form.context.invalid || !form.context.value.trim()) {
-        this.addingQuestionError = 'Contexto é inválido';
-        return;
+    handleSelect(key, qa) {
+      this.currentQA = qa;
+      if (key === 'edit') {
+        this.showEditModal = true;
+        this.qaForm.question = qa.value;
+        this.qaForm.answer = qa.answer;
       }
-      if (form.question.invalid || !form.question.value.trim()) {
-        this.addingQuestionError = 'Pergunta é inválida';
-        return;
+      if (key === 'delete') {
+        this.showDeleteModal = true;
       }
-
-      this.isAddingContext = false;
-      this.addingQuestionError = undefined;
-      this.isAddingQuestion = true;
     },
-    openContextModal() {
-      // const form = this.form;
-      // form.context.value = '';
-      this.isAddingContext = true;
+    showDetails(qa) {
+      this.currentQA = qa;
+      this.showDetailsModal = true;
     },
-    reopenContextModal() {
-      this.isAddingQuestion = false;
-      this.isAddingContext = true;
+    deleteQuestion() {
+      const apiUrl = this.globalStore.apiUrl;
+      this.loadingBar.start();
+      axios.delete(`${apiUrl}/question/${this.currentQA.id}`)
+        .then(res => {
+          this.message.success('Pergunta apagada com sucesso');
+          this.loadingBar.finish();
+        }).catch(err => {
+          this.message.error(`Erro ao tentar apagar a pergunta ${this.currentCategory.name}`);
+          console.error(err);
+          this.loadingBar.error();
+        }).finally(() => {
+          this.updateData(true);
+        });
     },
-    addQuestion() {
-      const form = this.form;
-      if (form.answer.value && !form.answer.value.trim()) {
-        console.log(form.answer);
-        this.addingQuestionError = 'Resposta é inválida';
-        return;
+    updateData(force) {
+      const id = this.$route.params.id;
+      const apiUrl = import.meta.env.VITE_API_URL;
+      this.loadingBar.start();
+      if (!this.globalStore.data.currentCategory || force) {
+        axios.get(`${apiUrl}/category/${id}`)
+          .then(res => {
+            this.category = res.data;
+            this.globalStore.setCurrentCategory(this.category);
+            this.message.success('Perguntas atualizadas com sucesso');
+          }).catch(err => {
+            console.error(err);
+            this.message.error('Erro ao tentar atualizar as perguntas');
+          });
+      } else {
+        this.category = this.globalStore.data.currentCategory;
       }
-
-      axios.post('/questions/create', {
-        id: this.id,
-        question: form.question.value.trim(),
-        answer: form.answer.value.trim(),
-        answer_start: this.newAnswerData.start,
-        context: form.context.value.trim(),
-      }).then(() => {
-        this.addingQuestionError = undefined;
-        this.isAddingQuestion = false;
-        this.loadCategory();
-      }).catch(err => {
-        console.error(err);
-        this.addingQuestionError = err;
-        this.loadCategory();
-      });
-    },
-    deleteQuestion(id) {
-      if (confirm('Você tem certeza disso?')) {
-        axios.post('/questions/delete', {
-          id,
-        }).then(() => {
-          this.loadCategory();
+      axios.get(`${apiUrl}/question/?category=${id}`)
+        .then(res => {
+          this.questions = res.data;
+          Promise.all(
+            this.questions.map(question => axios.get(`${apiUrl}/answer/${question.answer_id}?questions=false`)
+              .then(res => {
+              // eslint-disable-next-line no-param-reassign
+                question.answer = res.data.value;
+              })),
+          ).then(() => {
+            this.loadingBar.finish();
+          }).catch(err => {
+            this.loadingBar.error();
+          });
         }).catch(err => {
           console.error(err);
-          this.loadCategory();
+          this.loadingBar.error();
         });
-      }
     },
-    setAnswer(data) {
-      if (data) {
-        this.form.answer.value = data.text;
-        this.newAnswerData = data;
-      }
+    submitEditQA() {
+      this.qaFormRef.validate(
+        errors => {
+          if (!errors) {
+            const API_URL = this.globalStore.apiUrl;
+            this.loadingBar.start();
+            axios.patch(`${API_URL}/question/${this.currentQA.id}`, {
+              question: this.qaFormRef.model.question,
+              answer: this.qaFormRef.model.answer,
+            }).then(res => {
+              this.message.success('Pergunta atualizada com sucesso');
+              this.loadingBar.finish();
+              this.showEditModal = false;
+            }).catch(err => {
+              this.message.error('Erro ao tentar editar a pergunta');
+              console.error(err);
+              this.loadingBar.error();
+            }).finally(() => {
+              this.updateData(true);
+            });
+          } else {
+            // console.log(errors);
+          }
+        },
+      );
+    },
+    submitNewQA() {
+      this.qaFormRef.validate(
+        errors => {
+          if (!errors) {
+            const API_URL = this.globalStore.apiUrl;
+            this.loadingBar.start();
+            axios.post(`${API_URL}/question/?category=${this.category.id}`, {
+              question: this.qaFormRef.model.question,
+              answer: this.qaFormRef.model.answer,
+            }).then(res => {
+              this.message.success('Pergunta cadastrada com sucesso');
+              this.loadingBar.finish();
+              this.showCreateQAModal = false;
+            }).catch(err => {
+              this.message.error('Erro ao tentar cadastrar a pergunta');
+              console.error(err);
+              this.loadingBar.error();
+            }).finally(() => {
+              this.updateData(true);
+            });
+          } else {
+            // console.log(errors);
+          }
+        },
+      );
     },
   },
 };
 </script>
 
-<style lang="scss" scoped>
+<style>
+#main {
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+#list {
+  padding: 10px;
+}
 </style>

@@ -52,7 +52,15 @@
     "no-use-before-define": "off",
     "vue/no-v-for-template-key": "off",
     "no-restricted-globals": "off",
-    "no-alert": "off"
+    "no-alert": "off",
+    "import/no-extraneous-dependencies": [
+      "warn",
+      {
+        "devDependencies": false,
+        "optionalDependencies": false,
+        "peerDependencies": false
+      }
+    ]
   },
   "parserOptions": {
     "ecmaVersion": 2022
