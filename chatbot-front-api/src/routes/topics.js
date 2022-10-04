@@ -3,15 +3,15 @@ const status = require('http-status');
 const { param, body, query } = require('express-validator');
 const { prisma, handleError } = require('../db');
 const {
-  checkUserIsAdmin,
+  checkUserIsAdmin, validateRequest,
 } = require('../util');
 
 const router = express.Router();
 
-router.get('/', query('categories').isBoolean().toBoolean(), (req, res) => {
+router.get('/', query('categories').isBoolean().toBoolean().optional({ nullable: true }), validateRequest, (req, res) => {
   prisma.topic.findMany({
     include: {
-      categories: req.query.categories,
+      categories: req.query.categories === true,
     },
   }).then(result => {
     res.json(result || []);
@@ -23,13 +23,13 @@ router.get('/', query('categories').isBoolean().toBoolean(), (req, res) => {
   });
 });
 
-router.get('/:id', query('categories').isBoolean().toBoolean(), param('id').isInt().toInt(10), (req, res) => {
+router.get('/:id', query('categories').isBoolean().toBoolean().optional({ nullable: true }), param('id').isInt().toInt(10), validateRequest, (req, res) => {
   prisma.topic.findUnique({
     where: {
       id: req.params.id,
     },
     include: {
-      categories: req.query.categories,
+      categories: req.query.categories === true,
     },
   }).then(result => {
     res.json(result || {});
@@ -41,7 +41,7 @@ router.get('/:id', query('categories').isBoolean().toBoolean(), param('id').isIn
   });
 });
 
-router.post('/', checkUserIsAdmin, body('name').isString(), body('description').isString().optional({ nullable: true }), (req, res) => {
+router.post('/', checkUserIsAdmin, body('name').isString(), body('description').isString().optional({ nullable: true }), validateRequest, (req, res) => {
   prisma.topic.create({
     data: {
       name: req.body.name,
@@ -64,7 +64,7 @@ router.post('/', checkUserIsAdmin, body('name').isString(), body('description').
   });
 });
 
-router.patch('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), (req, res) => {
+router.patch('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), validateRequest, (req, res) => {
   const data = {};
   const columns = ['name', 'description'];
   for (const column of columns) {
@@ -94,7 +94,7 @@ router.patch('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), (req, res)
   });
 });
 
-router.delete('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), (req, res) => {
+router.delete('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), validateRequest, (req, res) => {
   prisma.topic.delete({
     where: {
       id: req.params.id,

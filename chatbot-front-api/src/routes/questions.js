@@ -2,7 +2,7 @@ const express = require('express');
 const status = require('http-status');
 const { param, query, body } = require('express-validator');
 const { prisma, handleError } = require('../db');
-const { checkUserIsAdmin, checkAccessToken } = require('../util');
+const { checkUserIsAdmin, checkAccessToken, validateRequest } = require('../util');
 
 const router = express.Router();
 
@@ -18,7 +18,7 @@ router.get('/unknown', checkAccessToken, (req, res) => {
     });
 });
 
-router.delete('/unknown/:id', checkUserIsAdmin, param('id').isInt().toInt(10), (req, res) => {
+router.delete('/unknown/:id', checkUserIsAdmin, param('id').isInt().toInt(10), validateRequest, (req, res) => {
   prisma.unknown_question.delete({
     where: {
       id: req.params.id,
@@ -40,7 +40,7 @@ router.delete('/unknown/:id', checkUserIsAdmin, param('id').isInt().toInt(10), (
   });
 });
 
-router.get('/', query('category').isInt().toInt(10), (req, res) => {
+router.get('/', query('category').isInt().toInt(10), validateRequest, (req, res) => {
   prisma.question.findMany({
     where: {
       category_id: req.query.category,
@@ -55,7 +55,7 @@ router.get('/', query('category').isInt().toInt(10), (req, res) => {
   });
 });
 
-router.get('/:id', param('id').isInt().toInt(10), (req, res) => {
+router.get('/:id', param('id').isInt().toInt(10), validateRequest, (req, res) => {
   prisma.question.findUnique({
     where: {
       id: req.params.id,
@@ -70,7 +70,7 @@ router.get('/:id', param('id').isInt().toInt(10), (req, res) => {
   });
 });
 
-router.post('/', checkUserIsAdmin, query('category').isInt().toInt(10), body(['question', 'answer']).isString(), (req, res) => {
+router.post('/', checkUserIsAdmin, query('category').isInt().toInt(10), body(['question', 'answer']).isString(), validateRequest, (req, res) => {
   prisma.question.create({
     data: {
       value: req.body.question,
@@ -106,7 +106,7 @@ router.post('/', checkUserIsAdmin, query('category').isInt().toInt(10), body(['q
   });
 });
 
-router.patch('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), body(['question', 'answer']).isString(), (req, res) => {
+router.patch('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), body(['question', 'answer']).isString(), validateRequest, (req, res) => {
   prisma.question.update({
     where: {
       id: req.params.id,
@@ -136,7 +136,7 @@ router.patch('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), body(['que
   });
 });
 
-router.delete('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), (req, res) => {
+router.delete('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), validateRequest, (req, res) => {
   prisma.question.delete({
     where: {
       id: req.params.id,

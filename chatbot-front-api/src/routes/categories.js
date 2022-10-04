@@ -3,12 +3,12 @@ const status = require('http-status');
 const { param, body, query } = require('express-validator');
 const { prisma, Prisma, handleError } = require('../db');
 const {
-  isUserAuthenticated, checkAccessToken, checkUserIsAdmin,
+  isUserAuthenticated, checkAccessToken, checkUserIsAdmin, validateRequest,
 } = require('../util');
 
 const router = express.Router();
 
-router.get('/', query('topicId').optional().isInt().toInt(10), (req, res) => {
+router.get('/', query('topicId').optional().isInt().toInt(10), validateRequest, (req, res) => {
   const { isAuthenticated, userId } = isUserAuthenticated(req);
   if (isAuthenticated) {
     /* eslint-disable indent */
@@ -50,7 +50,7 @@ router.get('/', query('topicId').optional().isInt().toInt(10), (req, res) => {
   }
 });
 
-router.get('/:id', param('id').isInt().toInt(10), (req, res) => {
+router.get('/:id', param('id').isInt().toInt(10), validateRequest, (req, res) => {
   const { isAuthenticated, userId } = isUserAuthenticated(req);
   if (isAuthenticated) {
     /* eslint-disable indent */
@@ -88,7 +88,7 @@ router.get('/:id', param('id').isInt().toInt(10), (req, res) => {
   }
 });
 
-router.post('/', checkUserIsAdmin, body('topicId').isInt().toInt(10), body('name').isString(), body('description').isString().optional({ nullable: true }), (req, res) => {
+router.post('/', checkUserIsAdmin, body('topicId').isInt().toInt(10), body('name').isString(), body('description').isString().optional({ nullable: true }), validateRequest, (req, res) => {
   prisma.category.create({
     data: {
       name: req.body.name,
@@ -116,7 +116,7 @@ router.post('/', checkUserIsAdmin, body('topicId').isInt().toInt(10), body('name
   });
 });
 
-router.post('/favorite/:id', checkAccessToken, param('id').isInt().toInt(10), (req, res) => {
+router.post('/favorite/:id', checkAccessToken, param('id').isInt().toInt(10), validateRequest, (req, res) => {
   prisma.user_favorite.create({
     data: {
       category: {
@@ -146,7 +146,7 @@ router.post('/favorite/:id', checkAccessToken, param('id').isInt().toInt(10), (r
   });
 });
 
-router.delete('/favorite/:id', checkUserIsAdmin, param('id').isInt().toInt(10), (req, res) => {
+router.delete('/favorite/:id', checkUserIsAdmin, param('id').isInt().toInt(10), validateRequest, (req, res) => {
   prisma.user_favorite.delete({
     where: {
       user_id_category_id: {
@@ -171,7 +171,7 @@ router.delete('/favorite/:id', checkUserIsAdmin, param('id').isInt().toInt(10), 
   });
 });
 
-router.patch('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), (req, res) => {
+router.patch('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), validateRequest, (req, res) => {
   const data = {};
   const columns = ['name', 'description'];
   for (const column of columns) {
@@ -201,7 +201,7 @@ router.patch('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), (req, res)
   });
 });
 
-router.delete('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), (req, res) => {
+router.delete('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), validateRequest, (req, res) => {
   prisma.category.delete({
     where: {
       id: req.params.id,

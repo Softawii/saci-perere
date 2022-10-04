@@ -2,10 +2,11 @@ const express = require('express');
 const status = require('http-status');
 const { param, query } = require('express-validator');
 const { prisma } = require('../db');
+const { validateRequest } = require('../util');
 
 const router = express.Router();
 
-router.get('/:id', param('id').isInt().toInt(10), query('questions').isBoolean().toBoolean(), (req, res) => {
+router.get('/:id', param('id').isInt().toInt(10), query('questions').isBoolean().toBoolean(), validateRequest, (req, res) => {
   prisma.answer.findFirst({
     where: {
       id: req.params.id,

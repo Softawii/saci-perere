@@ -3,7 +3,7 @@ const status = require('http-status');
 const bcrypt = require('bcrypt');
 const { param } = require('express-validator');
 const { prisma } = require('../db');
-const { checkUserIsAdmin, checkAccessToken } = require('../util');
+const { checkUserIsAdmin, checkAccessToken, validateRequest } = require('../util');
 
 const router = express.Router();
 
@@ -89,7 +89,7 @@ router.patch('/profile', checkAccessToken, async (req, res) => {
   });
 });
 
-router.post('/give-admin/:id', checkUserIsAdmin, param('id').isInt().toInt(10), (req, res) => {
+router.post('/give-admin/:id', checkUserIsAdmin, param('id').isInt().toInt(10), validateRequest, (req, res) => {
   prisma.user.update({
     where: {
       id: req.params.id,
