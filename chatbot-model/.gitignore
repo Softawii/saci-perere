@@ -1,0 +1,5 @@
+*.env
+model/checkpoint/**
+!model/checkpoint/*.md
+__pycache__/
+logs/

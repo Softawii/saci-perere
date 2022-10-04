@@ -1,77 +1,76 @@
-<script setup>
-</script>
-
 <template>
-  <div id="main" style="min-height: 100vh; min-width: 100vw;">
-    <i-container>
-      <i-navbar v-if="userStore.isAuthenticated" id="navbar" style="min-width: 99%; margin: 0 2px 4px;">
-        <i-navbar-brand to="/">
-          <span>
-            Olá, {{ userStore.name }}
-          </span>
-        </i-navbar-brand>
-        <i-navbar-collapsible class="_justify-content:flex-end">
-          <i-nav>
-            <i-nav-item to="/">
-              Cadastrar Usuário
-            </i-nav-item>
-            <i-nav-item @click="logout">
-              Logout
-            </i-nav-item>
-          </i-nav>
-        </i-navbar-collapsible>
-      </i-navbar>
-    </i-container>
-    <div style="text-align: center">
-      <router-link to="/">
-        Home
-      </router-link> |
-      <router-link to="/login">
-        Login
-      </router-link> |
-      <router-link to="/category">
-        Category
-      </router-link>
-    </div>
-    <router-view />
-  </div>
+  <n-config-provider :theme="currentMode">
+    <n-message-provider>
+      <n-loading-bar-provider>
+        <div v-if="$route.meta.label" style="height: 100vh; width: 100vw;" :style="{backgroundColor: currentMode.common.bodyColor}">
+          <router-view v-slot="{ Component }">
+            <transition name="fade" mode="out-in">
+              <div v-if="$route.meta.label === 'faq' || $route.meta.label === 'home' ">
+                <n-layout-content>
+                  <component :is="Component" :key="$route.name" />
+                </n-layout-content>
+              </div>
+              <div v-else>
+                <n-layout-header>
+                  <Navbar v-if="$route.meta.label !== 'login'" @menu-updated="changeRoute" />
+                </n-layout-header>
+                <n-layout-content>
+                  <Sidebar @menu-updated="changeRoute">
+                    <component :is="Component" :key="$route.name" />
+                  </Sidebar>
+                </n-layout-content>
+              </div>
+            </transition>
+          </router-view>
+        </div>
+      </n-loading-bar-provider>
+    </n-message-provider>
+  </n-config-provider>
 </template>
 <script>
-
-import { mapActions, mapStores } from 'pinia';
+import { ref } from 'vue';
+import { darkTheme, lightTheme } from 'naive-ui';
+import Navbar from './components/Navbar.vue';
+import Sidebar from './components/Sidebar.vue';
 import { useUserStore } from './store/UserStore';
 
 export default {
-  components: {},
-  data() {
-    return {
-    };
+  components: {
+    Navbar,
+    Sidebar,
   },
   setup() {
     const userStore = useUserStore();
 
     return {
+      darkTheme,
+      lightTheme,
       userStore,
+      currentMode: ref(darkTheme),
     };
   },
-  computed: {
-    ...mapStores(useUserStore),
+  watch: {
+    'userStore.isDarkMode': function (isDarkMode) {
+      this.currentMode = isDarkMode ? darkTheme : lightTheme;
+    },
+  },
+  beforeMount() {
   },
   methods: {
-    ...mapActions(useUserStore, ['clearCredentials']),
-    logout() {
-      this.clearCredentials()
-        .then(() => {
-          this.$router.push({
-            name: 'Login',
-          });
-        });
+    changeRoute(key) {
+      this.$router.push(`/${key}`);
     },
   },
 };
 </script>
-<style>
-#main {
-  background-color: #DDE2E4;
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

@@ -1,161 +1,123 @@
-<script setup>
-import axios from 'axios';
-import { mapStores } from 'pinia';
-import AccountIcon from '../components/icons/Account.vue';
-import LockIcon from '../components/icons/Lock.vue';
-import EyeIcon from '../components/icons/Eye.vue';
-import EyeOffIcon from '../components/icons/EyeOff.vue';
-
-import { useUserStore } from '../store/UserStore';
-import { useGlobalStore } from '../store/GlobalStore';
-</script>
 <template>
-  <div id="main" style="min-height: 100vh; display: flex; align-items: center;">
-    <i-container>
-      <i-row center style="">
-        <h1 style="margin: 0 0 80px">
-          SAMA
-        </h1>
-      </i-row>
-      <i-row v-if="$route.query.unAuthenticated" center style="margin: 0 0 20px">
-        <i-alert color="info">
-          <template #icon>
-            <i-icon name="ink-info" />
-          </template>
-          <p>Você não está autenticado para poder acessar a página.</p>
-        </i-alert>
-      </i-row>
-      <i-row v-if="wrongCredentials" center style="margin: 0 0 20px">
-        <i-alert color="danger">
-          <template #icon>
-            <i-icon name="ink-danger" />
-          </template>
-          <p>As credenciais inseridas estão incorretas.</p>
-        </i-alert>
-      </i-row>
-      <i-row v-if="unexpectedError" center style="margin: 0 0 20px">
-        <i-alert color="danger">
-          <template #icon>
-            <i-icon name="ink-danger" />
-          </template>
-          <p>Algo de errado ocorreu, entre em contato com os administradores.</p>
-        </i-alert>
-      </i-row>
-      <i-row center style="">
-        <i-form v-model="form" @submit="submit">
-          <i-form-group>
-            <i-input name="username" placeholder="Usuário">
-              <template #prefix>
-                <AccountIcon />
-              </template>
-            </i-input>
-            <i-form-error for="username" />
-          </i-form-group>
-
-          <i-form-group>
-            <i-input :type="isPasswordVisible? 'text' :'password'" name="password" placeholder="Senha">
-              <template #prefix>
-                <LockIcon />
-              </template>
-              <template #suffix>
-                <EyeIcon v-if="isPasswordVisible" @click="togglePasswordVisibility" />
-                <EyeOffIcon v-else @click="togglePasswordVisibility" />
-              </template>
-            </i-input>
-            <i-form-error for="password" />
-          </i-form-group>
-
-          <i-form-group class="_margin-x:auto" style="max-width: 200px;">
-            <i-button id="sign-in" outline color="primary">
-              <span v-if="!loading">
-                Entrar
-              </span>
-              <i-loader v-else />
-            </i-button>
-          </i-form-group>
-        </i-form>
-      </i-row>
-    </i-container>
+  <div id="container">
+    <Logo style="padding: 20px 0" />
+    <!-- eslint-disable  vue/no-v-model-argument -->
+    <n-form
+      ref="formRef"
+      :model="loginForm"
+      :rules="rules"
+      style="max-width: 300px;"
+      @keyup.enter="submit"
+    >
+      <n-alert v-if="loginErrorMessage" title="Erro ao fazer login" type="warning" style="margin-bottom: 20px;">
+        {{ loginErrorMessage }}
+      </n-alert>
+      <n-form-item label="Usuário" path="username">
+        <n-input v-model:value="loginForm.username" placeholder="fulano" />
+      </n-form-item>
+      <n-form-item label="Senha" path="password">
+        <n-input v-model:value="loginForm.password" type="password" show-password-on="click" placeholder="123456" />
+      </n-form-item>
+      <n-button block type="primary" @click="submit">
+        Fazer Login
+      </n-button>
+      <n-button block type="info" style="margin-top: 4px" @click="$router.push('/faq')">
+        FAQ
+      </n-button>
+      <n-form-item :span="24">
+        <ToggleMode style="margin: auto;" :size="20" />
+      </n-form-item>
+    </n-form>
   </div>
 </template>
 
 <script>
-
-import {mapStores} from "pinia";
+import axios from 'axios';
+import { ref } from 'vue';
+import { useLoadingBar } from 'naive-ui';
+import Logo from '../components/Logo.vue';
+import ToggleMode from '../components/ToggleMode.vue';
+import { useUserStore } from '../store/UserStore';
 
 export default {
   components: {
+    Logo,
+    ToggleMode,
+  },
+  setup() {
+    const formRef = ref(null);
+    const model = ref({
+      username: '',
+      password: '',
+    });
+
+    return {
+      userStore: useUserStore(),
+      loadingBar: useLoadingBar(),
+      formRef,
+      loginForm: model,
+      rules: {
+        password: {
+          required: true,
+          message: 'Insira a senha',
+          trigger: 'blur',
+        },
+        username: {
+          required: true,
+          message: 'Insira o usuário',
+          trigger: 'blur',
+        },
+      },
+    };
   },
   data() {
-    const formSchema = {
-      username: {
-        validators: [
-          {
-            name: 'required',
-          },
-        ],
-      },
-      password: {
-        validators: [
-          {
-            name: 'required',
-          },
-        ],
-      },
-    };
     return {
-      isPasswordVisible: false,
-      form: this.$inkline.form(formSchema),
-      loading: false,
-      wrongCredentials: false,
-      unexpectedError: false,
+      loginErrorMessage: undefined,
     };
-  },
-  computed: {
-    ...mapStores(useGlobalStore, useUserStore),
   },
   methods: {
     submit() {
-      const form = this.form;
-      const username = form.username.value;
-      const password = form.password.value;
-
-      const url = this.globalStore.apiUrl;
-      this.loading = true;
-      axios.post(`${url}/auth/signin`, {
-        username,
-        password,
-      }).then(response => {
-        this.userStore.setUserData(response.data);
-        this.$router.push({
-          path: '/',
-        });
-      }).catch(err => {
-        this.loading = false;
-        if (err.response.status === 401) {
-          this.wrongCredentials = true;
+      this.formRef.validate(errors => {
+        if (!errors) {
+          const { username, password } = this.loginForm;
+          const API_URL = import.meta.env.VITE_API_URL;
+          this.loadingBar.start();
+          this.loginErrorMessage = undefined;
+          axios.post(`${API_URL}/auth/signin`, {
+            username,
+            password,
+          }).then(res => {
+            this.userStore.setUserProfile(res.data);
+            axios.defaults.headers.common.Authorization = `Bearer ${res.data.token}`;
+            this.loadingBar.finish();
+            this.$router.push('/categories');
+          }).catch(err => {
+            const response = err.response;
+            if (response.status === 403) {
+              this.loginErrorMessage = 'Credenciais inválidas';
+            } else if (err.message === 'Network Error') {
+              this.loginErrorMessage = 'Ocorreu algum problema de rede';
+            } else {
+              this.loginErrorMessage = 'Aconteceu algo inesperado';
+              console.error(err);
+            }
+            this.loadingBar.error();
+          });
         } else {
-          this.unexpectedError = true;
+          // console.log(errors);
         }
-      });
-    },
-    togglePasswordVisibility() {
-      this.isPasswordVisible = !this.isPasswordVisible;
+      }).catch(() => {});
     },
   },
 };
 </script>
 
-<style lang="scss" scoped>
-#main {
-  color: white;
-  background-color: #023E8A;
-}
-
-#sign-in {
-  border-width: 2px;
-  border-color: white;
-  width: 200px;
-  color: white;
+<style scoped>
+#container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 </style>
