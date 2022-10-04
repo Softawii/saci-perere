@@ -6,7 +6,7 @@ const { validateRequest } = require('../util');
 
 const router = express.Router();
 
-router.get('/:id', param('id').isInt().toInt(10), query('questions').isBoolean().toBoolean(), validateRequest, (req, res) => {
+router.get('/:id', param('id').isInt().toInt(10), query('questions').isBoolean().toBoolean().optional({ nullable: true }), validateRequest, (req, res) => {
   prisma.answer.findFirst({
     where: {
       id: req.params.id,

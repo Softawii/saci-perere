@@ -7,7 +7,7 @@ const { checkUserIsAdmin, checkAccessToken, validateRequest } = require('../util
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
+router.get('/', checkAccessToken, (req, res) => {
   prisma.user.findMany({
     select: {
       id: true,

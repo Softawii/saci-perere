@@ -119,6 +119,9 @@ router.patch('/:id', checkUserIsAdmin, param('id').isInt().toInt(10), body(['que
         },
       },
     },
+    include: {
+      answer: true,
+    },
   }).then(result => {
     res.json(result || {});
   }).catch(reason => {
