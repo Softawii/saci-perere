@@ -1,21 +1,22 @@
 const express = require('express');
 const status = require('http-status');
-const { param, body } = require('express-validator');
-const { prisma, handleError } = require('../db');
+const { param, body, query } = require('express-validator');
+const { prisma, Prisma, handleError } = require('../db');
 const {
   isUserAuthenticated, checkAccessToken, checkUserIsAdmin,
 } = require('../util');
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
+router.get('/', query('topicId').optional().isInt().toInt(10), (req, res) => {
   const { isAuthenticated, userId } = isUserAuthenticated(req);
   if (isAuthenticated) {
     /* eslint-disable indent */
     prisma.$queryRaw`
       SELECT c.id, c.name, c.description, CASE WHEN f.user_id IS NOT NULL THEN true ELSE false END AS favorite
       FROM saci.category c
-      LEFT OUTER JOIN saci.user_favorite f ON f.category_id = c.id and f.user_id = ${userId};
+      LEFT OUTER JOIN saci.user_favorite f ON f.category_id = c.id and f.user_id = ${userId}
+      ${req.query.topicId ? Prisma.sql`WHERE c.topic_id = ${req.query.topicId}` : Prisma.empty};
     `.then(result => {
       res.json(result || []);
     }).catch(reason => {
@@ -26,15 +27,26 @@ router.get('/', (req, res) => {
     });
     /* eslint-enable indent */
   } else {
-    prisma.category.findMany()
-      .then(result => {
-        res.json(result || []);
-      }).catch(reason => {
-        console.error(reason);
-        res.status(status.INTERNAL_SERVER_ERROR).json({
-          message: 'failed to fetch categories',
-        });
+    prisma.category.findMany({
+      ...(req.query.topicId && {
+        where: {
+          topics: {
+            every: {
+              id: {
+                equals: req.query.topicId,
+              },
+            },
+          },
+        },
+      }),
+    }).then(result => {
+      res.json(result || []);
+    }).catch(reason => {
+      console.error(reason);
+      res.status(status.INTERNAL_SERVER_ERROR).json({
+        message: 'failed to fetch categories',
       });
+    });
   }
 });
 
@@ -76,11 +88,16 @@ router.get('/:id', param('id').isInt().toInt(10), (req, res) => {
   }
 });
 
-router.post('/', checkUserIsAdmin, body('name').isString(), body('description').isString().optional({ nullable: true }), (req, res) => {
+router.post('/', checkUserIsAdmin, body('topicId').isInt().toInt(10), body('name').isString(), body('description').isString().optional({ nullable: true }), (req, res) => {
   prisma.category.create({
     data: {
       name: req.body.name,
       description: req.body.description || null,
+      topic: {
+        connect: {
+          id: req.body.topicId,
+        },
+      },
     },
   }).then(result => {
     res.json(result || {});

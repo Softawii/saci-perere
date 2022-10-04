@@ -12,10 +12,19 @@ CREATE TABLE IF NOT EXISTS saci.user
     isadmin  BOOL                NOT NULL DEFAULT false
 );
 
+DROP TABLE IF EXISTS saci.topic;
+CREATE TABLE IF NOT EXISTS saci.topic
+(
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(100) UNIQUE NOT NULL,
+    description VARCHAR(200)
+);
+
 DROP TABLE IF EXISTS saci.category;
 CREATE TABLE IF NOT EXISTS saci.category
 (
     id          SERIAL PRIMARY KEY,
+    topic_id    INTEGER             NOT NULL REFERENCES saci.topic (id) ON DELETE CASCADE,
     name        VARCHAR(100) UNIQUE NOT NULL,
     description VARCHAR(200)
 );

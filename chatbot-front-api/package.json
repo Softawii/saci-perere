@@ -6,7 +6,8 @@
   "scripts": {
     "server": "node src/server.js",
     "secret": "node -p \"require('crypto').randomBytes(64).toString('hex')\"",
-    "ci:test": "npx prisma generate --schema=./src/prisma/schema.prisma && npx jest"
+    "ci:test": "npx prisma generate --schema=./src/prisma/schema.prisma && npx jest --runInBand",
+    "prisma:generate": "npx prisma generate --schema=./src/prisma/schema.prisma"
   },
   "dependencies": {
     "@prisma/client": "^4.2.1",

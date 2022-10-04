@@ -3,11 +3,18 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function init() {
-  await prisma.category.create({
-    data: categories[0],
+  await prisma.topic.create({
+    data: {
+      name: 'CC',
+      categories: {
+        create: categories,
+      },
+    },
   });
-  await prisma.category.create({
-    data: categories[1],
+  await prisma.topic.create({
+    data: {
+      name: 'Letras',
+    },
   });
 
   await prisma.user.create({
@@ -29,6 +36,7 @@ async function init() {
 }
 
 async function clear() {
+  await prisma.topic.deleteMany();
   await prisma.category.deleteMany();
   await prisma.user.deleteMany();
   await prisma.user_favorite.deleteMany();
