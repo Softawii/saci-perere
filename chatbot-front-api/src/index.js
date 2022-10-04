@@ -8,7 +8,6 @@ const mountRoutes = require('./routes');
 const app = express();
 const envs = dotenv.config();
 dotenvExpand.expand(envs);
-const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -27,10 +26,6 @@ app.get('/', (req, res) => {
   res.send('nice to meet you');
 });
 
-app.listen(port, () => {
-  console.log(`Listening on port ${port}`);
-});
-
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(400).send({
@@ -40,3 +35,5 @@ app.use((err, req, res, next) => {
   console.log(err);
   res.status(500).send('Something is wrong 😔');
 });
+
+module.exports = app;

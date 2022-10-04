@@ -1,0 +1,57 @@
+name: test-api-job
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test-api-job:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./chatbot-front-api/
+    container: node:current-buster
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres        
+          POSTGRES_USER: postgres
+          POSTGRES_HOST: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Install psql
+        run: |
+          apt-get update
+          apt-get install -y postgresql-client
+
+      - name: Create database
+        working-directory: ./sql-scripts
+        run: PGPASSWORD=postgres psql -h postgres -U postgres -d postgres -a -f tables.sql
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Connect to PostgreSQL
+        run: npm run ci:test
+        env:
+          PGHOST: postgres
+          PGPORT: 5432
+          PGUSER: postgres
+          PGDATABASE: postgres
+          PGPASSWORD: postgres
+          TOKEN_SECRET: 1a64aaf43cd7d5487c52db9354407e12d1b9dfc45282d85e7bdef9510790fab8eef647de64f38b12c0358548ae1985c8f4ea5fcfec39d2a00db49a9eda9f73d7
+          DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/postgres?schema=saci"

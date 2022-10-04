@@ -26,7 +26,7 @@ async function isUserAdmin(id) {
       id,
     },
   });
-  return user.isadmin;
+  return user?.isadmin;
 }
 
 module.exports = {

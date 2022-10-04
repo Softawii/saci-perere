@@ -62,7 +62,11 @@ router.get('/:id', param('id').isInt().toInt(10), (req, res) => {
         id: req.params.id,
       },
     }).then(result => {
-      res.json(result || []);
+      if (!result) {
+        res.sendStatus(404);
+        return;
+      }
+      res.json(result || {});
     }).catch(reason => {
       console.error(reason);
       res.status(status.INTERNAL_SERVER_ERROR).json({
