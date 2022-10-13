@@ -1,0 +1,112 @@
+name: deploy-front-digitalocean
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    name: Deploy Front to DigitalOcean
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: 'Check Secrets Folder'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DO_INSTANCE_IP }}
+          username: ${{ secrets.DO_SSH_USERNAME }}
+          passphrase: ${{ secrets.DO_VM_SSH_PRIVATE_KEY_PASSPHRASE }}
+          key: ${{ secrets.DO_VM_SSH_PRIVATE_KEY }}
+          script: |
+            if [ -d /home/${{ secrets.DO_SSH_USERNAME }}/.secrets/ ]; then echo 'Exists'; else exit 1; fi
+
+      - name: 'Install API packages'
+        working-directory: ./chatbot-front-api
+        run: npm install
+
+      - name: 'Generate prisma'
+        working-directory: ./chatbot-front-api
+        run: npx prisma generate --schema=./src/prisma/schema.prisma
+
+      - name: 'Creating Env File'
+        working-directory: ./chatbot-front
+        run: 'echo "$ENV_FILE" > .env'
+        shell: bash
+        env:
+          ENV_FILE: ${{ secrets.FRONT_API_ENV }}
+
+      - name: 'Install Front packages'
+        working-directory: ./chatbot-front
+        run: npm install
+
+      - name: 'Build Front'
+        working-directory: ./chatbot-front
+        run: npm run build
+
+      - name: 'Stop Front'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DO_INSTANCE_IP }}
+          username: ${{ secrets.DO_SSH_USERNAME }}
+          passphrase: ${{ secrets.DO_VM_SSH_PRIVATE_KEY_PASSPHRASE }}
+          key: ${{ secrets.DO_VM_SSH_PRIVATE_KEY }}
+          script: |
+            kill -9 $(lsof -t -i:${{ secrets.DEFAULT_API_PORT }})
+            rm -rf /home/${{ secrets.DO_SSH_USERNAME }}/deploys/${{ github.event.repository.name }}/chatbot-front-api/*
+            rm -rf /home/${{ secrets.DO_SSH_USERNAME }}/deploys/${{ github.event.repository.name }}/chatbot-front/*
+            echo 'Done'
+
+      - name: 'Push Repo'
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.DO_INSTANCE_IP }}
+          username: ${{ secrets.DO_SSH_USERNAME }}
+          passphrase: ${{ secrets.DO_VM_SSH_PRIVATE_KEY_PASSPHRASE }}
+          key: ${{ secrets.DO_VM_SSH_PRIVATE_KEY }}
+          source: "./"
+          target: /home/${{ secrets.DO_SSH_USERNAME }}/deploys/${{ github.event.repository.name }}
+
+      - name: 'Start Front API'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DO_INSTANCE_IP }}
+          username: ${{ secrets.DO_SSH_USERNAME }}
+          passphrase: ${{ secrets.DO_VM_SSH_PRIVATE_KEY_PASSPHRASE }}
+          key: ${{ secrets.DO_VM_SSH_PRIVATE_KEY }}
+          script: |
+            export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+
+            cd /home/${{ secrets.DO_SSH_USERNAME }}/deploys/${{ github.event.repository.name }}/chatbot-front-api
+            rsync --ignore-times -a /home/${{ secrets.DO_SSH_USERNAME }}/.secrets/${{ github.event.repository.name }}/chatbot-front-api/ /home/${{ secrets.DO_SSH_USERNAME }}/deploys/${{ github.event.repository.name }}/chatbot-front-api/
+            nohup npm run server > nohup.out 2> nohup.err < /dev/null &
+
+      - name: 'Start Front'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DO_INSTANCE_IP }}
+          username: ${{ secrets.DO_SSH_USERNAME }}
+          passphrase: ${{ secrets.DO_VM_SSH_PRIVATE_KEY_PASSPHRASE }}
+          key: ${{ secrets.DO_VM_SSH_PRIVATE_KEY }}
+          script: |
+            export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+
+            cd /home/${{ secrets.DO_SSH_USERNAME }}/deploys/${{ github.event.repository.name }}/chatbot-front
+            rm -rf /var/www/saci-front/html/*
+            rsync --ignore-times -a dist/ /var/www/saci-front/html/
