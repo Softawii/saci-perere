@@ -8,33 +8,44 @@ generator client {
 }
 
 model user {
-    id        Int             @id @default(autoincrement())
-    username  String          @unique
-    password  String
-    name      String
-    email     String          @unique
-    isadmin   Boolean?
-    favorites user_favorite[]
+    id                   Int                      @id @default(autoincrement())
+    username             String                   @unique
+    password             String
+    name                 String
+    email                String                   @unique
+    isadmin              Boolean?
+    favorites_categories user_category_favorite[]
+    favorites_topics     user_topic_favorite[]
 }
 
 model topic {
-    id          Int        @id @default(autoincrement())
-    name        String     @unique
+    id          Int                   @id @default(autoincrement())
+    name        String                @unique
     description String?
     categories  category[]
+    favorites   user_topic_favorite[]
 }
 
 model category {
-    id          Int             @id @default(autoincrement())
-    name        String          @unique
+    id          Int                      @id @default(autoincrement())
+    name        String                   @unique
     description String?
     topic_id    Int
-    topic       topic           @relation(fields: [topic_id], references: [id])
-    favorites   user_favorite[]
+    topic       topic                    @relation(fields: [topic_id], references: [id])
+    favorites   user_category_favorite[]
     questions   question[]
 }
 
-model user_favorite {
+model user_topic_favorite {
+    user_id  Int
+    topic_id Int
+    user     user  @relation(fields: [user_id], references: [id])
+    topic    topic @relation(fields: [topic_id], references: [id])
+
+    @@id([user_id, topic_id])
+}
+
+model user_category_favorite {
     user_id     Int
     category_id Int
     user        user     @relation(fields: [user_id], references: [id])

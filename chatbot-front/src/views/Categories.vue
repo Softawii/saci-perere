@@ -16,28 +16,15 @@ export default {
     CategoryTab,
     NewCategory,
   },
-  setup() {
-  },
   data() {
     return {
       categoryListType: 'all',
     };
   },
-  computed: {
-  },
-  beforeMount() {
-  },
   methods: {
-    show(data) {
-      console.log(data);
-      alert(data);
-    },
     tabUpdated(key) {
       this.categoryListType = key;
     },
   },
 };
 </script>
-
-<style lang="scss" scoped>
-</style>

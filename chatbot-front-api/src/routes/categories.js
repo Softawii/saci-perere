@@ -15,7 +15,7 @@ router.get('/', query('topicId').optional().isInt().toInt(10), validateRequest, 
     prisma.$queryRaw`
       SELECT c.id, c.name, c.description, CASE WHEN f.user_id IS NOT NULL THEN true ELSE false END AS favorite
       FROM saci.category c
-      LEFT OUTER JOIN saci.user_favorite f ON f.category_id = c.id and f.user_id = ${userId}
+      LEFT OUTER JOIN saci.user_category_favorite f ON f.category_id = c.id and f.user_id = ${userId}
       ${req.query.topicId ? Prisma.sql`WHERE c.topic_id = ${req.query.topicId}` : Prisma.empty};
     `.then(result => {
       res.json(result || []);
@@ -55,7 +55,7 @@ router.get('/:id', param('id').isInt().toInt(10), validateRequest, (req, res) =>
     prisma.$queryRaw`
       SELECT c.id, c.name, c.description, CASE WHEN f.user_id IS NOT NULL THEN true ELSE false END AS favorite
       FROM saci.category c
-      LEFT JOIN saci.user_favorite f ON f.category_id = c.id AND f.user_id = ${userId}
+      LEFT JOIN saci.user_category_favorite f ON f.category_id = c.id AND f.user_id = ${userId}
       WHERE c.id = ${req.params.id};
     `.then(result => {
       res.json(result?.[0] || {});
@@ -115,7 +115,7 @@ router.post('/', checkUserIsAdmin, body('topicId').isInt().toInt(10), body('name
 });
 
 router.post('/favorite/:id', checkAccessToken, param('id').isInt().toInt(10), validateRequest, (req, res) => {
-  prisma.user_favorite.create({
+  prisma.user_category_favorite.create({
     data: {
       category: {
         connect: {
@@ -145,7 +145,7 @@ router.post('/favorite/:id', checkAccessToken, param('id').isInt().toInt(10), va
 });
 
 router.delete('/favorite/:id', checkUserIsAdmin, param('id').isInt().toInt(10), validateRequest, (req, res) => {
-  prisma.user_favorite.delete({
+  prisma.user_category_favorite.delete({
     where: {
       user_id_category_id: {
         category_id: req.params.id,

@@ -25,7 +25,6 @@ import ProfileModal from './modal/ProfileModal.vue';
 import ProfilePopover from './popover/ProfilePopover.vue';
 import MenuPopover from './popover/MenuPopover.vue';
 import { useUserStore } from '../store/UserStore';
-import MenuOptions from '../helper/MenuOptions';
 
 export default {
   components: {
@@ -42,7 +41,6 @@ export default {
     return {
       userStore,
       isMobile: ref(window.innerWidth < 1024),
-      menuOptions: MenuOptions.navOptions(false),
     };
   },
   data() {

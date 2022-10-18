@@ -29,8 +29,16 @@ CREATE TABLE IF NOT EXISTS saci.category
     description VARCHAR(200)
 );
 
-DROP TABLE IF EXISTS saci.user_favorite;
-CREATE TABLE IF NOT EXISTS saci.user_favorite
+DROP TABLE IF EXISTS saci.user_topic_favorite;
+CREATE TABLE IF NOT EXISTS saci.user_topic_favorite
+(
+    user_id     INTEGER NOT NULL REFERENCES saci.user (id) ON DELETE CASCADE,
+    topic_id INTEGER NOT NULL REFERENCES saci.topic (id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, topic_id)
+);
+
+DROP TABLE IF EXISTS saci.user_category_favorite;
+CREATE TABLE IF NOT EXISTS saci.user_category_favorite
 (
     user_id     INTEGER NOT NULL REFERENCES saci.user (id) ON DELETE CASCADE,
     category_id INTEGER NOT NULL REFERENCES saci.category (id) ON DELETE CASCADE,

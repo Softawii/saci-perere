@@ -16,7 +16,8 @@ router.get('/', checkAccessToken, (req, res) => {
       name: true,
       email: true,
       isadmin: true,
-      favorites: false,
+      favorites_categories: false,
+      favorites_topics: false,
     },
   }).then(result => res.json(result))
     .catch(reason => {

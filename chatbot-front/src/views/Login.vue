@@ -90,7 +90,7 @@ export default {
             this.userStore.setUserProfile(res.data);
             axios.defaults.headers.common.Authorization = `Bearer ${res.data.token}`;
             this.loadingBar.finish();
-            this.$router.push('/categories');
+            this.$router.push('/topics');
           }).catch(err => {
             const response = err.response;
             if (response.status === 403) {

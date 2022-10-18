@@ -7,6 +7,8 @@ import {
   Help as HelpIcon,
   LogOutOutline as LogOutOutIcon,
   PersonOutline as PersonIcon,
+  ChatboxEllipsesOutline as ChatboxIcon,
+  Document as DocumentIcon,
 } from '@vicons/ionicons5';
 import { useUserStore } from '../store/UserStore';
 
@@ -18,10 +20,24 @@ function navOptions(enableIcon = true) {
   const userStore = useUserStore();
   return [
     {
+      label: 'Tópicos',
+      key: 'topics',
+      href: '/topics',
+      ...(enableIcon && { icon: renderIcon(ChatboxIcon) }),
+    },
+    {
       label: 'Categorias',
-      key: 'categories',
-      href: '/categories',
+      key: 'topic',
+      href: '/topic',
       ...(enableIcon && { icon: renderIcon(NewspaperIcon) }),
+      disabled: true,
+    },
+    {
+      label: 'QA',
+      key: 'category',
+      href: '/category',
+      ...(enableIcon && { icon: renderIcon(DocumentIcon) }),
+      disabled: true,
     },
     {
       label: 'Usuários',
