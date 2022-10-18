@@ -30,11 +30,9 @@ router.get('/', query('topicId').optional().isInt().toInt(10), validateRequest, 
     prisma.category.findMany({
       ...(req.query.topicId && {
         where: {
-          topics: {
-            every: {
-              id: {
-                equals: req.query.topicId,
-              },
+          topic: {
+            id: {
+              equals: req.query.topicId,
             },
           },
         },

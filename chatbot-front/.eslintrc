@@ -60,7 +60,8 @@
         "optionalDependencies": false,
         "peerDependencies": false
       }
-    ]
+    ],
+    "no-param-reassign": "warn"
   },
   "parserOptions": {
     "ecmaVersion": 2022
