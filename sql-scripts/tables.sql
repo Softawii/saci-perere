@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS saci.category
 DROP TABLE IF EXISTS saci.user_topic_favorite;
 CREATE TABLE IF NOT EXISTS saci.user_topic_favorite
 (
-    user_id     INTEGER NOT NULL REFERENCES saci.user (id) ON DELETE CASCADE,
+    user_id  INTEGER NOT NULL REFERENCES saci.user (id) ON DELETE CASCADE,
     topic_id INTEGER NOT NULL REFERENCES saci.topic (id) ON DELETE CASCADE,
     PRIMARY KEY (user_id, topic_id)
 );
@@ -78,13 +78,34 @@ DECLARE
 BEGIN
     SELECT json_agg(row_to_json(data))
     INTO result
-    FROM (SELECT question.id          as question_id,
-                 question.category_id as category_id,
-                 question.value       as question,
-                 answer.id            as answer_id,
-                 answer.value         as answer
-          FROM saci.question question
-                   INNER JOIN saci.answer answer on answer.id = question.answer_id) data;
+    FROM (SELECT topic.id           AS topic_id,
+                 topic.name         AS topic_name,
+                 topic.description  AS topic_description,
+                 json_agg(category) AS categories
+          from saci.topic topic
+                   INNER JOIN (SELECT category.id              AS category_id,
+                                      category.description     AS category_description,
+                                      category.name            AS category_name,
+                                      category.topic_id        AS topic_id,
+                                      json_agg(question_table) AS questions
+                               FROM saci.category category
+                                        INNER JOIN saci.topic topic ON category.topic_id = topic.id
+                                        INNER JOIN (SELECT question.id            AS question_id,
+                                                           question.value         AS question,
+                                                           question.category_id   as category_id,
+                                                           json_agg(answer_table) AS answers
+                                                    FROM saci.question question
+                                                             INNER JOIN saci.category category ON question.category_id = category.id
+                                                             INNER JOIN (SELECT answer.id AS answer_id, answer.value as answer
+                                                                         FROM saci.answer answer
+                                                                                  INNER JOIN saci.question ON question.answer_id = answer.id) answer_table
+                                                                        ON question.answer_id = answer_table.answer_id
+                                                    GROUP BY question.id) question_table
+                                                   ON category.id = question_table.category_id
+
+                               GROUP BY category.id) category
+                              ON topic.id = category.topic_id
+          GROUP BY topic.id) data;
     RETURN result;
 END;
 $result$ LANGUAGE plpgsql;
