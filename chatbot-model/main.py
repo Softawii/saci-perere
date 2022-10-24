@@ -50,6 +50,14 @@ def create_app():
     @app.get("/categories")
     async def categories():
         return await db.get_categories()
+
+    @app.get("/categories/{topic_id}")
+    async def categories_by_topic(topic_id: int):
+        return await db.get_categories_by_topic_id(topic_id)
+
+    @app.get("/topics")
+    async def topics():
+        return await db.get_topics()
     
     return app
 

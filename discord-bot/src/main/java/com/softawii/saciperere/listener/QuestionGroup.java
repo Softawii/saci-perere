@@ -6,7 +6,7 @@ import com.softawii.curupira.annotations.IGroup;
 import com.softawii.curupira.properties.Environment;
 import com.softawii.saciperere.request.model.CategoryResponseBody;
 import com.softawii.saciperere.request.model.ModelResponseBody;
-import com.softawii.saciperere.request.model.QuestionHit;
+import com.softawii.saciperere.request.model.TopicResponseBody;
 import com.softawii.saciperere.util.ModelUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
@@ -18,15 +18,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
-
-import static net.dv8tion.jda.api.interactions.commands.Command.*;
 
 @IGroup(name = "question", description = "", hidden = true)
 public class QuestionGroup {
 
     @ICommand(name = "make-question", description = "Faça uma pergunta e tenha uma resposta", environment = Environment.BOTH)
+    @IArgument(name = "topic", description = "Tópico no qual a pergunta será filtrada", type = OptionType.INTEGER, required = true, hasAutoComplete = true)
     @IArgument(name = "category", description = "Categoria no qual a pergunta será buscada", type = OptionType.STRING, required = true, hasAutoComplete = true)
     @IArgument(name = "question", description = "Pergunta que será feita", type = OptionType.STRING, required = true)
     public static void makeQuestion(SlashCommandInteractionEvent event) {
@@ -55,8 +53,34 @@ public class QuestionGroup {
         event.replyEmbeds(embedBuilder.build()).queue();
     }
 
+    @ICommand(name = "topics", description = "Descubra quais tópicos estão disponíveis", environment = Environment.BOTH)
+    public static void topics(SlashCommandInteractionEvent event) {
+        TopicResponseBody[] topics = ModelUtil.getTopics();
+        EmbedBuilder embedBuilder = new EmbedBuilder();
+        embedBuilder.addField("Tópicos",
+            Arrays.stream(topics)
+                .map(TopicResponseBody::name)
+                .collect(Collectors.joining("\n")),
+            false);
+        event.replyEmbeds(embedBuilder.build()).queue();
+    }
+
     @ICommand(name = "categories", description = "Descubra quais categorias estão disponíveis", environment = Environment.BOTH)
     public static void categories(SlashCommandInteractionEvent event) {
+        CategoryResponseBody[] categories = ModelUtil.getCategories();
+        EmbedBuilder embedBuilder = new EmbedBuilder();
+        embedBuilder.addField("Categorias",
+            Arrays.stream(categories)
+                .map(CategoryResponseBody::name)
+                .collect(Collectors.joining("\n")),
+            false);
+        event.replyEmbeds(embedBuilder.build()).queue();
+    }
+
+    @ICommand(name = "categories-by-id", description = "Descubra quais categorias estão disponíveis por tópico", environment = Environment.BOTH)
+    @IArgument(name = "topic", description = "Tópico no qual a categoria será filtrada", type = OptionType.INTEGER, required = true, hasAutoComplete = true)
+    public static void categoriesById(SlashCommandInteractionEvent event) {
+        long topic = event.getOption("topic").getAsLong();
         CategoryResponseBody[] categories = ModelUtil.getCategories();
         EmbedBuilder embedBuilder = new EmbedBuilder();
         embedBuilder.addField("Categorias",
@@ -72,11 +96,19 @@ public class QuestionGroup {
         public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
             String path = event.getCommandPath();
             String focusedKey   = event.getFocusedOption().getName();
-            String focusedValue = event.getFocusedOption().getValue();
-            
+            String focusedValue = event.getFocusedOption().getValue().trim();
+
             if (path.equals("make-question") && focusedKey.equals("category")) {
-                CategoryResponseBody[] categories = ModelUtil.getCategories();
+                long topicId = event.getOption("topic").getAsLong();
+                CategoryResponseBody[] categories = ModelUtil.getCategories(topicId);
                 Command.Choice[] choices = Arrays.stream(categories)
+                    .filter(category -> focusedValue.isBlank() || category.name().toLowerCase().startsWith(focusedValue.toLowerCase()))
+                    .map(category -> new Command.Choice(category.name(), category.id()))
+                    .toArray(Command.Choice[]::new);
+                event.replyChoices(choices).queue();
+            } else if (focusedKey.equals("topic")) {
+                TopicResponseBody[] topics = ModelUtil.getTopics();
+                Command.Choice[] choices = Arrays.stream(topics)
                     .filter(category -> category.name().toLowerCase().startsWith(focusedValue.toLowerCase()))
                     .map(category -> new Command.Choice(category.name(), category.id()))
                     .toArray(Command.Choice[]::new);
