@@ -3,11 +3,18 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function init() {
-  await prisma.category.create({
-    data: categories[0],
+  await prisma.topic.create({
+    data: {
+      name: 'CC',
+      categories: {
+        create: categories,
+      },
+    },
   });
-  await prisma.category.create({
-    data: categories[1],
+  await prisma.topic.create({
+    data: {
+      name: 'Letras',
+    },
   });
 
   await prisma.user.create({
@@ -26,9 +33,58 @@ async function init() {
       },
     },
   });
+  await prisma.user.create({
+    data: {
+      name: 'fulana',
+      username: 'fulaninha',
+      email: 'fulana@mail.com',
+      password: '$2b$10$YNGKtTOqftxiWRBbo.JIx.O4GvhSeSbKIhn7Oz2nUm.zeCJryYI9a',
+      isadmin: false,
+      favorites: {
+        create: [
+          {
+            category: {
+              connect: {
+                name: 'DCC',
+              },
+            },
+          },
+        ],
+      },
+    },
+  });
+
+  // await prisma.unknown_question.create({
+  //   data: {
+  //     predicted_score: 0.87,
+  //     user_question: 'O que é IM?',
+  //     predicted_question: {
+  //       create: {
+  //         value: 'O que é IM?',
+  //         answer: {
+  //           create: {
+  //             value: 'Instituto Multidisciplinar',
+  //           },
+  //         },
+  //         category: {
+  //           create: {
+  //             name: 'aaa',
+  //             description: 'bbbb',
+  //             topic: {
+  //               connect: {
+  //                 name: 'CC',
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  // });
 }
 
 async function clear() {
+  await prisma.topic.deleteMany();
   await prisma.category.deleteMany();
   await prisma.user.deleteMany();
   await prisma.user_favorite.deleteMany();
@@ -65,6 +121,18 @@ const categories = [
   {
     name: 'DTL',
     description: 'Departamento de Tecnologias e Linguagens',
+    questions: {
+      create: [
+        {
+          value: 'O que é DTL?',
+          answer: {
+            create: {
+              value: 'Departamento de Tecnologias e Linguagens',
+            },
+          },
+        },
+      ],
+    },
   },
 ];
 

@@ -38,7 +38,7 @@ describe('Categories endpoints', () => {
     expect(body.length).toEqual(2);
     expect(body[0].favorite).toEqual(true);
   });
-  it('Should find by id', async () => {
+  it('Should find category by id', async () => {
     const category = await prisma.category.findFirst();
     const { statusCode, body } = await request(app).get(`${prefix}/${category.id}`).send();
     expect(statusCode).toEqual(200);
@@ -74,10 +74,6 @@ describe('Categories endpoints', () => {
     expect(statusCode).toEqual(404);
   });
   it('Should authenticate and create category', async () => {
-    const categoryBody = {
-      name: 'Nome brabo',
-      description: null,
-    };
     const authRes = await request(app)
       .post('/auth/signin')
       .send({
@@ -86,6 +82,20 @@ describe('Categories endpoints', () => {
       });
     expect(authRes.statusCode).toEqual(200);
 
+    const topicRes = await request(app)
+      .get('/topic')
+      .set('Authorization', `Bearer ${authRes.body.token}`)
+      .send();
+    expect(topicRes.statusCode).toEqual(200);
+    expect(topicRes.body).toBeInstanceOf(Array);
+    expect(topicRes.body.length).toEqual(2);
+    expect(topicRes.body[0].id).toBeDefined();
+
+    const categoryBody = {
+      name: 'Nome brabo',
+      description: null,
+      topicId: topicRes.body[0].id,
+    };
     const { statusCode, body } = await request(app)
       .post(`${prefix}/`)
       .set('Authorization', `Bearer ${authRes.body.token}`)

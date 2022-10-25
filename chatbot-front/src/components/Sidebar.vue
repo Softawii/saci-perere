@@ -28,14 +28,16 @@
 
 <script>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import MenuOptions from '../helper/MenuOptions';
 
 export default {
   emits: ['menu-updated'],
   setup() {
+    const router = useRouter();
     return {
       isMobile: ref(window.innerWidth < 1024),
-      menuOptions: MenuOptions.navOptions(),
+      menuOptions: MenuOptions.navOptions(router),
     };
   },
   mounted() {

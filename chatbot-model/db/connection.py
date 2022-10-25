@@ -40,6 +40,16 @@ class Database():
             results = await con.fetch("SELECT * from saci.category")
             return results
 
+    async def get_categories_by_topic_id(self, topic_id):
+        async with self._pool.acquire() as con:
+            results = await con.fetch("SELECT * FROM saci.category WHERE topic_id = ($1)", topic_id)
+            return results
+
+    async def get_topics(self):
+        async with self._pool.acquire() as con:
+            results = await con.fetch("SELECT * from saci.topic")
+            return results
+
     async def save_unkwnown_question(self, user_question, predicted_question_id, predicted_score):
         async with self._pool.acquire() as con:
             await con.execute(

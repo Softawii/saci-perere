@@ -2,9 +2,9 @@
   <!-- eslint-disable  vue/no-v-model-argument -->
   <div>
     <n-list hoverable clickable>
-      <n-list-item v-for="category in filteredCategories" :key="category.name">
+      <n-list-item v-for="topic in filteredCategories" :key="topic.name">
         <template #suffix>
-          <n-dropdown trigger="hover" :options="categoryOptions" @select="(key) => handleSelect(key, category)">
+          <n-dropdown trigger="hover" :options="topicOptions" @select="(key) => handleSelect(key, topic)">
             <n-button>
               <template #icon>
                 <n-icon :component="EllipsisVerticalIcon" />
@@ -12,9 +12,9 @@
             </n-button>
           </n-dropdown>
         </template>
-        <n-thing :title="category.name" content-style="margin-top: 10px;" @click="openCategory(category)">
+        <n-thing :title="topic.name" content-style="margin-top: 10px;" @click="openCategory(topic)">
           <template #description>
-            <n-space v-if="category.favorite" size="small" style="margin-top: 4px">
+            <n-space v-if="topic.favorite" size="small" style="margin-top: 4px">
               <n-tag :bordered="false" type="warning" size="small">
                 Favorito
                 <template #icon>
@@ -23,7 +23,7 @@
               </n-tag>
             </n-space>
           </template>
-          {{ category.description }}
+          {{ topic.description }}
         </n-thing>
       </n-list-item>
     </n-list>
@@ -31,8 +31,8 @@
       v-model:show="showDeleteModal"
       preset="dialog"
       type="error"
-      title="Apagar categoria"
-      :content="`Você realmente deseja apagar a categoria: '${currentCategory.name}'?`"
+      title="Apagar tópico"
+      :content="`Você realmente deseja apagar o tópico: '${currentTopic.name}'?`"
       positive-text="Apagar"
       negative-text="Cancelar"
       @positive-click="deleteCategory"
@@ -40,24 +40,24 @@
     <n-modal v-model:show="showEditModal">
       <n-card
         style="width: 600px"
-        :title="currentCategory.name"
+        :title="currentTopic.name"
         :bordered="false"
         size="huge"
         role="dialog"
         aria-modal="true"
       >
         <n-form
-          ref="editCategoryFormRef"
-          :model="categoryForm"
-          :rules="categoryFormRules"
+          ref="editTopicFormRef"
+          :model="topicForm"
+          :rules="topicFormRules"
           style="margin: auto; max-width: 600px;"
         >
-          <n-form-item label="Nome da categoria" path="name">
-            <n-input v-model:value="categoryForm.name" placeholder="Nome da categoria" />
+          <n-form-item label="Nome do tópico" path="name">
+            <n-input v-model:value="topicForm.name" placeholder="Nome do tópico" />
           </n-form-item>
           <n-form-item label="Descrição" path="description">
             <n-input
-              v-model:value="categoryForm.description" placeholder="Descrição" type="textarea"
+              v-model:value="topicForm.description" placeholder="Descrição" type="textarea"
               :autosize="{
                 minRows: 3
               }"
@@ -82,8 +82,8 @@ import {
 } from '@vicons/ionicons5';
 import { useLoadingBar, useMessage, NIcon } from 'naive-ui';
 import { h, ref } from 'vue';
-import { useGlobalStore } from '../store/GlobalStore';
-import { useUserStore } from '../store/UserStore';
+import { useGlobalStore } from '../../store/GlobalStore';
+import { useUserStore } from '../../store/UserStore';
 
 function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) });
@@ -100,7 +100,7 @@ export default {
   },
   setup() {
     const userStore = useUserStore();
-    const editCategoryFormRef = ref(null);
+    const editTopicFormRef = ref(null);
     const model = ref({
       name: '',
       description: '',
@@ -112,12 +112,12 @@ export default {
       globalStore: useGlobalStore(),
       loadingBar: useLoadingBar(),
       message: useMessage(),
-      editCategoryFormRef,
-      categoryForm: model,
-      categoryFormRules: {
+      editTopicFormRef,
+      topicForm: model,
+      topicFormRules: {
         name: {
           required: true,
-          message: 'Insira o nome da categoria',
+          message: 'Insira o nome do tópico',
           trigger: 'blur',
         },
         description: {
@@ -125,7 +125,7 @@ export default {
           trigger: 'blur',
         },
       },
-      categoryOptions: [
+      topicOptions: [
         {
           label: 'Apagar',
           key: 'delete',
@@ -148,130 +148,120 @@ export default {
   },
   data() {
     return {
-      categories: [],
-      currentCategory: {},
+      topics: [],
+      currentTopic: {},
       showDeleteModal: false,
       showEditModal: false,
     };
   },
   computed: {
     filteredCategories() {
-      if (!this.globalStore.data?.categories) {
+      if (!this.globalStore.data?.topics) {
         return [];
       }
-      return this.globalStore.data.categories.filter(category => {
-        if (this.type === 'favorites') return category.favorite === true;
+      return this.globalStore.data.topics.filter(topic => {
+        if (this.type === 'favorites') return topic.favorite === true;
         return true;
       });
     },
   },
-  watch: {
-    '$route.name': function (previous, next) {
-      if (next === 'Topic' && previous && previous !== next) {
-        this.globalStore.data.categories = [];
-        this.globalStore.data.topicId = undefined;
-      }
-    },
-  },
   mounted() {
-    this.$emitter.on('refreshCategories', this.updateCategories);
-    const topicId = this.$route.params.topicId;
-    if (this.globalStore.data?.topicId !== topicId) {
-      this.updateCategories();
+    this.$emitter.on('refreshTopics', this.updateTopics);
+    if (!this.globalStore.data.topics?.length) {
+      this.updateTopics();
     }
   },
   unmounted() {
-    this.$emitter.off('refreshCategories', this.updateCategories);
+    this.$emitter.off('refreshTopics', this.updateTopics);
   },
   methods: {
-    openCategory(category) {
-      this.globalStore.setCurrentCategory(category);
-      this.$router.push(`/category/${category.id}`);
+    openCategory(topic) {
+      this.globalStore.setCurrentCategory(topic);
+      this.$router.push(`/topic/${topic.id}`);
     },
-    handleSelect(key, category) {
-      this.currentCategory = category;
+    handleSelect(key, topic) {
+      this.currentTopic = topic;
       if (key === 'edit') {
         this.showEditModal = true;
-        this.categoryForm.name = category.name;
-        this.categoryForm.description = category.description;
+        this.topicForm.name = topic.name;
+        this.topicForm.description = topic.description;
       }
       if (key === 'delete') {
         this.showDeleteModal = true;
       }
       if (key === 'favorite') {
-        if (category.favorite) {
+        if (topic.favorite) {
           const apiUrl = this.globalStore.apiUrl;
-          axios.delete(`${apiUrl}/category/favorite/${category.id}`)
+          axios.delete(`${apiUrl}/topic/favorite/${topic.id}`)
             .then(res => {
-              this.message.success('Categoria não é mais favorita');
+              this.message.success('Tópico definido como favorito');
             }).catch(err => {
-              this.message.error('Ocorreu um erro ao adicionar uma categoria como favorita');
+              this.message.error('Ocorreu um erro ao adicionar um tópico como favorito');
             }).finally(() => {
-              this.updateCategories();
+              this.updateTopics();
             });
         } else {
           const apiUrl = this.globalStore.apiUrl;
-          axios.post(`${apiUrl}/category/favorite/${category.id}`)
+          axios.post(`${apiUrl}/topic/favorite/${topic.id}`)
             .then(res => {
-              this.message.success('Categoria definida como favorita');
+              this.message.success('Tópico definido como favorito');
             }).catch(err => {
-              this.message.error('Ocorreu um erro ao adicionar uma categoria como favorita');
+              this.message.error('Ocorreu um erro ao adicionar um tópico como favorito');
             }).finally(() => {
-              this.updateCategories();
+              this.updateTopics();
             });
         }
       }
     },
-    updateCategories() {
-      const topicId = this.$route.params.topicId;
+    updateTopics() {
       const apiUrl = this.globalStore.apiUrl;
       this.loadingBar.start();
-      axios.get(`${apiUrl}/category?topicId=${topicId}`)
+      axios.get(`${apiUrl}/topic`)
         .then(res => {
-          this.globalStore.data.topicId = topicId;
-          this.globalStore.data.categories = res.data;
+          this.topics = res.data;
+          this.globalStore.data.topics = this.topics;
           this.loadingBar.finish();
-          this.message.success('Lista de categorias atualizada');
+          this.message.success('Lista de tópicos foi atualizada');
         }).catch(err => {
           console.error(err);
           this.loadingBar.error();
-          this.message.error('Erro ao tentar atualizar a lista de categorias');
+          this.message.error('Erro ao tentar atualizar a lista de tópicos');
         });
     },
     deleteCategory() {
       const apiUrl = this.globalStore.apiUrl;
       this.loadingBar.start();
-      axios.delete(`${apiUrl}/category/${this.currentCategory.id}`)
+      axios.delete(`${apiUrl}/topic/${this.currentTopic.id}`)
         .then(res => {
-          this.message.success(`Categoria ${this.currentCategory.name} apagada com sucesso`);
+          this.message.success(`Tópico ${this.currentTopic.name} apagado com sucesso`);
           this.loadingBar.finish();
         }).catch(err => {
-          this.message.error(`Erro ao tentar apagar a categoria ${this.currentCategory.name}`);
+          this.message.error(`Erro ao tentar apagar o tópico ${this.currentTopic.name}`);
           console.error(err);
           this.loadingBar.error();
         }).finally(() => {
-          this.updateCategories();
+          this.updateTopics();
         });
     },
     submitEditCategory() {
-      this.editCategoryFormRef.validate(
+      this.editTopicFormRef.validate(
         errors => {
           if (!errors) {
             const API_URL = this.globalStore.apiUrl;
             this.loadingBar.start();
-            axios.patch(`${API_URL}/category/${this.currentCategory.id}`, {
-              name: this.editCategoryFormRef.model.name,
-              description: this.editCategoryFormRef.model.description || null,
+            axios.patch(`${API_URL}/topic/${this.currentTopic.id}`, {
+              name: this.editTopicFormRef.model.name,
+              description: this.editTopicFormRef.model.description || null,
             }).then(res => {
-              this.message.success(`Categoria ${this.currentCategory.name} atualizada com sucesso`);
+              this.message.success(`Tópico ${this.currentTopic.name} atualizado com sucesso`);
               this.loadingBar.finish();
               this.showEditModal = false;
             }).catch(err => {
-              this.message.error(`Erro ao tentar editar a categoria ${this.currentCategory.name}`);
+              this.message.error(`Erro ao tentar editar o tópico ${this.currentTopic.name}`);
               console.error(err);
               this.loadingBar.error();
             }).finally(() => {
-              this.updateCategories();
+              this.updateTopics();
             });
           } else {
             // console.log(errors);

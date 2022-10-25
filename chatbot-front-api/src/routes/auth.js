@@ -6,12 +6,12 @@ const status = require('http-status');
 const { body } = require('express-validator');
 const { prisma } = require('../db');
 const {
-  generateRandomPassword, hashSaltRounds, checkAccessToken,
+  generateRandomPassword, hashSaltRounds, checkAccessToken, validateRequest,
 } = require('../util');
 
 const router = express.Router();
 
-router.post('/signin', body(['username', 'password']).isString(), (req, res) => {
+router.post('/signin', body(['username', 'password']).isString(), validateRequest, (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
 
@@ -50,7 +50,7 @@ router.post('/signin', body(['username', 'password']).isString(), (req, res) => 
   });
 });
 
-router.post('/signup', checkAccessToken, body(['username', 'name']).isString(), body('email').isEmail(), (req, res) => {
+router.post('/signup', checkAccessToken, body(['username', 'name']).isString(), body('email').isEmail(), validateRequest, (req, res) => {
   const username = req.body.username;
   const password = generateRandomPassword();
   const name = req.body.name;

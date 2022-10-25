@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient, Prisma } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
@@ -30,6 +30,7 @@ async function isUserAdmin(id) {
 }
 
 module.exports = {
+  Prisma,
   prisma,
   handleError,
   isUserAdmin,

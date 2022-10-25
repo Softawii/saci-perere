@@ -3,16 +3,16 @@
     <!-- eslint-disable  vue/no-v-model-argument -->
     <n-form
       ref="formRef"
-      :model="categoryForm"
+      :model="topicForm"
       :rules="rules"
       style="margin: auto; max-width: 600px;"
     >
-      <n-form-item label="Nome da categoria" path="name">
-        <n-input v-model:value="categoryForm.name" placeholder="Nome da categoria" />
+      <n-form-item label="Nome do tópico" path="name">
+        <n-input v-model:value="topicForm.name" placeholder="Nome do tópico" />
       </n-form-item>
       <n-form-item label="Descrição" path="description">
         <n-input
-          v-model:value="categoryForm.description" placeholder="Descrição" type="textarea"
+          v-model:value="topicForm.description" placeholder="Descrição" type="textarea"
           :autosize="{
             minRows: 3
           }"
@@ -42,11 +42,11 @@ export default {
       loadingBar: useLoadingBar(),
       message: useMessage(),
       formRef,
-      categoryForm: model,
+      topicForm: model,
       rules: {
         name: {
           required: true,
-          message: 'Insira o nome da categoria',
+          message: 'Insira o nome do tópico',
           trigger: 'blur',
         },
         description: {
@@ -61,22 +61,20 @@ export default {
       this.formRef.validate(
         errors => {
           if (!errors) {
-            const topicId = this.$route.params.topicId;
             const API_URL = import.meta.env.VITE_API_URL;
             this.loadingBar.start();
-            axios.post(`${API_URL}/category`, {
+            axios.post(`${API_URL}/topic`, {
               name: this.formRef.model.name,
               description: this.formRef.model.description || null,
-              topicId,
             }).then(res => {
               this.loadingBar.finish();
-              this.message.success('Categoria criada com sucesso');
+              this.message.success('Tópico criado com sucesso');
             }).catch(err => {
               this.loadingBar.error();
               console.error(err);
-              this.message.warning('Erro ao criar categoria');
+              this.message.warning('Erro ao criar tópico');
             }).finally(() => {
-              this.$emitter.emit('refreshCategories');
+              this.$emitter.emit('refreshTopics');
             });
           } else {
             // console.log(errors);
@@ -87,7 +85,3 @@ export default {
   },
 };
 </script>
-
-<style>
-
-</style>

@@ -24,12 +24,21 @@ const router = createRouter({
       },
     },
     {
-      path: '/categories',
-      name: 'Categories',
+      path: '/topics',
+      name: 'Topics',
+      component: () => import('../views/Topics.vue'),
+      meta: {
+        auth: true,
+        label: 'topics',
+      },
+    },
+    {
+      path: '/topic/:topicId',
+      name: 'Topic',
       component: () => import('../views/Categories.vue'),
       meta: {
         auth: true,
-        label: 'categories',
+        label: 'topic',
       },
     },
     {
@@ -84,7 +93,7 @@ router.beforeEach((to, from, next) => {
   const userStore = useUserStore();
 
   if (to.name === 'Login' && userStore.isAuthenticated) {
-    next({ name: 'Categories' });
+    next({ name: 'Topics' });
     return;
   }
 

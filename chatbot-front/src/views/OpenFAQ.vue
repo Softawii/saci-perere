@@ -15,7 +15,7 @@
       </n-gi>
     </n-grid>
     <n-result
-      v-if="noCategories"
+      v-if="noTopics"
       title="Que pena"
       description="Nenhuma categoria cadastrada"
     >
@@ -48,14 +48,17 @@ export default {
       message: useMessage(),
       pattern: ref(''),
       data: ref([]),
-      noCategories: false,
+      noTopics: false,
     };
   },
   mounted() {
-    this.getCategories();
+    this.getTopics();
   },
   methods: {
     handleLoad(node) {
+      if (node.type === 'topic') {
+        return this.getCategories(node);
+      }
       if (node.type === 'category') {
         return this.getQuestions(node);
       }
@@ -64,36 +67,55 @@ export default {
       }
       return undefined;
     },
-    getCategories() {
+    getTopics() {
       const vm = this;
       const API_URL = import.meta.env.VITE_API_URL;
       this.loadingBar.start();
-      axios.get(`${API_URL}/category`)
+      axios.get(`${API_URL}/topic?categories=false`)
         .then(res => {
           this.loadingBar.finish();
           if (!res.data?.length) {
-            this.noCategories = true;
+            this.noTopics = true;
             return;
           }
-          vm.data = res.data.map(category => ({
-            key: `category_${category.id}`,
-            label: category.name,
+          vm.data = res.data.map(topic => ({
+            key: `category_${topic.id}`,
+            label: topic.name,
             isLeaf: false,
-            type: 'category',
-            id: category.id,
+            type: 'topic',
+            id: topic.id,
           }));
         }).catch(err => {
-          this.message.error('Erro ao obter as categorias');
+          this.message.error('Erro ao obter os tópicos');
           console.error(err);
           this.loadingBar.error();
         });
+    },
+    async getCategories(topicNode) {
+      const API_URL = import.meta.env.VITE_API_URL;
+      try {
+        this.loadingBar.start();
+        const res = await axios.get(`${API_URL}/category?topicId=${topicNode.id}`);
+        this.loadingBar.finish();
+        topicNode.children = res.data.map(category => ({
+          key: `category_${category.id}`,
+          label: category.name,
+          isLeaf: false,
+          type: 'category',
+          id: category.id,
+        }));
+      } catch (err) {
+        this.message.error('Erro ao obter as categorias');
+        console.error(err);
+        this.loadingBar.error();
+      }
     },
     async getQuestions(categoryNode) {
       const API_URL = import.meta.env.VITE_API_URL;
       try {
         this.loadingBar.start();
         const res = await axios.get(`${API_URL}/question/?category=${categoryNode.id}`);
-        // eslint-disable-next-line no-param-reassign
+        this.loadingBar.finish();
         categoryNode.children = res.data.map(question => ({
           key: `question_${question.id}`,
           label: question.value,
@@ -113,7 +135,6 @@ export default {
       try {
         const res = await axios.get(`${API_URL}/answer/${questionNode.answer_id}?questions=false`);
         const answer = res.data;
-        // eslint-disable-next-line no-param-reassign
         questionNode.children = [
           {
             key: `answer_${answer.id}`,

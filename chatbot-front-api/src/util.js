@@ -2,6 +2,7 @@
 const crypto = require('crypto');
 const status = require('http-status');
 const jwt = require('jsonwebtoken');
+const { validationResult } = require('express-validator');
 const { isUserAdmin } = require('./db');
 
 const LOWERCASE_ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
@@ -110,6 +111,14 @@ function isUserAuthenticated(req) {
   }
 }
 
+function validateRequest(req, res, next) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  next();
+}
+
 module.exports = {
   generateRandomPassword,
   hashSaltRounds,
@@ -117,4 +126,5 @@ module.exports = {
   checkContainsIdParam,
   checkAccessToken,
   isUserAuthenticated,
+  validateRequest,
 };
