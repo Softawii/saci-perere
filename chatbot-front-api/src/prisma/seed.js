@@ -20,7 +20,7 @@ async function init() {
   await prisma.user.create({
     data: {
       ...user.database,
-      favorites: {
+      favorites_categories: {
         create: [
           {
             category: {
@@ -40,7 +40,7 @@ async function init() {
       email: 'fulana@mail.com',
       password: '$2b$10$YNGKtTOqftxiWRBbo.JIx.O4GvhSeSbKIhn7Oz2nUm.zeCJryYI9a',
       isadmin: false,
-      favorites: {
+      favorites_categories: {
         create: [
           {
             category: {
@@ -87,7 +87,8 @@ async function clear() {
   await prisma.topic.deleteMany();
   await prisma.category.deleteMany();
   await prisma.user.deleteMany();
-  await prisma.user_favorite.deleteMany();
+  await prisma.user_category_favorite.deleteMany();
+  await prisma.user_topic_favorite.deleteMany();
   await prisma.answer.deleteMany();
   await prisma.question.deleteMany();
   await prisma.unknown_question.deleteMany();

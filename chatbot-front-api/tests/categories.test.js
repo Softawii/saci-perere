@@ -123,7 +123,7 @@ describe('Categories endpoints', () => {
       });
     expect(authRes.statusCode).toEqual(200);
 
-    const category = await prisma.user_favorite.findFirst({
+    const category = await prisma.user_category_favorite.findFirst({
       where: {
         user: {
           username: {
