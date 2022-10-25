@@ -6,16 +6,14 @@ const { checkAccessToken } = require('../util');
 
 const router = express.Router();
 
-router.get('/full', checkAccessToken, (req, res) => sendReport(req, res, 'full_report'));
+router.get('/full', checkAccessToken, (req, res) => sendReport(req, res));
 
-// router.get('/questions', checkAccessToken, (req, res) => sendReport(req, res, 'questions_report'));
-
-function sendReport(req, res, report) {
+function sendReport(req, res) {
   const download = req.query.download === 'true';
   prisma.$queryRawUnsafe(Prisma.sql`SELECT * FROM full_report() AS result`)
     .then(result => {
       if (download) {
-        res.setHeader('Content-disposition', `attachment; filename="${report}.json"`);
+        res.setHeader('Content-disposition', 'attachment; filename="full_report.json"');
       } else {
         res.setHeader('Content-Type', 'application/json');
       }
@@ -23,7 +21,7 @@ function sendReport(req, res, report) {
     }).catch(reason => {
       console.error(reason);
       res.status(status.INTERNAL_SERVER_ERROR).json({
-        message: 'failed to fetch the report',
+        message: 'failed to fetch the full report',
       });
     });
 }
