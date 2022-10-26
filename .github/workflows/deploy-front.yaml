@@ -61,7 +61,7 @@ jobs:
             cd /home/${{ secrets.SSH_USERNAME }}/deploys/${{ github.event.repository.name }}/chatbot-front-api
             rm -rf ./node_modules
             npm install
-            npx prisma generate
+            npm run prisma:generate
             sudo rsync --ignore-times -a /home/${{ secrets.SSH_USERNAME }}/deploys/secrets/${{ github.event.repository.name }}/chatbot-front-api/ /home/${{ secrets.SSH_USERNAME }}/deploys/${{ github.event.repository.name }}/chatbot-front-api/
             nohup npm run server > nohup.out 2> nohup.err < /dev/null &
 

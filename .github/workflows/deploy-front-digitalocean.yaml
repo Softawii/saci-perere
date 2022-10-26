@@ -41,7 +41,7 @@ jobs:
 
       - name: 'Generate prisma'
         working-directory: ./chatbot-front-api
-        run: npx prisma generate --schema=./src/prisma/schema.prisma
+        run: npm run prisma:generate
 
       - name: 'Creating Env File'
         working-directory: ./chatbot-front
