@@ -1,4 +1,5 @@
 import asyncpg
+from request.model import Feedback
 
 class Database():
     def __init__(self, settings):
@@ -57,3 +58,30 @@ class Database():
                 INSERT INTO saci.unknown_question(user_question, predicted_question_id, predicted_score)
                 VALUES ($1, $2, $3)
                 """, user_question, predicted_question_id, predicted_score)
+
+    async def save_to_history(self, user_question, found_question_id, platform_id):
+        async with self._pool.acquire() as con:
+            history_id = await con.fetchval(
+                """
+                INSERT INTO saci.history (user_question, found_question_id, platform_id, time)
+                VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+                RETURNING id
+                """, user_question, found_question_id, platform_id)
+            return history_id
+
+    async def save_feedback(self, feedback: Feedback):
+        async with self._pool.acquire() as con:
+            try:
+                await con.execute(
+                    """
+                    INSERT INTO saci.feedback (history_id, status, user_feedback)
+                    VALUES ($1, $2, $3)
+                    """, feedback.history, feedback.status, feedback.user_feedback)
+            except asyncpg.exceptions.UniqueViolationError:
+                pass
+
+
+    async def find_platform(self, platform_name):
+        async with self._pool.acquire() as con:
+            results = await con.fetchrow("SELECT id from saci.platform WHERE name = $1", platform_name)
+            return results['id']

@@ -2,7 +2,7 @@ from dotenv import load_dotenv, dotenv_values
 from fastapi import FastAPI, Request
 from db.connection import Database
 from model import Distiluse_Base_Multilingual_Cased_v2 as QA
-from request.model import User_Question
+from request.model import User_Question, Feedback
 import asyncio
 
 def create_app():
@@ -41,11 +41,20 @@ def create_app():
         for hit in result['hits']: hit['id'] = questions_db[hit['id']]['id']
         result['answer'] = (await db.get_answer(best['answer_id']))['value']
 
+        platform_id = await db.find_platform(user_question.platform)
+        history_id = await db.save_to_history(question, best['id'], platform_id)
+        result['history_id'] = history_id
+
         # fire and forget
         if result['score'] < 0.5:
             asyncio.ensure_future(db.save_unkwnown_question(question, result['question_id'], result['score']))
 
         return result
+
+    @app.post("/give-feedback")
+    async def give_feedback(feedback: Feedback):
+        # fire and forget
+        asyncio.ensure_future(db.save_feedback(feedback))
 
     @app.get("/categories")
     async def categories():
