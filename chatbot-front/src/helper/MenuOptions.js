@@ -9,6 +9,7 @@ import {
   PersonOutline as PersonIcon,
   ChatboxEllipsesOutline as ChatboxIcon,
   Document as DocumentIcon,
+  StatsChart as ChartIcon,
 } from '@vicons/ionicons5';
 import { useUserStore } from '../store/UserStore';
 
@@ -57,6 +58,12 @@ function navOptions(enableIcon = true) {
       key: 'unknown-questions',
       href: '/unknown-questions',
       ...(enableIcon && { icon: renderIcon(HelpIcon) }),
+    },
+    {
+      label: 'Estatísticas',
+      key: 'stats',
+      href: '/stats',
+      ...(enableIcon && { icon: renderIcon(ChartIcon) }),
     },
   ];
 }

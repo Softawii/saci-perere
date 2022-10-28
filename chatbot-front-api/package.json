@@ -10,7 +10,7 @@
     "prisma:generate": "npx prisma generate --schema=./src/prisma/schema.prisma"
   },
   "dependencies": {
-    "@prisma/client": "^4.2.1",
+    "@prisma/client": "^4.5.0",
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",
