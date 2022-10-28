@@ -1,73 +1,83 @@
 <template>
   <n-card title="Estatísticas">
-    <n-grid x-gap="12" cols="1 400:2 600:3 800:4" style="margin-bottom: 20px">
-      <n-gi>
-        <n-statistic label="Plataformas Registradas" :value="platforms.length" />
-      </n-gi>
-      <n-gi>
-        <n-statistic label="Perguntas Feitas">
-          <n-number-animation
-            ref="numberAnimationInstRef"
-            show-separator
-            :from="0"
-            :to="stats.historyCount"
-            :active="true"
-            :duration="1000"
-          />
-        </n-statistic>
-      </n-gi>
-      <n-gi>
-        <n-statistic label="Feedbacks do Usuário">
-          <n-number-animation
-            ref="numberAnimationInstRef"
-            show-separator
-            :from="0"
-            :to="stats.feedbackCount"
-            :active="true"
-            :duration="1000"
-          />
-        </n-statistic>
-      </n-gi>
-    </n-grid>
-    <n-card title="Plataformas">
-      <n-collapse @item-header-click="handleItemHeaderClick">
-        <n-collapse-item v-for="platform in platforms" :key="platform.name" :title="platform.name" :name="platform.name">
-          <n-grid x-gap="12" cols="1 400:2 600:3 800:4">
-            <n-gi>
-              <n-statistic label="Perguntas Feitas">
-                <n-number-animation
-                  ref="numberAnimationInstRef"
-                  show-separator
-                  :from="0"
-                  :to="platform.data.historyCount"
-                  :active="true"
-                  :duration="1000"
-                />
-              </n-statistic>
-            </n-gi>
-            <n-gi>
-              <n-statistic label="Feedbacks do Usuário">
-                <n-number-animation
-                  ref="numberAnimationInstRef"
-                  show-separator
-                  :from="0"
-                  :to="platform.data.feedbackCount"
-                  :active="true"
-                  :duration="1000"
-                />
-              </n-statistic>
-            </n-gi>
-          </n-grid>
-          <Doughnut v-if="platform?.chart?.feedback" :chart-data="platform?.chart?.feedback" :chart-options="platform?.chart?.feedback.chartOptions" />
-        </n-collapse-item>
-      </n-collapse>
-    </n-card>
+    <template v-if="isLoading">
+      <n-skeleton text :repeat="10" />
+    </template>
+    <template v-else>
+      <n-grid x-gap="12" cols="1 400:2 600:3 800:4" style="margin-bottom: 20px">
+        <n-gi>
+          <n-statistic label="Plataformas Registradas" :value="platforms.length" />
+        </n-gi>
+        <n-gi>
+          <n-statistic label="Perguntas Feitas">
+            <n-number-animation
+              ref="numberAnimationInstRef"
+              show-separator
+              :from="0"
+              :to="stats.historyCount"
+              :active="true"
+              :duration="1000"
+            />
+          </n-statistic>
+        </n-gi>
+        <n-gi>
+          <n-statistic label="Feedbacks do Usuário">
+            <n-number-animation
+              ref="numberAnimationInstRef"
+              show-separator
+              :from="0"
+              :to="stats.feedbackCount"
+              :active="true"
+              :duration="1000"
+            />
+          </n-statistic>
+        </n-gi>
+      </n-grid>
+      <n-card title="Plataformas" size="small">
+        <n-collapse @item-header-click="handleItemHeaderClick">
+          <n-collapse-item v-for="platform in platforms" :key="platform.name" :title="platform.name" :name="platform.name">
+            <n-skeleton v-if="platform.isLoading" text :repeat="10" />
+            <template v-else>
+              <n-grid x-gap="12" cols="1 400:2 600:3 800:4">
+                <n-gi>
+                  <n-statistic label="Perguntas Feitas">
+                    <n-number-animation
+                      ref="numberAnimationInstRef"
+                      show-separator
+                      :from="0"
+                      :to="platform.data.historyCount"
+                      :active="true"
+                      :duration="1000"
+                    />
+                  </n-statistic>
+                </n-gi>
+                <n-gi>
+                  <n-statistic label="Feedbacks do Usuário">
+                    <n-number-animation
+                      ref="numberAnimationInstRef"
+                      show-separator
+                      :from="0"
+                      :to="platform.data.feedbackCount"
+                      :active="true"
+                      :duration="1000"
+                    />
+                  </n-statistic>
+                </n-gi>
+              </n-grid>
+              <component :is="platform.chart?.feedback" v-if="platform.chart?.feedback" />
+            </template>
+          </n-collapse-item>
+        </n-collapse>
+      </n-card>
+    </template>
   </n-card>
 </template>
 
 <script>
+import { h } from 'vue';
 import axios from 'axios';
 import { Doughnut } from 'vue-chartjs';
+import { useLoadingBar, useMessage } from 'naive-ui';
 import {
   Chart as ChartJS,
   Title,
@@ -87,12 +97,35 @@ export default {
   setup() {
     return {
       globalStore: useGlobalStore(),
+      loadingBar: useLoadingBar(),
+      message: useMessage(),
     };
   },
   data() {
     return {
+      isLoading: true,
       platforms: [],
       stats: {},
+      statusLabel: {
+        '-1': {
+          label: 'Negative',
+        },
+        1: {
+          label: 'Positive',
+        },
+        0: {
+          label: 'Text',
+        },
+        Negative: {
+          color: '#b30000',
+        },
+        Positive: {
+          color: '#2e7d32',
+        },
+        Text: {
+          color: '#fff176',
+        },
+      },
     };
   },
   mounted() {
@@ -111,53 +144,51 @@ export default {
     },
     loadPlatforms() {
       const apiUrl = this.globalStore.apiUrl;
+      this.loadingBar.start();
       axios.get(`${apiUrl}/platform`)
-        .then(res => {
+        .then(async res => {
           this.platforms = res.data.map(platform => ({
             ...platform,
             name: this.toTitleCase(platform.name),
             data: {},
+            isLoading: true,
           }));
-        });
-      axios.get(`${apiUrl}/history/count`)
-        .then(res => {
-          this.stats.historyCount = res.data;
-        });
-      axios.get(`${apiUrl}/history/count`)
-        .then(res => {
-          this.stats.historyCount = res.data;
-        });
-      axios.get(`${apiUrl}/feedback/count`)
-        .then(res => {
-          // eslint-disable-next-line dot-notation
-          this.stats.feedbackCount = res.data.reduce((count, currentStatus) => count + currentStatus['_count'].status, 0);
+          this.stats.historyCount = (await axios.get(`${apiUrl}/history/count`)).data;
+          this.stats.historyCount = (await axios.get(`${apiUrl}/history/count`)).data;
+          this.stats.feedbackCount = (await axios.get(`${apiUrl}/feedback/count`)).data
+            .reduce((count, currentStatus) => count + currentStatus['_count'].status, 0);
+          this.loadingBar.finish();
+        }).catch(reason => {
+          console.error(reason.message);
+          this.message.error(reason.message);
+          this.loadingBar.error();
+        }).finally(() => {
+          this.isLoading = false;
         });
     },
     loadPlatformData(platform) {
-      const statusLabel = {
-        '-1': 'Negative',
-        1: 'Positive',
-        0: 'Text',
-      };
       const apiUrl = this.globalStore.apiUrl;
+      this.loadingBar.start();
       axios.get(`${apiUrl}/feedback/count?platform=${platform.id}`)
-        .then(res => {
+        .then(async res => {
           platform.data.feedback = res.data.map(status => ({
-            label: statusLabel[status.status],
-            // eslint-disable-next-line dot-notation
-            count: status['_count'].status,
+            label: this.statusLabel[status.status].label,
+            count: status._count.status,
           }));
-          // eslint-disable-next-line dot-notation
-          platform.data.feedbackCount = res.data.reduce((count, currentStatus) => count + currentStatus['_count'].status, 0);
+          platform.data.feedbackCount = res.data.reduce((count, currentStatus) => count + currentStatus._count.status, 0);
           const labels = platform.data.feedback.map(feedback => feedback.label);
           const data = platform.data.feedback.map(feedback => feedback.count);
           const title = 'Feedbacks';
           platform.chart = {};
           platform.chart.feedback = this.generatePlatformFeedbackChart(labels, data, title);
-        });
-      axios.get(`${apiUrl}/history/count?platform=${platform.id}`)
-        .then(res => {
-          platform.data.historyCount = res.data;
+          platform.data.historyCount = (await axios.get(`${apiUrl}/history/count?platform=${platform.id}`)).data;
+          this.loadingBar.finish();
+        }).catch(reason => {
+          console.error(reason.message);
+          this.message.error(reason.message);
+          this.loadingBar.error();
+        }).finally(() => {
+          platform.isLoading = false;
         });
     },
     toTitleCase(str) {
@@ -166,30 +197,41 @@ export default {
         txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(),
       );
     },
+    getFeedbackChartColors(labels) {
+      const self = this;
+      return labels.map(status => self.statusLabel[status].color);
+    },
     generatePlatformFeedbackChart(labels, data, title) {
-      return {
+      const chartData = {
         labels,
         datasets: [
           {
-            backgroundColor: ['green', 'red', 'yellow', 'purple', 'cyan', 'orange'],
+            backgroundColor: this.getFeedbackChartColors(labels),
             data,
           },
         ],
-        chartOptions: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            title: {
-              display: true,
-              text: title,
-              color: 'gray',
-              padding: {
-                bottom: 10,
-              },
+      };
+      const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: title,
+            color: 'gray',
+            padding: {
+              bottom: 10,
             },
           },
         },
       };
+      return h(
+        Doughnut,
+        {
+          'chart-data': chartData,
+          'chart-options': chartOptions,
+        },
+      );
     },
   },
 };
