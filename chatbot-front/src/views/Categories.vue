@@ -6,9 +6,9 @@
 </template>
 
 <script>
-import CategoryList from '../components/CategoryList.vue';
-import CategoryTab from '../components/CategoryTab.vue';
-import NewCategory from '../components/NewCategory.vue';
+import CategoryList from '../components/category/CategoryList.vue';
+import CategoryTab from '../components/category/CategoryTab.vue';
+import NewCategory from '../components/category/NewCategory.vue';
 
 export default {
   components: {

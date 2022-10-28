@@ -1,6 +1,7 @@
 <template>
   <!-- eslint-disable  vue/no-v-model-argument -->
-  <div>
+  <SkeletonList v-if="isLoading" />
+  <div v-else>
     <n-list hoverable clickable>
       <n-list-item v-for="topic in filteredCategories" :key="topic.name">
         <template #suffix>
@@ -84,6 +85,7 @@ import { useLoadingBar, useMessage, NIcon } from 'naive-ui';
 import { h, ref } from 'vue';
 import { useGlobalStore } from '../../store/GlobalStore';
 import { useUserStore } from '../../store/UserStore';
+import SkeletonList from '../SkeletonList.vue';
 
 function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) });
@@ -91,6 +93,7 @@ function renderIcon(icon) {
 
 export default {
   components: {
+    SkeletonList,
   },
   props: {
     type: {
@@ -152,6 +155,7 @@ export default {
       currentTopic: {},
       showDeleteModal: false,
       showEditModal: false,
+      isLoading: true,
     };
   },
   computed: {
@@ -169,6 +173,8 @@ export default {
     this.$emitter.on('refreshTopics', this.updateTopics);
     if (!this.globalStore.data.topics?.length) {
       this.updateTopics();
+    } else {
+      this.isLoading = false;
     }
   },
   unmounted() {
@@ -216,6 +222,7 @@ export default {
     updateTopics() {
       const apiUrl = this.globalStore.apiUrl;
       this.loadingBar.start();
+      this.isLoading = true;
       axios.get(`${apiUrl}/topic`)
         .then(res => {
           this.topics = res.data;
@@ -226,6 +233,8 @@ export default {
           console.error(err);
           this.loadingBar.error();
           this.message.error('Erro ao tentar atualizar a lista de tópicos');
+        }).finally(() => {
+          this.isLoading = false;
         });
     },
     deleteCategory() {

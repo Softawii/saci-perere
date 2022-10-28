@@ -61,7 +61,9 @@
         "peerDependencies": false
       }
     ],
-    "no-param-reassign": "warn"
+    "no-param-reassign": "off",
+    "no-underscore-dangle": "off",
+    "dot-notation": "warn"
   },
   "parserOptions": {
     "ecmaVersion": 2022

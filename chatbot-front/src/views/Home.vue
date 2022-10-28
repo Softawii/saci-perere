@@ -16,8 +16,8 @@
 <script>
 import Navbar from '../components/Navbar.vue';
 import Sidebar from '../components/Sidebar.vue';
-import CategoryList from '../components/CategoryList.vue';
-import CategoryTab from '../components/CategoryTab.vue';
+import CategoryList from '../components/category/CategoryList.vue';
+import CategoryTab from '../components/category/CategoryTab.vue';
 
 export default {
   components: {

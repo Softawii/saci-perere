@@ -1,6 +1,7 @@
 <template>
   <!-- eslint-disable  vue/no-v-model-argument -->
-  <div>
+  <SkeletonList v-if="isLoading" />
+  <div v-else>
     <n-list hoverable clickable>
       <n-list-item v-for="category in filteredCategories" :key="category.name">
         <template #suffix>
@@ -82,8 +83,9 @@ import {
 } from '@vicons/ionicons5';
 import { useLoadingBar, useMessage, NIcon } from 'naive-ui';
 import { h, ref } from 'vue';
-import { useGlobalStore } from '../store/GlobalStore';
-import { useUserStore } from '../store/UserStore';
+import { useGlobalStore } from '../../store/GlobalStore';
+import { useUserStore } from '../../store/UserStore';
+import SkeletonList from '../SkeletonList.vue';
 
 function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) });
@@ -91,6 +93,7 @@ function renderIcon(icon) {
 
 export default {
   components: {
+    SkeletonList,
   },
   props: {
     type: {
@@ -152,6 +155,7 @@ export default {
       currentCategory: {},
       showDeleteModal: false,
       showEditModal: false,
+      isLoading: true,
     };
   },
   computed: {
@@ -178,6 +182,8 @@ export default {
     const topicId = this.$route.params.topicId;
     if (this.globalStore.data?.topicId !== topicId) {
       this.updateCategories();
+    } else {
+      this.isLoading = false;
     }
   },
   unmounted() {
@@ -226,6 +232,7 @@ export default {
       const topicId = this.$route.params.topicId;
       const apiUrl = this.globalStore.apiUrl;
       this.loadingBar.start();
+      this.isLoading = true;
       axios.get(`${apiUrl}/category?topicId=${topicId}`)
         .then(res => {
           this.globalStore.data.topicId = topicId;
@@ -236,6 +243,8 @@ export default {
           console.error(err);
           this.loadingBar.error();
           this.message.error('Erro ao tentar atualizar a lista de categorias');
+        }).finally(() => {
+          this.isLoading = false;
         });
     },
     deleteCategory() {
