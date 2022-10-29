@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS saci.question
     id          SERIAL PRIMARY KEY,
     category_id INTEGER      NOT NULL REFERENCES saci.category (id) ON DELETE CASCADE,
     answer_id   INTEGER      NOT NULL REFERENCES saci.answer (id) ON DELETE CASCADE,
-    value       VARCHAR(100) NOT NULL
+    value       VARCHAR(500) NOT NULL
 );
 
 DROP TABLE IF EXISTS saci.unknown_question;
