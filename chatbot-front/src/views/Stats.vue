@@ -32,13 +32,49 @@
             />
           </n-statistic>
         </n-gi>
+        <n-gi>
+          <n-statistic label="Feedbacks Positivos">
+            <n-number-animation
+              ref="numberAnimationInstRef"
+              show-separator
+              :from="0"
+              :to="stats.positiveFeedbackCount"
+              :active="true"
+              :duration="1000"
+            />
+          </n-statistic>
+        </n-gi>
+        <n-gi>
+          <n-statistic label="Feedbacks Negativos">
+            <n-number-animation
+              ref="numberAnimationInstRef"
+              show-separator
+              :from="0"
+              :to="stats.negativeFeedbackCount"
+              :active="true"
+              :duration="1000"
+            />
+          </n-statistic>
+        </n-gi>
+        <n-gi>
+          <n-statistic label="Feedbacks em Texto">
+            <n-number-animation
+              ref="numberAnimationInstRef"
+              show-separator
+              :from="0"
+              :to="stats.textFeedbackCount"
+              :active="true"
+              :duration="1000"
+            />
+          </n-statistic>
+        </n-gi>
       </n-grid>
       <n-card title="Plataformas" size="small">
         <n-collapse @item-header-click="handleItemHeaderClick">
           <n-collapse-item v-for="platform in platforms" :key="platform.name" :title="platform.name" :name="platform.name">
             <n-skeleton v-if="platform.isLoading" text :repeat="10" />
             <template v-else>
-              <n-grid x-gap="12" cols="1 400:2 600:3 800:4">
+              <n-grid x-gap="12" cols="1 400:2 600:3 800:5">
                 <n-gi>
                   <n-statistic label="Perguntas Feitas">
                     <n-number-animation
@@ -63,8 +99,44 @@
                     />
                   </n-statistic>
                 </n-gi>
+                <n-gi>
+                  <n-statistic label="Feedbacks Positivos">
+                    <n-number-animation
+                      ref="numberAnimationInstRef"
+                      show-separator
+                      :from="0"
+                      :to="platform.data.positiveFeedbackCount"
+                      :active="true"
+                      :duration="1000"
+                    />
+                  </n-statistic>
+                </n-gi>
+                <n-gi>
+                  <n-statistic label="Feedbacks Negativos">
+                    <n-number-animation
+                      ref="numberAnimationInstRef"
+                      show-separator
+                      :from="0"
+                      :to="platform.data.negativeFeedbackCount"
+                      :active="true"
+                      :duration="1000"
+                    />
+                  </n-statistic>
+                </n-gi>
+                <n-gi>
+                  <n-statistic label="Feedbacks em Texto">
+                    <n-number-animation
+                      ref="numberAnimationInstRef"
+                      show-separator
+                      :from="0"
+                      :to="platform.data.textFeedbackCount"
+                      :active="true"
+                      :duration="1000"
+                    />
+                  </n-statistic>
+                </n-gi>
               </n-grid>
-              <component :is="platform.chart?.feedback" v-if="platform.chart?.feedback" />
+              <component :is="platform.chart?.feedback" v-if="platform.chart?.feedback" style="max-width: 500px; margin: auto" />
             </template>
           </n-collapse-item>
         </n-collapse>
@@ -118,13 +190,13 @@ export default {
           label: 'Text',
         },
         Negative: {
-          color: '#b30000',
+          color: '#d73027',
         },
         Positive: {
-          color: '#2e7d32',
+          color: '#1a9850',
         },
         Text: {
-          color: '#fff176',
+          color: '#ffffbf',
         },
       },
     };
@@ -156,8 +228,11 @@ export default {
           }));
           this.stats.historyCount = (await axios.get(`${apiUrl}/history/count`)).data;
           this.stats.historyCount = (await axios.get(`${apiUrl}/history/count`)).data;
-          this.stats.feedbackCount = (await axios.get(`${apiUrl}/feedback/count`)).data
-            .reduce((count, currentStatus) => count + currentStatus['_count'].status, 0);
+          const feedbackRes = await axios.get(`${apiUrl}/feedback/count`);
+          this.stats.feedbackCount = feedbackRes.data.reduce((count, currentStatus) => count + currentStatus._count.status, 0);
+          this.stats.positiveFeedbackCount = feedbackRes.data.find(status => status.status === 1)?._count.status;
+          this.stats.negativeFeedbackCount = feedbackRes.data.find(status => status.status === -1)?._count.status;
+          this.stats.textFeedbackCount = feedbackRes.data.find(status => status.status === 0)?._count.status;
           this.loadingBar.finish();
         }).catch(reason => {
           console.error(reason.message);
@@ -176,12 +251,16 @@ export default {
             label: this.statusLabel[status.status].label,
             count: status._count.status,
           }));
+          console.log(res.data);
           platform.data.feedbackCount = res.data.reduce((count, currentStatus) => count + currentStatus._count.status, 0);
+          platform.data.positiveFeedbackCount = res.data.find(status => status.status === 1)?._count.status;
+          platform.data.negativeFeedbackCount = res.data.find(status => status.status === -1)?._count.status;
+          platform.data.textFeedbackCount = res.data.find(status => status.status === 0)?._count.status;
           const labels = platform.data.feedback.map(feedback => feedback.label);
           const data = platform.data.feedback.map(feedback => feedback.count);
           const title = 'Feedbacks';
           platform.chart = {};
-          platform.chart.feedback = this.generatePlatformFeedbackChart(labels, data, title);
+          if (data.length > 0) platform.chart.feedback = this.generatePlatformFeedbackChart(labels, data, title);
           platform.data.historyCount = (await axios.get(`${apiUrl}/history/count?platform=${platform.id}`)).data;
           this.loadingBar.finish();
         }).catch(reason => {
@@ -203,6 +282,7 @@ export default {
       return labels.map(status => self.statusLabel[status].color);
     },
     generatePlatformFeedbackChart(labels, data, title) {
+      const isMobile = window.innerWidth < 1024;
       const chartData = {
         labels,
         datasets: [
@@ -222,6 +302,12 @@ export default {
             color: 'gray',
             padding: {
               bottom: 10,
+            },
+          },
+          legend: {
+            position: isMobile ? 'bottom' : 'right',
+            labels: {
+              color: 'gray',
             },
           },
         },
