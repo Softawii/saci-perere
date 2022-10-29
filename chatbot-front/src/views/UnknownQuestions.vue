@@ -57,6 +57,7 @@
         </template>
       </n-thing>
     </template>
+    <n-back-top :right="100" />
   </div>
 </template>
 

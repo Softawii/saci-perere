@@ -70,6 +70,7 @@
         </n-collapse>
       </n-card>
     </template>
+    <n-back-top :right="100" />
   </n-card>
 </template>
 

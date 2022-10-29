@@ -70,6 +70,7 @@
         </n-form>
       </n-card>
     </n-modal>
+    <n-back-top :right="100" />
   </div>
 </template>
 

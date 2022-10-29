@@ -45,8 +45,8 @@
             </n-button>
           </n-dropdown>
         </template>
-        <n-thing :title="qa.value" content-style="margin-top: 10px;" @click="showDetails(qa)">
-          {{ qa.answer }}
+        <n-thing :title="qa.value" content-style="margin-top: 10px; word-wrap: anywhere;" @click="showDetails(qa)">
+          {{ qa.answer.substr(0, 200) }} {{ qa.answer.length > 200 ? '...' : '' }}
         </n-thing>
       </n-list-item>
     </n-list>
@@ -123,7 +123,9 @@
         role="dialog"
         aria-modal="true"
       >
-        {{ currentQA.answer }}
+        <div style="white-space: pre-wrap;">
+          {{ currentQA.answer }}
+        </div>
       </n-card>
     </n-modal>
     <n-modal
@@ -136,6 +138,7 @@
       negative-text="Cancelar"
       @positive-click="deleteQuestion"
     />
+    <n-back-top :right="100" />
   </div>
 </template>
 
