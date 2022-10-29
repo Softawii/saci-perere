@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS saci.unknown_question
 (
     id                    SERIAL PRIMARY KEY,
     user_question         VARCHAR(100) NOT NULL,
-    predicted_question_id INTEGER      NOT NULL REFERENCES saci.question (id) ON DELETE RESTRICT,
+    predicted_question_id INTEGER      REFERENCES saci.question (id) ON DELETE SET NULL,
     predicted_score       REAL         NOT NULL
 );
 
@@ -89,8 +89,8 @@ CREATE TABLE IF NOT EXISTS saci.history
     id                SERIAL PRIMARY KEY,
     time              timestamptz  NOT NULL,
     user_question     VARCHAR(100) NOT NULL,
-    found_question_id INTEGER      NOT NULL REFERENCES saci.question (id) ON DELETE RESTRICT,
-    platform_id       INTEGER      NOT NULL REFERENCES saci.platform (id) ON DELETE RESTRICT
+    found_question_id INTEGER      REFERENCES saci.question (id) ON DELETE SET NULL,
+    platform_id       INTEGER      REFERENCES saci.platform (id) ON DELETE SET NULL
 );
 
 DROP TABLE IF EXISTS saci.feedback;

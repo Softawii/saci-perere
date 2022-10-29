@@ -72,11 +72,11 @@ model question {
 }
 
 model unknown_question {
-    id                    Int      @id @default(autoincrement())
+    id                    Int       @id @default(autoincrement())
     user_question         String
-    predicted_question_id Int
+    predicted_question_id Int?
     predicted_score       Float
-    question              question @relation(fields: [predicted_question_id], references: [id])
+    question              question? @relation(fields: [predicted_question_id], references: [id])
 }
 
 model platform {
@@ -89,10 +89,10 @@ model history {
     id                Int        @id @default(autoincrement())
     time              DateTime   @db.Timestamptz
     user_question     String
-    found_question_id Int
-    platform_id       Int
-    platform          platform   @relation(fields: [platform_id], references: [id])
-    question          question   @relation(fields: [found_question_id], references: [id])
+    found_question_id Int?
+    platform_id       Int?
+    platform          platform?  @relation(fields: [platform_id], references: [id])
+    question          question?  @relation(fields: [found_question_id], references: [id])
     feedback          feedback[]
 }
 
