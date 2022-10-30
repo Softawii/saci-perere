@@ -11,6 +11,6 @@ charset = utf-8
 trim_trailing_whitespace = false
 insert_final_newline = true
 
-[{**.js,**.vue,.eslintrc,package.json}]
+[{**.js,**.vue,.eslintrc,package.json,**.yaml}]
 trim_trailing_whitespace = true
 indent_size = 2
