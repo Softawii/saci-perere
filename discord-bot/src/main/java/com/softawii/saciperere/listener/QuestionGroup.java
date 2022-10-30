@@ -109,7 +109,7 @@ public class QuestionGroup {
     @IArgument(name = "topic", description = "Tópico no qual a categoria será filtrada", type = OptionType.INTEGER, required = true, hasAutoComplete = true)
     public static void categoriesById(SlashCommandInteractionEvent event) {
         long topic = event.getOption("topic").getAsLong();
-        CategoryResponseBody[] categories = ModelUtil.getCategories();
+        CategoryResponseBody[] categories = ModelUtil.getCategories(topic);
         EmbedBuilder embedBuilder = new EmbedBuilder();
         embedBuilder.addField("Categorias",
             Arrays.stream(categories)

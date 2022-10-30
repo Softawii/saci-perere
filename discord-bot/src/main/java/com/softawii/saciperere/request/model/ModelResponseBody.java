@@ -35,8 +35,8 @@ public record ModelResponseBody(
         public ModelResponseBody deserialize(JsonParser jp, DeserializationContext ctx) throws IOException, JacksonException {
             TreeNode node = jp.getCodec().readTree(jp);
             String userQuestion = node.get("user_question").toString();
-            String question = node.get("question").toString();
-            String answer = node.get("answer").toString();
+            String question = node.get("question").toString().replaceAll("\\\\r\\\\n|\\\\n", "\n").replaceAll("^\"|\"$", "");
+            String answer = node.get("answer").toString().replaceAll("\\\\r\\\\n|\\\\n", "\n").replaceAll("^\"|\"$", "");
             long questionId = ((IntNode) node.get("question_id")).longValue();
             long historyId = ((IntNode) node.get("history_id")).longValue();
             double score = ((DoubleNode) node.get("score")).doubleValue();
