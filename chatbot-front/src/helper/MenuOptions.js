@@ -10,6 +10,7 @@ import {
   ChatboxEllipsesOutline as ChatboxIcon,
   Document as DocumentIcon,
   StatsChart as ChartIcon,
+  BookOutline as BookIcon,
 } from '@vicons/ionicons5';
 import { useUserStore } from '../store/UserStore';
 
@@ -64,6 +65,12 @@ function navOptions(enableIcon = true) {
       key: 'stats',
       href: '/stats',
       ...(enableIcon && { icon: renderIcon(ChartIcon) }),
+    },
+    {
+      label: 'Histórico',
+      key: 'history',
+      href: '/history',
+      ...(enableIcon && { icon: renderIcon(BookIcon) }),
     },
   ];
 }
