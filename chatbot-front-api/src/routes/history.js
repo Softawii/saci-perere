@@ -7,73 +7,109 @@ const { checkUserIsAdmin } = require('../util');
 const router = express.Router();
 
 // TODO: cache
-router.get('/', query('platform').isInt().toInt(10).optional({ nullable: true }), query('detail').isBoolean().toBoolean(10).optional({ nullable: true }), checkUserIsAdmin, (req, res) => {
-  const { platform, detail } = req.query;
-  if (platform != null) {
-    prisma.history.findMany({
-      where: {
-        platform_id: {
-          equals: platform,
+router.get(
+  '/',
+  query('platform').isInt().toInt(10).optional({ nullable: true }),
+  query('detail').isBoolean().toBoolean(10).optional({ nullable: true }),
+  query('page').isInt().toInt(10).default(1),
+  checkUserIsAdmin,
+  async (req, res) => {
+    const { platform, detail, page } = req.query;
+    const pageSize = 50;
+    if (platform != null) {
+      const count = await prisma.history.count({
+        where: {
+          platform_id: {
+            equals: platform,
+          },
         },
-      },
-      include: {
-        ...(detail && {
-          question: {
-            select: {
-              value: true,
-              category: {
-                select: {
-                  name: true,
-                  topic: {
-                    select: {
-                      name: true,
+      });
+      prisma.history.findMany({
+        take: pageSize,
+        skip: pageSize * (page - 1),
+        where: {
+          platform_id: {
+            equals: platform,
+          },
+        },
+        include: {
+          ...(detail && {
+            question: {
+              select: {
+                value: true,
+                category: {
+                  select: {
+                    name: true,
+                    topic: {
+                      select: {
+                        name: true,
+                      },
                     },
                   },
                 },
               },
             },
-          },
-        }),
-      },
-    }).then(result => {
-      res.json(result);
-    }).catch(reason => {
-      console.error(reason);
-      res.status(status.INTERNAL_SERVER_ERROR).json({
-        message: 'failed to fetch history by platform',
+          }),
+        },
+      }).then(result => {
+        res.json({
+          data: result,
+          count,
+          pageSize,
+          pages: Math.ceil(count / pageSize),
+        });
+      }).catch(reason => {
+        console.error(reason);
+        res.status(status.INTERNAL_SERVER_ERROR).json({
+          message: 'failed to fetch history by platform',
+        });
       });
-    });
-  } else {
-    prisma.history.findMany({
-      include: {
-        ...(detail && {
-          question: {
-            select: {
-              value: true,
-              category: {
-                select: {
-                  name: true,
-                  topic: {
-                    select: {
-                      name: true,
+    } else {
+      const count = await prisma.history.count({
+        where: {
+          platform_id: {
+            equals: platform,
+          },
+        },
+      });
+      prisma.history.findMany({
+        take: pageSize,
+        skip: pageSize * page,
+        include: {
+          ...(detail && {
+            question: {
+              select: {
+                value: true,
+                category: {
+                  select: {
+                    name: true,
+                    topic: {
+                      select: {
+                        name: true,
+                      },
                     },
                   },
                 },
               },
             },
-          },
-        }),
-      },
-    }).then(result => {
-      res.json(result);
-    }).catch(reason => {
-      console.error(reason);
-      res.status(status.INTERNAL_SERVER_ERROR).json({
-        message: 'failed to fetch history',
+          }),
+        },
+      }).then(result => {
+        res.json({
+          data: result,
+          count,
+          pageSize,
+          pages: Math.ceil(count / pageSize),
+        });
+      }).catch(reason => {
+        console.error(reason);
+        res.status(status.INTERNAL_SERVER_ERROR).json({
+          message: 'failed to fetch history',
+        });
       });
-    });
-  }
-});
+    }
+  },
+);
 
 // TODO: cache
 router.get('/count', query('platform').isInt().toInt(10).optional({ nullable: true }), checkUserIsAdmin, (req, res) => {

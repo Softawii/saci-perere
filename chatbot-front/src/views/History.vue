@@ -10,7 +10,7 @@
           <n-data-table
             :columns="table.columns"
             :data="platform.questions"
-            :pagination="table.pagination"
+            :pagination="false"
             :bordered="true"
             :single-line="false"
             :row-class-name="table.rowClassName"
@@ -21,6 +21,12 @@
               <n-empty description="Nenhum registro encontrado" />
             </template>
           </n-data-table>
+          <div style="display:flex; margin-top: 10px;">
+            <n-pagination
+              v-model:page="page" :page-count="platform.pages" :page-slot="6" style="margin: auto"
+              :on-update:page="page => pageUpdate(page, platform)"
+            />
+          </div>
         </template>
       </n-collapse-item>
     </n-collapse>
@@ -31,12 +37,16 @@
 <script>
 import axios from 'axios';
 import { useLoadingBar, useMessage } from 'naive-ui';
+import { ref } from 'vue';
 import { useGlobalStore } from '../store/GlobalStore';
 
 export default {
   components: {},
   setup() {
     return {
+      pageSize: ref(5),
+      pageCount: ref(0),
+      page: ref(1),
       globalStore: useGlobalStore(),
       loadingBar: useLoadingBar(),
       message: useMessage(),
@@ -77,7 +87,6 @@ export default {
             render: row => row?.question?.value || 'Não encontrada',
           },
         ],
-        pagination: false,
         rowClassName(row) {
           let className = '';
           if (!row?.question) {
@@ -130,12 +139,15 @@ export default {
           this.isLoading = false;
         });
     },
-    loadPlatformHistory(platform) {
+    loadPlatformHistory(platform, page) {
       const apiUrl = this.globalStore.apiUrl;
       this.loadingBar.start();
-      axios.get(`${apiUrl}/history?platform=${platform.id}&detail=true`)
+      axios.get(`${apiUrl}/history?platform=${platform.id}&detail=true${page ? `&page=${page}` : ''}`)
         .then(async res => {
-          platform.questions = res.data;
+          platform.questions = res.data.data;
+          platform.questionsCount = res.data.count;
+          platform.pageSize = res.data.pageSize;
+          platform.pages = res.data.pages;
           platform.isLoading = false;
           this.loadingBar.finish();
         }).catch(reason => {
@@ -151,6 +163,11 @@ export default {
         /\w\S*/g,
         txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(),
       );
+    },
+    pageUpdate(page, platform) {
+      this.page = page;
+      console.log(page);
+      this.loadPlatformHistory(platform, page);
     },
   },
 };
