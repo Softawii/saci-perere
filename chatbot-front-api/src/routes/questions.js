@@ -6,16 +6,26 @@ const { checkUserIsAdmin, checkAccessToken, validateRequest } = require('../util
 
 const router = express.Router();
 
-router.get('/unknown', checkAccessToken, (req, res) => {
-  prisma.unknown_question.findMany()
-    .then(result => {
-      res.json(result || []);
-    }).catch(reason => {
-      console.error(reason);
-      res.status(status.INTERNAL_SERVER_ERROR).json({
-        message: 'failed to fetch unknown questions',
-      });
+router.get('/unknown', query('page').isInt().toInt(10).default(1), checkAccessToken, async (req, res) => {
+  const { page } = req.query;
+  const pageSize = 50;
+  const count = await prisma.unknown_question.count();
+  prisma.unknown_question.findMany({
+    take: pageSize,
+    skip: pageSize * (page - 1),
+  }).then(result => {
+    res.json({
+      data: result,
+      count,
+      pageSize,
+      pages: Math.ceil(count / pageSize),
     });
+  }).catch(reason => {
+    console.error(reason);
+    res.status(status.INTERNAL_SERVER_ERROR).json({
+      message: 'failed to fetch unknown questions',
+    });
+  });
 });
 
 router.delete('/unknown/:id', checkUserIsAdmin, param('id').isInt().toInt(10), validateRequest, (req, res) => {

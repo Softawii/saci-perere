@@ -166,7 +166,6 @@ export default {
     },
     pageUpdate(page, platform) {
       this.page = page;
-      console.log(page);
       this.loadPlatformHistory(platform, page);
     },
   },
