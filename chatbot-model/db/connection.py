@@ -59,14 +59,14 @@ class Database():
                 VALUES ($1, $2, $3)
                 """, user_question, predicted_question_id, predicted_score)
 
-    async def save_to_history(self, user_question, found_question_id, platform_id):
+    async def save_to_history(self, user_question, found_question_id, platform_id, predicted_score):
         async with self._pool.acquire() as con:
             history_id = await con.fetchval(
                 """
-                INSERT INTO saci.history (user_question, found_question_id, platform_id, time)
-                VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+                INSERT INTO saci.history (user_question, found_question_id, platform_id, time, predicted_score)
+                VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4)
                 RETURNING id
-                """, user_question, found_question_id, platform_id)
+                """, user_question, found_question_id, platform_id, predicted_score)
             return history_id
 
     async def save_feedback(self, feedback: Feedback):

@@ -90,7 +90,8 @@ CREATE TABLE IF NOT EXISTS saci.history
     time              timestamptz  NOT NULL,
     user_question     VARCHAR(100) NOT NULL,
     found_question_id INTEGER      REFERENCES saci.question (id) ON DELETE SET NULL,
-    platform_id       INTEGER      REFERENCES saci.platform (id) ON DELETE SET NULL
+    platform_id       INTEGER      REFERENCES saci.platform (id) ON DELETE SET NULL,
+    predicted_score   REAL         NOT NULL
 );
 
 DROP TABLE IF EXISTS saci.feedback;

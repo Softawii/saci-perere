@@ -42,7 +42,7 @@ def create_app():
         result['answer'] = (await db.get_answer(best['answer_id']))['value']
 
         platform_id = await db.find_platform(user_question.platform)
-        history_id = await db.save_to_history(question, best['id'], platform_id)
+        history_id = await db.save_to_history(question, best['id'], platform_id, result['score'])
         result['history_id'] = history_id
 
         # fire and forget

@@ -77,6 +77,11 @@ export default {
             render: row => row?.question?.category?.name || 'Não encontrada',
           },
           {
+            title: 'Score',
+            key: 'predicted_score',
+            align: 'center',
+          },
+          {
             title: 'Pergunta do Usuário',
             key: 'user_question',
           },

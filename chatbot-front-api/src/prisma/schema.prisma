@@ -94,6 +94,7 @@ model history {
     platform          platform?  @relation(fields: [platform_id], references: [id])
     question          question?  @relation(fields: [found_question_id], references: [id])
     feedback          feedback[]
+    predicted_score   Float
 }
 
 model feedback {
