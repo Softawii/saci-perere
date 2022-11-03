@@ -2,11 +2,10 @@ const express = require('express');
 const status = require('http-status');
 const { query } = require('express-validator');
 const { prisma } = require('../db');
-const { checkUserIsAdmin } = require('../util');
+const { checkUserIsAdmin, cache, objectHash } = require('../util');
 
 const router = express.Router();
 
-// TODO: cache
 router.get(
   '/',
   query('platform').isInt().toInt(10).optional({ nullable: true }),
@@ -16,7 +15,14 @@ router.get(
   async (req, res) => {
     const { platform, detail, page } = req.query;
     const pageSize = 50;
-    if (platform != null) {
+    const cacheKey = objectHash({
+      ...req.body,
+      url: req.originalUrl,
+    });
+    const isCached = cache.has(cacheKey);
+    if (isCached) {
+      res.json(cache.get(cacheKey));
+    } else if (platform != null) {
       const count = await prisma.history.count({
         where: {
           platform_id: {
@@ -111,10 +117,16 @@ router.get(
   },
 );
 
-// TODO: cache
 router.get('/count', query('platform').isInt().toInt(10).optional({ nullable: true }), checkUserIsAdmin, (req, res) => {
   const { platform } = req.query;
-  if (platform != null) {
+  const cacheKey = objectHash({
+    ...req.body,
+    url: req.originalUrl,
+  });
+  const isCached = cache.has(cacheKey);
+  if (isCached) {
+    res.json(cache.get(cacheKey));
+  } else if (platform != null) {
     prisma.history.count({
       where: {
         platform_id: {

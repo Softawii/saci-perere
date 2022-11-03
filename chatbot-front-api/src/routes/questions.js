@@ -2,30 +2,45 @@ const express = require('express');
 const status = require('http-status');
 const { param, query, body } = require('express-validator');
 const { prisma, handleError } = require('../db');
-const { checkUserIsAdmin, checkAccessToken, validateRequest } = require('../util');
+const {
+  checkUserIsAdmin, checkAccessToken, validateRequest, cache, objectHash,
+} = require('../util');
 
 const router = express.Router();
 
 router.get('/unknown', query('page').isInt().toInt(10).default(1), checkAccessToken, async (req, res) => {
   const { page } = req.query;
   const pageSize = 50;
-  const count = await prisma.unknown_question.count();
-  prisma.unknown_question.findMany({
-    take: pageSize,
-    skip: pageSize * (page - 1),
-  }).then(result => {
-    res.json({
-      data: result,
-      count,
-      pageSize,
-      pages: Math.ceil(count / pageSize),
-    });
-  }).catch(reason => {
-    console.error(reason);
-    res.status(status.INTERNAL_SERVER_ERROR).json({
-      message: 'failed to fetch unknown questions',
-    });
+  const cacheKey = objectHash({
+    ...req.body,
+    url: req.originalUrl,
   });
+  console.log({cacheKey});
+  const isCached = cache.has(cacheKey);
+  if (isCached) {
+    res.json(cache.get(cacheKey));
+  } else {
+    const count = await prisma.unknown_question.count();
+    prisma.unknown_question.findMany({
+      take: pageSize,
+      skip: pageSize * (page - 1),
+    }).then(result => {
+      const data = {
+        data: result,
+        count,
+        pageSize,
+        pages: Math.ceil(count / pageSize),
+      };
+
+      cache.set(cacheKey, data);
+      res.json(data);
+    }).catch(reason => {
+      console.error(reason);
+      res.status(status.INTERNAL_SERVER_ERROR).json({
+        message: 'failed to fetch unknown questions',
+      });
+    });
+  }
 });
 
 router.delete('/unknown/:id', checkUserIsAdmin, param('id').isInt().toInt(10), validateRequest, (req, res) => {
