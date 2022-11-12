@@ -66,14 +66,15 @@
           style="margin: auto; max-width: 600px;"
         >
           <n-form-item label="Pergunta" path="question">
-            <n-input v-model:value="qaForm.question" placeholder="Pergunta" />
+            <n-input
+              v-model:value="qaForm.question" placeholder="Pergunta" type="textarea"
+              :autosize="{ minRows: 1 }"
+            />
           </n-form-item>
           <n-form-item label="Resposta" path="answer">
             <n-input
               v-model:value="qaForm.answer" placeholder="Resposta" type="textarea"
-              :autosize="{
-                minRows: 3
-              }"
+              :autosize="{ minRows: 3 }"
             />
           </n-form-item>
           <n-button type="primary" block @click="submitNewQA">
@@ -186,13 +187,29 @@ export default {
       qaFormRules: {
         question: {
           required: true,
-          message: 'Insira a pergunta',
-          trigger: 'blur',
+          trigger: ['input', 'blur'],
+          validator(rule, value) {
+            const limit = 500;
+            if (!value || !value.trim()) {
+              return new Error('Campo é obrigatório');
+            } if (value.length > limit) {
+              return new Error(`O limite de caracteres é ${limit}, mas o campo possui ${value.length}`);
+            }
+            return true;
+          },
         },
         answer: {
           required: true,
-          message: 'Insira a resposta',
-          trigger: 'blur',
+          trigger: ['input', 'blur'],
+          validator(rule, value) {
+            const limit = 1000;
+            if (!value || !value.trim()) {
+              return new Error('Campo é obrigatório');
+            } if (value.length > limit) {
+              return new Error(`O limite de caracteres é ${limit}, mas o campo possui ${value.length}`);
+            }
+            return true;
+          },
         },
       },
       qaOptions: [
