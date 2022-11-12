@@ -7,6 +7,7 @@ import com.softawii.saciperere.request.model.ModelResponseBody;
 import com.softawii.saciperere.request.model.TopicResponseBody;
 import com.softawii.saciperere.util.ModelUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -14,10 +15,10 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -42,81 +43,111 @@ public class QuestionGroup {
     @IArgument(name = "category", description = "Categoria no qual a pergunta será buscada", type = OptionType.STRING, required = true, hasAutoComplete = true)
     @IArgument(name = "question", description = "Pergunta que será feita", type = OptionType.STRING, required = true)
     public static void makeQuestion(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
         String question = event.getOption("question").getAsString();
         long category = event.getOption("category").getAsLong();
-        ModelResponseBody response = ModelUtil.makeQuestion(question, category);
+        ModelResponseBody response;
+        try {
+            response = ModelUtil.makeQuestion(question, category);
+        } catch (Exception e) {
+            event.getHook().editOriginalEmbeds(getApiErrorEmbed()).queue();
+            e.printStackTrace();
+            return;
+        }
         EmbedBuilder embedBuilder = new EmbedBuilder();
-        embedBuilder.addField("Pergunta feita", question, false);
-        embedBuilder.addField("Pergunta encontrada", response.question(), false);
-        embedBuilder.addField("Resposta da pergunta encontrada", response.answer(), false);
-        embedBuilder.addField("Score", String.format("%.2f", response.score()), false);
-        embedBuilder.addField("Outras perguntas possivelmente associadas",
-            Arrays.stream(response.hits())
-                .skip(1)
-                .map(questionHit -> "- "+questionHit.question())
-                .collect(Collectors.joining("\n")),
-            false);
 
-        if (response.score() > 0.75) {
-            embedBuilder.setColor(Color.GREEN);
-        } else if (response.score() > 0.50) {
-            embedBuilder.setColor(Color.ORANGE);
+        embedBuilder.setTitle(question);
+        embedBuilder.setFooter(event.getUser().getAsTag(), event.getUser().getAvatarUrl());
+        if (response.score() > 0.50) {
+            embedBuilder.addField("Pergunta encontrada", response.question(), false);
+            embedBuilder.addField("Resposta", response.answer(), false);
+            embedBuilder.addField("Outras perguntas possivelmente associadas",
+                Arrays.stream(response.hits())
+                    .skip(1)
+                    .map(questionHit -> "- " + questionHit.question())
+                    .collect(Collectors.joining("\n")),
+                false);
+            embedBuilder.setColor(getScoreColor(response.score()));
+            event.getHook().editOriginalEmbeds(embedBuilder.build())
+                .queue(interactionHook -> {
+                    String positiveId = String.format("%s:%s", POSITIVE_FEEDBACK_ACTION, response.historyId());
+                    String negativeId = String.format("%s:%s", NEGATIVE_FEEDBACK_ACTION, response.historyId());
+                    String textId = String.format("%s:%s", TEXT_FEEDBACK_ACTION, response.historyId());
+
+                    Button successButton = Button.success(positiveId, "Era o que esperava");
+                    Button cancelButton = Button.danger(negativeId, "Fora do esperado");
+                    Button textButton = Button.secondary(textId, "Quero enviar um feedback em texto");
+
+                    event.getHook().sendMessage("Qual feedback daria para o retorno do bot?")
+                        .addActionRow(successButton, cancelButton, textButton)
+                        .setEphemeral(true)
+                        .queueAfter(2, TimeUnit.SECONDS);
+                });
         } else {
             embedBuilder.setColor(Color.RED);
+            embedBuilder.addField("Ops!", "Não encontramos pergunta similar em nossa base de dados", false);
+            event.getHook().editOriginalEmbeds(embedBuilder.build()).queue();
         }
-        event.replyEmbeds(embedBuilder.build())
-            .queue(interactionHook -> {
-                String positiveId = String.format("%s:%s", POSITIVE_FEEDBACK_ACTION, response.historyId());
-                String negativeId = String.format("%s:%s", NEGATIVE_FEEDBACK_ACTION, response.historyId());
-                String textId = String.format("%s:%s", TEXT_FEEDBACK_ACTION, response.historyId());
-                
-                Button successButton = Button.success(positiveId, "Era o que esperava");
-                Button cancelButton = Button.danger(negativeId, "Fora do esperado");
-                Button textButton = Button.secondary(textId, "Quero enviar um feedback em texto");
-                
-                interactionHook.sendMessage("Qual feedback daria para o retorno do bot?")
-                    .addActionRow(successButton, cancelButton, textButton)
-                    .setEphemeral(true)
-                    .queueAfter(2, TimeUnit.SECONDS);
-            });
+    }
+
+    @NotNull
+    private static Color getScoreColor(double score) {
+        // Normalize
+        score = (score - 0.5) / (1 - 0.5);
+
+        // Color between orange and green
+        int r = (int) (Color.ORANGE.getRed() + Math.min(1, score) * (Color.GREEN.getRed() - Color.ORANGE.getRed()));
+        int g = (int) (Color.ORANGE.getGreen() + Math.min(1, score) * (Color.GREEN.getGreen() - Color.ORANGE.getGreen()));
+        int b = (int) (Color.ORANGE.getBlue() + Math.min(1, score) * (Color.GREEN.getBlue() - Color.ORANGE.getBlue()));
+        return new Color(r, g, b);
+    }
+    
+    private static MessageEmbed getApiErrorEmbed() {
+        EmbedBuilder builder = new EmbedBuilder();
+        builder.setTitle("Ops! Ocorreu algum erro na comunicação com a API");        
+        return builder.build();
     }
 
     @ICommand(name = "topics", description = "Descubra quais tópicos estão disponíveis", environment = Environment.BOTH)
     public static void topics(SlashCommandInteractionEvent event) {
-        TopicResponseBody[] topics = ModelUtil.getTopics();
+        event.deferReply().queue();
+        TopicResponseBody[] topics;
+        try {
+            topics = ModelUtil.getTopics();
+        } catch (Exception e) {
+            event.getHook().editOriginalEmbeds(getApiErrorEmbed()).queue();
+            e.printStackTrace();
+            return;
+        }
         EmbedBuilder embedBuilder = new EmbedBuilder();
         embedBuilder.addField("Tópicos",
             Arrays.stream(topics)
                 .map(TopicResponseBody::name)
                 .collect(Collectors.joining("\n")),
             false);
-        event.replyEmbeds(embedBuilder.build()).queue();
-    }
-
-    @ICommand(name = "categories", description = "Descubra quais categorias estão disponíveis", environment = Environment.BOTH)
-    public static void categories(SlashCommandInteractionEvent event) {
-        CategoryResponseBody[] categories = ModelUtil.getCategories();
-        EmbedBuilder embedBuilder = new EmbedBuilder();
-        embedBuilder.addField("Categorias",
-            Arrays.stream(categories)
-                .map(CategoryResponseBody::name)
-                .collect(Collectors.joining("\n")),
-            false);
-        event.replyEmbeds(embedBuilder.build()).queue();
+        event.getHook().editOriginalEmbeds(embedBuilder.build()).queue();
     }
 
     @ICommand(name = "categories-by-id", description = "Descubra quais categorias estão disponíveis por tópico", environment = Environment.BOTH)
     @IArgument(name = "topic", description = "Tópico no qual a categoria será filtrada", type = OptionType.INTEGER, required = true, hasAutoComplete = true)
     public static void categoriesById(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
         long topic = event.getOption("topic").getAsLong();
-        CategoryResponseBody[] categories = ModelUtil.getCategories(topic);
+        CategoryResponseBody[] categories;
+        try {
+            categories = ModelUtil.getCategories(topic);
+        } catch (Exception e) {
+            event.getHook().editOriginalEmbeds(getApiErrorEmbed()).queue();
+            e.printStackTrace();
+            return;
+        }
         EmbedBuilder embedBuilder = new EmbedBuilder();
         embedBuilder.addField("Categorias",
             Arrays.stream(categories)
                 .map(CategoryResponseBody::name)
                 .collect(Collectors.joining("\n")),
             false);
-        event.replyEmbeds(embedBuilder.build()).queue();
+        event.getHook().editOriginalEmbeds(embedBuilder.build()).queue();
     }
 
     @IButton(id = POSITIVE_FEEDBACK_ACTION)
