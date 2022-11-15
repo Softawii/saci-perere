@@ -137,6 +137,29 @@
                 </n-gi>
               </n-grid>
               <component :is="platform.chart?.feedback" v-if="platform.chart?.feedback" style="max-width: 500px; margin: auto" />
+              <n-collapse @item-header-click="handleTextFeedbackClick">
+                <n-collapse-item title="Feedbacks em texto" :name="platform.name" style="margin: 0">
+                  <n-data-table
+                    :columns="platform.table.columns"
+                    :data="platform.table.feedbacks"
+                    :pagination="false"
+                    :bordered="true"
+                    :single-line="false"
+                    :scroll-x="500"
+                    striped
+                  >
+                    <template #empty>
+                      <n-empty description="Nenhum registro encontrado" />
+                    </template>
+                  </n-data-table>
+                  <div style="display:flex; margin-top: 10px;">
+                    <n-pagination
+                      v-model:page="platform.table.page" :page-count="platform.table.pages" :page-slot="6" style="margin: auto"
+                      :on-update:page="page => pageUpdate(page, platform)"
+                    />
+                  </div>
+                </n-collapse-item>
+              </n-collapse>
             </template>
           </n-collapse-item>
         </n-collapse>
@@ -147,7 +170,7 @@
 </template>
 
 <script>
-import { h } from 'vue';
+import { h, ref } from 'vue';
 import axios from 'axios';
 import { Doughnut } from 'vue-chartjs';
 import { useLoadingBar, useMessage } from 'naive-ui';
@@ -212,6 +235,13 @@ export default {
         this.loadPlatformData(platform);
       }
     },
+    handleTextFeedbackClick({ name, expanded }) {
+      const platform = this.platforms.find(platform => platform.name === name);
+      if (!platform.table.hasAlreadyExpanded) {
+        platform.table.hasAlreadyExpanded = true;
+        this.loadFeedbackHistory(1, platform);
+      }
+    },
     randomHex() {
       return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
     },
@@ -225,6 +255,31 @@ export default {
             name: this.toTitleCase(platform.name),
             data: {},
             isLoading: true,
+            table: {
+              columns: [
+                {
+                  title: 'ID',
+                  key: 'id',
+                  width: 100,
+                  align: 'center',
+                },
+                {
+                  title: 'Momento',
+                  key: 'time',
+                  width: 100,
+                  align: 'center',
+                  render: row => new Date(row.history.time).toLocaleString('pt-BR'),
+                },
+                {
+                  title: 'Mensagem',
+                  key: 'user_feedback',
+                  align: 'left',
+                },
+              ],
+              pageSize: ref(5),
+              pageCount: ref(0),
+              page: ref(1),
+            },
           }));
           this.stats.historyCount = (await axios.get(`${apiUrl}/history/count`)).data;
           this.stats.historyCount = (await axios.get(`${apiUrl}/history/count`)).data;
@@ -251,7 +306,6 @@ export default {
             label: this.statusLabel[status.status].label,
             count: status._count.status,
           }));
-          console.log(res.data);
           platform.data.feedbackCount = res.data.reduce((count, currentStatus) => count + currentStatus._count.status, 0);
           platform.data.positiveFeedbackCount = res.data.find(status => status.status === 1)?._count.status;
           platform.data.negativeFeedbackCount = res.data.find(status => status.status === -1)?._count.status;
@@ -319,6 +373,28 @@ export default {
           'chart-options': chartOptions,
         },
       );
+    },
+    pageUpdate(page, platform) {
+      platform.table.page = page;
+      this.loadFeedbackHistory(page, platform);
+    },
+    loadFeedbackHistory(page, platform) {
+      const apiUrl = this.globalStore.apiUrl;
+      this.loadingBar.start();
+      axios.get(`${apiUrl}/feedback/text?platform=${platform.id}&${page ? `&page=${page}` : ''}`)
+        .then(async res => {
+          platform.table.feedbacks = res.data.data;
+          platform.table.questionsCount = res.data.count;
+          platform.table.pageSize = res.data.pageSize;
+          platform.table.pages = res.data.pages;
+          this.loadingBar.finish();
+        }).catch(reason => {
+          console.error(reason.message);
+          this.message.error(reason.message);
+          this.loadingBar.error();
+        }).finally(() => {
+          this.isLoading = false;
+        });
     },
   },
 };

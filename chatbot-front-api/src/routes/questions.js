@@ -15,7 +15,6 @@ router.get('/unknown', query('page').isInt().toInt(10).default(1), checkAccessTo
     ...req.body,
     url: req.originalUrl,
   });
-  console.log({cacheKey});
   const isCached = cache.has(cacheKey);
   if (isCached) {
     res.json(cache.get(cacheKey));

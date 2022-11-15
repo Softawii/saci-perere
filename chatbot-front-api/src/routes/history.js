@@ -58,6 +58,12 @@ router.get(
           }),
         },
       }).then(result => {
+        cache.set(cacheKey, {
+          data: result,
+          count,
+          pageSize,
+          pages: Math.ceil(count / pageSize),
+        });
         res.json({
           data: result,
           count,
@@ -101,6 +107,12 @@ router.get(
           }),
         },
       }).then(result => {
+        cache.set(cacheKey, {
+          data: result,
+          count,
+          pageSize,
+          pages: Math.ceil(count / pageSize),
+        });
         res.json({
           data: result,
           count,
@@ -134,6 +146,7 @@ router.get('/count', query('platform').isInt().toInt(10).optional({ nullable: tr
         },
       },
     }).then(result => {
+      cache.set(cacheKey, result);
       res.json(result);
     }).catch(reason => {
       console.error(reason);
@@ -144,6 +157,7 @@ router.get('/count', query('platform').isInt().toInt(10).optional({ nullable: tr
   } else {
     prisma.history.count()
       .then(result => {
+        cache.set(cacheKey, result);
         res.json(result);
       }).catch(reason => {
         console.error(reason);
