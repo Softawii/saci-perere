@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Union
 
 class User_Question(BaseModel):
     question: str
@@ -7,5 +8,5 @@ class User_Question(BaseModel):
 
 class Feedback(BaseModel):
     history: int
-    status: bool
-    user_feedback: str
+    status: int
+    user_feedback: Union[str, None]
