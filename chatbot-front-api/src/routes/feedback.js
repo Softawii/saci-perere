@@ -85,6 +85,9 @@ router.get('/text', query('platform').isInt().toInt(10).optional({ nullable: tru
     const count = await prisma.feedback.count(condition);
     prisma.feedback.findMany({
       ...condition,
+      orderBy: {
+        id: 'desc',
+      },
       take: pageSize,
       skip: pageSize * (page - 1),
       include: {
@@ -120,6 +123,9 @@ router.get('/text', query('platform').isInt().toInt(10).optional({ nullable: tru
     const count = await prisma.feedback.count(condition);
     prisma.feedback.findMany({
       ...condition,
+      orderBy: {
+        id: 'desc',
+      },
       take: pageSize,
       skip: pageSize * (page - 1),
     }).then(result => {

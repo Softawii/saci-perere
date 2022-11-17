@@ -31,6 +31,9 @@ router.get(
         },
       });
       prisma.history.findMany({
+        orderBy: {
+          id: 'desc',
+        },
         take: pageSize,
         skip: pageSize * (page - 1),
         where: {
@@ -85,6 +88,9 @@ router.get(
         },
       });
       prisma.history.findMany({
+        orderBy: {
+          id: 'desc',
+        },
         take: pageSize,
         skip: pageSize * page,
         include: {
