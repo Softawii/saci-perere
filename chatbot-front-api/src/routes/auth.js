@@ -27,7 +27,7 @@ router.post('/signin', body(['username', 'password']).isString(), validateReques
     }
     bcrypt.compare(password, user.password, (err, result) => {
       if (result) {
-        const exp = Math.floor(Date.now() / 1000) + (60 * 60); // 1h
+        const exp = '6h';
         const token = generateAccessToken({
           id: user.id,
         }, exp);
@@ -37,7 +37,6 @@ router.post('/signin', body(['username', 'password']).isString(), validateReques
           username,
           isadmin: user.isadmin,
           token,
-          expiresAt: exp,
         });
       }
       return res.sendStatus(status.FORBIDDEN);

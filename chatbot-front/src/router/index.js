@@ -132,6 +132,13 @@ router.beforeEach((to, from, next) => {
           },
         }).then(res => {
           axios.defaults.headers.common.Authorization = `Bearer ${userStore.profile?.token}`;
+          axios.interceptors.response.use(response => response, error => {
+            const { status } = error.response;
+            if (status === 401) {
+              window.$message.error('Sua sessão expirou', { duration: 0 });
+            }
+            return Promise.reject(error);
+          });
           userStore.setUserProfile(res.data);
           userStore.isFirstLoad = false;
           next();

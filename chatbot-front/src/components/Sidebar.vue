@@ -28,12 +28,14 @@
 
 <script>
 import { ref } from 'vue';
+import { useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import MenuOptions from '../helper/MenuOptions';
 
 export default {
   emits: ['menu-updated'],
   setup() {
+    window.$message = useMessage();
     const router = useRouter();
     return {
       isMobile: ref(window.innerWidth < 1024),
