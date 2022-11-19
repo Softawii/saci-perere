@@ -38,6 +38,16 @@ public class QuestionGroup {
     private static final String POSITIVE_FEEDBACK_ACTION = "question-positive-feedback-action";
     private static final String NEGATIVE_FEEDBACK_ACTION = "question-negative-feedback-action";
     
+    private static final double THRESHOLD;
+    static {
+        double env = 0.5;
+        try {
+            env = Double.parseDouble(System.getenv("THRESHOLD"));
+        } catch (Exception ignored) {}
+        THRESHOLD = env;
+    }
+    private static final Color PRIMARY_COLOR = Color.decode("#63e2b7");
+    
     @ICommand(name = "make-question", description = "Faça uma pergunta e tenha uma resposta", environment = Environment.BOTH)
     @IArgument(name = "topic", description = "Tópico no qual a pergunta será filtrada", type = OptionType.INTEGER, required = true, hasAutoComplete = true)
     @IArgument(name = "category", description = "Categoria no qual a pergunta será buscada", type = OptionType.STRING, required = true, hasAutoComplete = true)
@@ -58,7 +68,7 @@ public class QuestionGroup {
 
         embedBuilder.setTitle(question);
         embedBuilder.setFooter(event.getUser().getAsTag(), event.getUser().getAvatarUrl());
-        if (response.score() > 0.50) {
+        if (response.score() >= THRESHOLD) {
             embedBuilder.addField("Pergunta encontrada", response.question(), false);
             embedBuilder.addField("Resposta", response.answer(), false);
             embedBuilder.addField("Outras perguntas possivelmente associadas",
@@ -125,6 +135,7 @@ public class QuestionGroup {
                 .map(TopicResponseBody::name)
                 .collect(Collectors.joining("\n")),
             false);
+        embedBuilder.setColor(PRIMARY_COLOR);
         event.getHook().editOriginalEmbeds(embedBuilder.build()).queue();
     }
 
@@ -147,6 +158,7 @@ public class QuestionGroup {
                 .map(CategoryResponseBody::name)
                 .collect(Collectors.joining("\n")),
             false);
+        embedBuilder.setColor(PRIMARY_COLOR);
         event.getHook().editOriginalEmbeds(embedBuilder.build()).queue();
     }
 
