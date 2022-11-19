@@ -76,7 +76,7 @@ DROP TABLE IF EXISTS saci.platform;
 CREATE TABLE IF NOT EXISTS saci.platform
 (
     id   SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL
+    name VARCHAR(50) UNIQUE NOT NULL
 );
 
 INSERT INTO saci.platform (name)

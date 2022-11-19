@@ -84,4 +84,8 @@ class Database():
     async def find_platform(self, platform_name):
         async with self._pool.acquire() as con:
             results = await con.fetchrow("SELECT id from saci.platform WHERE name = $1", platform_name)
-            return results['id']
+            if results is None:
+                print(f'Platforma "{platform_name}" não encontrada')
+                return 1
+            else:
+                return results['id']
