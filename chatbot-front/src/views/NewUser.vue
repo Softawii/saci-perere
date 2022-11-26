@@ -56,21 +56,47 @@ export default {
       rules: {
         name: {
           required: true,
-          message: 'Insira o nome',
-          trigger: 'blur',
+          trigger: ['input', 'blur'],
+          validator(rule, value) {
+            const limit = 60;
+            if (!value || !value.trim()) {
+              return new Error('Campo é obrigatório');
+            } if (value.length > limit) {
+              return new Error(`O limite de caracteres é ${limit}, mas o campo possui ${value.length}`);
+            }
+            return true;
+          },
         },
         username: {
           required: true,
-          message: 'Insira o usuário',
-          trigger: 'blur',
+          trigger: ['input', 'blur'],
+          validator(rule, value) {
+            const limit = 50;
+            if (!value || !value.trim()) {
+              return new Error('Campo é obrigatório');
+            } if (value.length > limit) {
+              return new Error(`O limite de caracteres é ${limit}, mas o campo possui ${value.length}`);
+            }
+            return true;
+          },
         },
         email: {
           required: true,
-          message: 'Insira o e-mail',
-          trigger: 'blur',
+          trigger: ['input', 'blur'],
+          validator(rule, value) {
+            const limit = 320;
+            if (!value || !value.trim()) {
+              return new Error('Campo é obrigatório');
+            } if (value.length > limit) {
+              return new Error(`O limite de caracteres é ${limit}, mas o campo possui ${value.length}`);
+            }
+            return true;
+          },
         },
       },
-      emailAutoCompleteOptions: computed(() => ['@gmail.com', '@hotmail.com'].map(suffix => {
+      emailAutoCompleteOptions: computed(() => [
+        '@gmail.com', '@hotmail.com', '@ufrrj.br',
+      ].map(suffix => {
         const prefix = model.value.email.split('@')[0];
         return {
           label: prefix + suffix,

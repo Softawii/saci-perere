@@ -9,6 +9,9 @@ import {
   PersonOutline as PersonIcon,
   ChatboxEllipsesOutline as ChatboxIcon,
   Document as DocumentIcon,
+  StatsChart as ChartIcon,
+  BookOutline as BookIcon,
+  DownloadOutline as DownloadIcon,
 } from '@vicons/ionicons5';
 import { useUserStore } from '../store/UserStore';
 
@@ -58,6 +61,18 @@ function navOptions(enableIcon = true) {
       href: '/unknown-questions',
       ...(enableIcon && { icon: renderIcon(HelpIcon) }),
     },
+    {
+      label: 'Estatísticas',
+      key: 'stats',
+      href: '/stats',
+      ...(enableIcon && { icon: renderIcon(ChartIcon) }),
+    },
+    {
+      label: 'Histórico',
+      key: 'history',
+      href: '/history',
+      ...(enableIcon && { icon: renderIcon(BookIcon) }),
+    },
   ];
 }
 
@@ -66,6 +81,19 @@ const navUserMenuOptions = [
     label: 'Perfil',
     key: 'edit-profile',
     icon: renderIcon(PersonIcon),
+  },
+  {
+    label: () => h(
+      'a',
+      {
+        href: `${import.meta.env.VITE_API_URL}/report/full?download=true`,
+        target: '_blank',
+        rel: 'noopenner noreferrer',
+      },
+      'Baixar Relatório',
+    ),
+    key: 'full-report',
+    icon: renderIcon(DownloadIcon),
   },
   {
     label: 'Logout',

@@ -2,10 +2,7 @@ package com.softawii.saciperere.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.softawii.saciperere.request.model.CategoryResponseBody;
-import com.softawii.saciperere.request.model.ModelRequestBody;
-import com.softawii.saciperere.request.model.ModelResponseBody;
-import com.softawii.saciperere.request.model.TopicResponseBody;
+import com.softawii.saciperere.request.model.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +21,7 @@ public class ModelUtil {
         String questionJson;
         try {
             apiURI = new URI(modelApiUrl + "/question");
-            ModelRequestBody modelRequestBody = new ModelRequestBody(question, category);
+            ModelRequestBody modelRequestBody = new ModelRequestBody(question, category, "discord");
             questionJson = mapper.writeValueAsString(modelRequestBody);
         } catch (URISyntaxException | JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -152,5 +149,36 @@ public class ModelUtil {
 
         return categories;
     }
-    
+
+    public static void saveFeedback(long history, int status, String userFeedback) {
+        String modelApiUrl = System.getenv("MODEL_API_URL");
+        ObjectMapper mapper = JacksonUtil.MAPPER;
+        URI apiURI;
+        String questionJson;
+        try {
+            apiURI = new URI(modelApiUrl + "/give-feedback");
+            FeedbackRequestBody feedbackRequestBody = new FeedbackRequestBody(history, status, userFeedback);
+            questionJson = mapper.writeValueAsString(feedbackRequestBody);
+        } catch (URISyntaxException | JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        HttpRequest.BodyPublisher bodyPublisher = HttpRequest.BodyPublishers.ofString(questionJson);
+        HttpRequest request = HttpRequest.newBuilder(apiURI)
+            .POST(bodyPublisher)
+            .version(HttpClient.Version.HTTP_1_1)
+            .setHeader("Content-Type", "application/json")
+            .build();
+        HttpClient client = HttpClient.newHttpClient();
+        try {
+            HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            int statusCode = response.statusCode();
+            if (statusCode == 200) {
+                //ok
+            } else {
+                // not ok
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

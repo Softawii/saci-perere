@@ -1,6 +1,7 @@
 <template>
   <!-- eslint-disable  vue/no-v-model-argument -->
-  <div>
+  <SkeletonList v-if="isLoading" />
+  <div v-else>
     <n-list hoverable clickable>
       <n-list-item v-for="topic in filteredCategories" :key="topic.name">
         <template #suffix>
@@ -69,6 +70,7 @@
         </n-form>
       </n-card>
     </n-modal>
+    <n-back-top :right="100" />
   </div>
 </template>
 
@@ -84,6 +86,7 @@ import { useLoadingBar, useMessage, NIcon } from 'naive-ui';
 import { h, ref } from 'vue';
 import { useGlobalStore } from '../../store/GlobalStore';
 import { useUserStore } from '../../store/UserStore';
+import SkeletonList from '../SkeletonList.vue';
 
 function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) });
@@ -91,6 +94,7 @@ function renderIcon(icon) {
 
 export default {
   components: {
+    SkeletonList,
   },
   props: {
     type: {
@@ -118,11 +122,27 @@ export default {
         name: {
           required: true,
           message: 'Insira o nome do tópico',
-          trigger: 'blur',
+          trigger: ['input', 'blur'],
+          validator(rule, value) {
+            const limit = 200;
+            if (!value || !value.trim()) {
+              return new Error('Campo é obrigatório');
+            } if (value.length > limit) {
+              return new Error(`O limite de caracteres é ${limit}, mas o campo possui ${value.length}`);
+            }
+            return true;
+          },
         },
         description: {
           required: false,
-          trigger: 'blur',
+          trigger: ['input', 'blur'],
+          validator(rule, value) {
+            const limit = 200;
+            if (value && value.length > limit) {
+              return new Error(`O limite de caracteres é ${limit}, mas o campo possui ${value.length}`);
+            }
+            return true;
+          },
         },
       },
       topicOptions: [
@@ -152,6 +172,7 @@ export default {
       currentTopic: {},
       showDeleteModal: false,
       showEditModal: false,
+      isLoading: true,
     };
   },
   computed: {
@@ -169,6 +190,8 @@ export default {
     this.$emitter.on('refreshTopics', this.updateTopics);
     if (!this.globalStore.data.topics?.length) {
       this.updateTopics();
+    } else {
+      this.isLoading = false;
     }
   },
   unmounted() {
@@ -216,6 +239,7 @@ export default {
     updateTopics() {
       const apiUrl = this.globalStore.apiUrl;
       this.loadingBar.start();
+      this.isLoading = true;
       axios.get(`${apiUrl}/topic`)
         .then(res => {
           this.topics = res.data;
@@ -226,6 +250,8 @@ export default {
           console.error(err);
           this.loadingBar.error();
           this.message.error('Erro ao tentar atualizar a lista de tópicos');
+        }).finally(() => {
+          this.isLoading = false;
         });
     },
     deleteCategory() {

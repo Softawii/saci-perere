@@ -4,7 +4,7 @@ import { useUserStore } from '../store/UserStore';
 import { useGlobalStore } from '../store/GlobalStore';
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/login',
@@ -69,6 +69,24 @@ const router = createRouter({
       },
     },
     {
+      path: '/stats',
+      name: 'Stats',
+      component: () => import('../views/Stats.vue'),
+      meta: {
+        auth: true,
+        label: 'stats',
+      },
+    },
+    {
+      path: '/history',
+      name: 'History',
+      component: () => import('../views/History.vue'),
+      meta: {
+        auth: true,
+        label: 'history',
+      },
+    },
+    {
       path: '/new-user',
       name: 'NewUser',
       component: () => import('../views/NewUser.vue'),
@@ -114,6 +132,13 @@ router.beforeEach((to, from, next) => {
           },
         }).then(res => {
           axios.defaults.headers.common.Authorization = `Bearer ${userStore.profile?.token}`;
+          axios.interceptors.response.use(response => response, error => {
+            const { status } = error.response;
+            if (status === 401) {
+              window.$message.error('Sua sessão expirou', { duration: 0 });
+            }
+            return Promise.reject(error);
+          });
           userStore.setUserProfile(res.data);
           userStore.isFirstLoad = false;
           next();

@@ -5,6 +5,9 @@ const answers = require('./answers');
 const report = require('./report');
 const user = require('./user');
 const topics = require('./topics');
+const platform = require('./platforms');
+const history = require('./history');
+const feedback = require('./feedback');
 
 module.exports = app => {
   app.use('/auth', auth.router);
@@ -14,4 +17,7 @@ module.exports = app => {
   app.use('/report', report.router);
   app.use('/user', user.router);
   app.use('/topic', topics.router);
+  app.use('/platform', platform.router);
+  app.use('/history', history.router);
+  app.use('/feedback', feedback.router);
 };

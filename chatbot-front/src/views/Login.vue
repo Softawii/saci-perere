@@ -12,6 +12,9 @@
       <n-alert v-if="loginErrorMessage" title="Erro ao fazer login" type="warning" style="margin-bottom: 20px;">
         {{ loginErrorMessage }}
       </n-alert>
+      <n-alert v-if="$route.query.unAuthenticated" title="Sessão expirou" type="warning" style="margin-bottom: 20px;">
+        Faça login novamente
+      </n-alert>
       <n-form-item label="Usuário" path="username">
         <n-input v-model:value="loginForm.username" placeholder="fulano" />
       </n-form-item>
@@ -77,6 +80,7 @@ export default {
   },
   methods: {
     submit() {
+      this.$router.replace({ query: {} });
       this.formRef.validate(errors => {
         if (!errors) {
           const { username, password } = this.loginForm;

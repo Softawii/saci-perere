@@ -3,6 +3,8 @@ const crypto = require('crypto');
 const status = require('http-status');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
+const NodeCache = require('node-cache');
+const objectHash = require('object-hash');
 const { isUserAdmin } = require('./db');
 
 const LOWERCASE_ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
@@ -127,4 +129,10 @@ module.exports = {
   checkAccessToken,
   isUserAuthenticated,
   validateRequest,
+  cache: new NodeCache({
+    stdTTL: 120,
+    checkperiod: 60,
+    useClones: false,
+  }),
+  objectHash,
 };

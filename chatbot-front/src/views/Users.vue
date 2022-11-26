@@ -1,12 +1,15 @@
 <template>
-  <n-data-table
-    :columns="columns"
-    :data="users"
-    :pagination="pagination"
-    :bordered="false"
-    :single-line="false"
-    :scroll-x="600"
-  />
+  <div>
+    <n-data-table
+      :columns="columns"
+      :data="users"
+      :pagination="pagination"
+      :bordered="false"
+      :single-line="false"
+      :scroll-x="600"
+    />
+    <n-back-top :right="100" />
+  </div>
 </template>
 
 <script>

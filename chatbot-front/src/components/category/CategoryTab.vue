@@ -18,8 +18,8 @@
 </template>
 
 <script>
-import { useUserStore } from '../store/UserStore';
-import RefreshButton from './RefreshButton.vue';
+import { useUserStore } from '../../store/UserStore';
+import RefreshButton from '../RefreshButton.vue';
 
 export default {
   components: { RefreshButton },

@@ -1,3 +1,5 @@
+SET timezone = 'America/Sao_Paulo';
+
 DROP SCHEMA IF EXISTS saci CASCADE;
 CREATE SCHEMA IF NOT EXISTS saci;
 
@@ -58,7 +60,7 @@ CREATE TABLE IF NOT EXISTS saci.question
     id          SERIAL PRIMARY KEY,
     category_id INTEGER      NOT NULL REFERENCES saci.category (id) ON DELETE CASCADE,
     answer_id   INTEGER      NOT NULL REFERENCES saci.answer (id) ON DELETE CASCADE,
-    value       VARCHAR(100) NOT NULL
+    value       VARCHAR(500) NOT NULL
 );
 
 DROP TABLE IF EXISTS saci.unknown_question;
@@ -66,8 +68,39 @@ CREATE TABLE IF NOT EXISTS saci.unknown_question
 (
     id                    SERIAL PRIMARY KEY,
     user_question         VARCHAR(100) NOT NULL,
-    predicted_question_id INTEGER      NOT NULL REFERENCES saci.question (id) ON DELETE RESTRICT,
+    predicted_question_id INTEGER      REFERENCES saci.question (id) ON DELETE SET NULL,
     predicted_score       REAL         NOT NULL
+);
+
+DROP TABLE IF EXISTS saci.platform;
+CREATE TABLE IF NOT EXISTS saci.platform
+(
+    id   SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL
+);
+
+INSERT INTO saci.platform (name)
+VALUES ('unknown'),
+       ('discord');
+
+DROP TABLE IF EXISTS saci.history;
+CREATE TABLE IF NOT EXISTS saci.history
+(
+    id                SERIAL PRIMARY KEY,
+    time              timestamptz  NOT NULL,
+    user_question     VARCHAR(100) NOT NULL,
+    found_question_id INTEGER      REFERENCES saci.question (id) ON DELETE SET NULL,
+    platform_id       INTEGER      REFERENCES saci.platform (id) ON DELETE SET NULL,
+    predicted_score   REAL         NOT NULL
+);
+
+DROP TABLE IF EXISTS saci.feedback;
+CREATE TABLE IF NOT EXISTS saci.feedback
+(
+    id            SERIAL PRIMARY KEY,
+    history_id    INTEGER       NOT NULL UNIQUE REFERENCES saci.history (id) ON DELETE RESTRICT,
+    status        NUMERIC(2, 0) NOT NULL,
+    user_feedback VARCHAR(200)
 );
 
 CREATE OR REPLACE FUNCTION saci.full_report()

@@ -6,7 +6,6 @@ export const useGlobalStore = defineStore('global', {
     apiUrl: import.meta.env.VITE_API_URL,
     alerts: [],
     data: {},
-    breadcrumbNavigation: [],
   }),
   getters: {
     getCurrentCategory() {
@@ -14,18 +13,6 @@ export const useGlobalStore = defineStore('global', {
     },
   },
   actions: {
-    pushNavigation(name, path) {
-      this.breadcrumbNavigation.push({
-        name,
-        path,
-      });
-    },
-    popNavigation() {
-      this.breadcrumbNavigation.pop();
-    },
-    clearNavigation() {
-      this.breadcrumbNavigation = [];
-    },
     addAlert(alert) {
       this.alerts.push(alert);
     },

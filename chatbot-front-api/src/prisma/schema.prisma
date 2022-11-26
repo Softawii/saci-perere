@@ -68,12 +68,39 @@ model question {
     category         category           @relation(fields: [category_id], references: [id])
     answer           answer             @relation(fields: [answer_id], references: [id])
     unknown_question unknown_question[]
+    history          history[]
 }
 
 model unknown_question {
-    id                    Int      @id @default(autoincrement())
+    id                    Int       @id @default(autoincrement())
     user_question         String
-    predicted_question_id Int
+    predicted_question_id Int?
     predicted_score       Float
-    question              question @relation(fields: [predicted_question_id], references: [id])
+    question              question? @relation(fields: [predicted_question_id], references: [id])
+}
+
+model platform {
+    id      Int       @id @default(autoincrement())
+    name    String
+    history history[]
+}
+
+model history {
+    id                Int        @id @default(autoincrement())
+    time              DateTime   @db.Timestamptz
+    user_question     String
+    found_question_id Int?
+    platform_id       Int?
+    platform          platform?  @relation(fields: [platform_id], references: [id])
+    question          question?  @relation(fields: [found_question_id], references: [id])
+    feedback          feedback[]
+    predicted_score   Float
+}
+
+model feedback {
+    id            Int     @id @default(autoincrement())
+    history_id    Int
+    status        Int
+    user_feedback String?
+    history       history @relation(fields: [history_id], references: [id])
 }

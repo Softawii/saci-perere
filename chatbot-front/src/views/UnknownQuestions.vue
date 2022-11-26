@@ -1,5 +1,20 @@
 <template>
-  <div id="container">
+  <div v-if="isLoading" id="container">
+    <n-thing v-for="i in 5" :key="i">
+      <template #header>
+        <n-skeleton text width="100px" />
+      </template>
+      <template #description>
+        <n-skeleton text width="500px" />
+      </template>
+      <n-skeleton text width="500px" />
+      <template #footer>
+        <n-skeleton text width="100px" />
+        <n-divider />
+      </template>
+    </n-thing>
+  </div>
+  <div v-else id="container">
     <template v-if="questions?.length === 0">
       <n-empty description="Nenhuma pergunta não respondida cadastrada" />
     </template>
@@ -35,13 +50,25 @@
         <template #description>
           Pergunta do usuário: {{ question.user_question }}
         </template>
-        Pergunta do encontrada: {{ question.predicted_question || `Pergunta de ID '${question.predicted_question_id}' não encontrada` }}
+        <template v-if="question.predicted_question_id">
+          Pergunta não encontrada
+        </template>
+        <template v-else>
+          Pergunta encontrada: {{ question.predicted_question || `Pergunta de ID '${question.predicted_question_id}' não encontrada` }}
+        </template>
         <template #footer>
           Score: <n-tag>{{ question.predicted_score }}</n-tag>
           <n-divider />
         </template>
       </n-thing>
+      <div style="display:flex; margin-top: 10px;">
+        <n-pagination
+          v-model:page="page" :page-count="pages" :page-slot="6" style="margin: auto"
+          :on-update:page="page => pageUpdate(page)"
+        />
+      </div>
     </template>
+    <n-back-top :right="100" />
   </div>
 </template>
 
@@ -58,35 +85,46 @@ export default defineComponent({
   },
   setup() {
     return {
+      pageSize: ref(5),
+      pageCount: ref(0),
+      page: ref(1),
+      pages: ref(1),
       userStore: useUserStore(),
       message: useMessage(),
       loadingBar: useLoadingBar(),
       questions: ref(),
+      isLoading: ref(true),
     };
   },
   mounted() {
     this.updateUnknownQuestions();
   },
   methods: {
-    updateUnknownQuestions() {
+    updateUnknownQuestions(page) {
       const API_URL = import.meta.env.VITE_API_URL;
       this.loadingBar.start();
-      axios.get(`${API_URL}/question/unknown`)
-        .then(res => {
-          this.questions = res.data;
-          this.questions.forEach(question => {
-            axios.get(`${API_URL}/question/${question.predicted_question_id}`)
-              .then(res => {
-                // eslint-disable-next-line no-param-reassign
-                question.predicted_question = res.data.value;
-              }).catch(err => {
-                console.error(err);
-              });
+      this.isLoading = true;
+      axios.get(`${API_URL}/question/unknown?${page ? `&page=${page}` : ''}`)
+        .then(async res => {
+          this.questions = res.data.data;
+          this.pageSize = res.data.pageSize;
+          this.pages = res.data.pages;
+          await this.questions.forEach(question => {
+            if (question.predicted_question_id) {
+              axios.get(`${API_URL}/question/${question.predicted_question_id}`)
+                .then(res => {
+                  question.predicted_question = res.data.value;
+                }).catch(err => {
+                  console.error(err);
+                });
+            }
           });
           this.loadingBar.finish();
         }).catch(err => {
           console.error(err);
           this.loadingBar.error();
+        }).finally(() => {
+          this.isLoading = false;
         });
     },
     deleteQuestion(id) {
@@ -103,6 +141,10 @@ export default defineComponent({
         }).finally(() => {
           this.updateUnknownQuestions();
         });
+    },
+    pageUpdate(page, platform) {
+      this.page = page;
+      this.updateUnknownQuestions(page);
     },
   },
 });

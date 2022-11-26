@@ -2,6 +2,7 @@ const dotenv = require('dotenv');
 const dotenvExpand = require('dotenv-expand');
 const express = require('express');
 const cors = require('cors');
+const morgan = require('morgan');
 
 const mountRoutes = require('./routes');
 
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use(express.urlencoded({
   extended: true,
 }));
+app.use(morgan('combined'));
 
 app.use((req, res, next) => {
   res.setHeader('X-Powered-By', 'with he4rt by softawii');

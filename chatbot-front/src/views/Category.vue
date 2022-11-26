@@ -1,12 +1,18 @@
 <template>
   <!-- eslint-disable  vue/no-v-model-argument -->
   <div id="main">
-    <n-breadcrumb style="padding-top: 10px">
-      <n-breadcrumb-item v-for="item in globalStore.breadcrumbNavigation" :key="item.name" @click="$router.push(item.path)">
-        {{ item.name }}
-      </n-breadcrumb-item>
-    </n-breadcrumb>
-    <n-h1 style="margin-top: 0">
+    <n-h1 v-if="isLoadingHeader" style="margin-top: 0">
+      <n-skeleton text style="max-width: 400px" />
+      <n-button
+        strong secondary circle style="margin-left: 10px;"
+        :disabled="true"
+      >
+        <template #icon>
+          <n-icon :component="AddCircleIcon" />
+        </template>
+      </n-button>
+    </n-h1>
+    <n-h1 v-else style="margin-top: 0">
       {{ category.name }}
       <n-tag v-if="category.favorite" :bordered="false" type="warning" size="small">
         Favorito
@@ -27,7 +33,8 @@
     <n-blockquote>
       {{ category.description }}
     </n-blockquote>
-    <n-list v-if="questions.length" id="list" hoverable clickable>
+    <SkeletonList v-if="isLoadingList" />
+    <n-list v-else-if="questions.length" id="list" hoverable clickable>
       <n-list-item v-for="qa in questions" :key="qa.question">
         <template #suffix>
           <n-dropdown trigger="hover" :options="qaOptions" @select="(key) => handleSelect(key, qa)">
@@ -38,8 +45,8 @@
             </n-button>
           </n-dropdown>
         </template>
-        <n-thing :title="qa.value" content-style="margin-top: 10px;" @click="showDetails(qa)">
-          {{ qa.answer }}
+        <n-thing :title="qa.value" content-style="margin-top: 10px; word-wrap: anywhere;" @click="showDetails(qa)">
+          {{ qa.answer.substr(0, 200) }} {{ qa.answer.length > 200 ? '...' : '' }}
         </n-thing>
       </n-list-item>
     </n-list>
@@ -59,14 +66,15 @@
           style="margin: auto; max-width: 600px;"
         >
           <n-form-item label="Pergunta" path="question">
-            <n-input v-model:value="qaForm.question" placeholder="Pergunta" />
+            <n-input
+              v-model:value="qaForm.question" placeholder="Pergunta" type="textarea"
+              :autosize="{ minRows: 1 }"
+            />
           </n-form-item>
           <n-form-item label="Resposta" path="answer">
             <n-input
               v-model:value="qaForm.answer" placeholder="Resposta" type="textarea"
-              :autosize="{
-                minRows: 3
-              }"
+              :autosize="{ minRows: 3 }"
             />
           </n-form-item>
           <n-button type="primary" block @click="submitNewQA">
@@ -116,7 +124,9 @@
         role="dialog"
         aria-modal="true"
       >
-        {{ currentQA.answer }}
+        <div style="white-space: pre-wrap;">
+          {{ currentQA.answer }}
+        </div>
       </n-card>
     </n-modal>
     <n-modal
@@ -129,6 +139,7 @@
       negative-text="Cancelar"
       @positive-click="deleteQuestion"
     />
+    <n-back-top :right="100" />
   </div>
 </template>
 
@@ -145,12 +156,16 @@ import {
 import { useLoadingBar, useMessage, NIcon } from 'naive-ui';
 import { useGlobalStore } from '../store/GlobalStore';
 import { useUserStore } from '../store/UserStore';
+import SkeletonList from '../components/SkeletonList.vue';
 
 function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) });
 }
 
 export default {
+  components: {
+    SkeletonList,
+  },
   setup() {
     const userStore = useUserStore();
     const qaFormRef = ref(null);
@@ -172,13 +187,29 @@ export default {
       qaFormRules: {
         question: {
           required: true,
-          message: 'Insira a pergunta',
-          trigger: 'blur',
+          trigger: ['input', 'blur'],
+          validator(rule, value) {
+            const limit = 500;
+            if (!value || !value.trim()) {
+              return new Error('Campo é obrigatório');
+            } if (value.length > limit) {
+              return new Error(`O limite de caracteres é ${limit}, mas o campo possui ${value.length}`);
+            }
+            return true;
+          },
         },
         answer: {
           required: true,
-          message: 'Insira a resposta',
-          trigger: 'blur',
+          trigger: ['input', 'blur'],
+          validator(rule, value) {
+            const limit = 1000;
+            if (!value || !value.trim()) {
+              return new Error('Campo é obrigatório');
+            } if (value.length > limit) {
+              return new Error(`O limite de caracteres é ${limit}, mas o campo possui ${value.length}`);
+            }
+            return true;
+          },
         },
       },
       qaOptions: [
@@ -206,6 +237,8 @@ export default {
       showCreateQAModal: false,
       currentQA: {},
       questions: [],
+      isLoadingList: true,
+      isLoadingHeader: true,
     };
   },
   watch: {
@@ -253,11 +286,12 @@ export default {
           this.updateData(true);
         });
     },
-    updateData(force) {
+    async updateData(force) {
       const id = this.$route.params.id;
       const apiUrl = import.meta.env.VITE_API_URL;
       this.loadingBar.start();
       if (!this.globalStore.data.currentCategory || force) {
+        this.isLoadingHeader = true;
         axios.get(`${apiUrl}/category/${id}`)
           .then(res => {
             this.category = res.data;
@@ -266,17 +300,20 @@ export default {
           }).catch(err => {
             console.error(err);
             this.message.error('Erro ao tentar atualizar as perguntas');
+          }).finally(() => {
+            this.isLoadingHeader = false;
           });
       } else {
         this.category = this.globalStore.data.currentCategory;
+        this.isLoadingHeader = false;
       }
+      this.isLoadingList = true;
       axios.get(`${apiUrl}/question/?category=${id}`)
-        .then(res => {
+        .then(async res => {
           this.questions = res.data;
-          Promise.all(
+          await Promise.all(
             this.questions.map(question => axios.get(`${apiUrl}/answer/${question.answer_id}?questions=false`)
               .then(res => {
-              // eslint-disable-next-line no-param-reassign
                 question.answer = res.data.value;
               })),
           ).then(() => {
@@ -287,6 +324,8 @@ export default {
         }).catch(err => {
           console.error(err);
           this.loadingBar.error();
+        }).finally(() => {
+          this.isLoadingList = false;
         });
     },
     submitEditQA() {

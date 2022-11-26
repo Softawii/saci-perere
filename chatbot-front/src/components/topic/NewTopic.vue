@@ -46,12 +46,27 @@ export default {
       rules: {
         name: {
           required: true,
-          message: 'Insira o nome do tópico',
-          trigger: 'blur',
+          trigger: ['input', 'blur'],
+          validator(rule, value) {
+            const limit = 100;
+            if (!value || !value.trim()) {
+              return new Error('Campo é obrigatório');
+            } if (value.length > limit) {
+              return new Error(`O limite de caracteres é ${limit}, mas o campo possui ${value.length}`);
+            }
+            return true;
+          },
         },
         description: {
           required: false,
-          trigger: 'blur',
+          trigger: ['input', 'blur'],
+          validator(rule, value) {
+            const limit = 200;
+            if (value && value.length > limit) {
+              return new Error(`O limite de caracteres é ${limit}, mas o campo possui ${value.length}`);
+            }
+            return true;
+          },
         },
       },
     };
