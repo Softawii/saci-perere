@@ -28,7 +28,6 @@ describe('Authentication endpoints', () => {
     expect(body.username).toBeDefined();
     expect(body.isadmin).toBeDefined();
     expect(body.token).toBeDefined();
-    expect(body.expiresAt).toBeDefined();
   });
   it('Should signup', async () => {
     const authRes = await request(app)
