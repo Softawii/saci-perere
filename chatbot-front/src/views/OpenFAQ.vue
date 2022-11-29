@@ -158,4 +158,7 @@ export default {
   margin: auto;
   padding: 20px 10px;
 }
+:deep(.n-tree-node-content__text) {
+  white-space: pre-wrap;
+}
 </style>
