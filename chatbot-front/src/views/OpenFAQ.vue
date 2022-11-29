@@ -79,7 +79,7 @@ export default {
             return;
           }
           vm.data = res.data.map(topic => ({
-            key: `category_${topic.id}`,
+            key: `topic_${topic.id}`,
             label: topic.name,
             isLeaf: false,
             type: 'topic',
