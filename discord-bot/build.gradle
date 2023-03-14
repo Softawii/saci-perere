@@ -26,6 +26,11 @@ dependencies {
     implementation 'com.github.Softawii:curupira:2658bebc30'
     implementation 'com.github.Softawii:curupira:2658bebc30:all'
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
+    implementation ('org.springframework.boot:spring-boot-starter-data-jpa:2.7.0') {
+        exclude module: 'spring-boot-starter-logging'
+    }
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    implementation 'com.h2database:h2:2.1.214'
 }
 
 tasks.register('deploy') {
