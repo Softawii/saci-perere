@@ -2,12 +2,18 @@ package com.softawii.saciperere.listener;
 
 import com.softawii.curupira.annotations.*;
 import com.softawii.curupira.properties.Environment;
+import com.softawii.saciperere.Main;
+import com.softawii.saciperere.entity.ChannelCategory;
+import com.softawii.saciperere.repository.ChannelCategoryRepository;
 import com.softawii.saciperere.request.model.CategoryResponseBody;
 import com.softawii.saciperere.request.model.ModelResponseBody;
 import com.softawii.saciperere.request.model.TopicResponseBody;
 import com.softawii.saciperere.util.ModelUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.unions.GuildMessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -32,22 +38,25 @@ import java.util.stream.Collectors;
 public class QuestionGroup {
 
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
-    
+
     private static final String MODAL_FEEDBACK_ACTION = "question-modal-feedback-action";
     private static final String TEXT_FEEDBACK_ACTION = "question-text-feedback-action";
     private static final String POSITIVE_FEEDBACK_ACTION = "question-positive-feedback-action";
     private static final String NEGATIVE_FEEDBACK_ACTION = "question-negative-feedback-action";
-    
-    private static final double THRESHOLD;
+
+    public static final double THRESHOLD;
+
     static {
         double env = 0.5;
         try {
             env = Double.parseDouble(System.getenv("THRESHOLD"));
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         THRESHOLD = env;
     }
+
     private static final Color PRIMARY_COLOR = Color.decode("#63e2b7");
-    
+
     @ICommand(name = "make-question", description = "Faça uma pergunta e tenha uma resposta", environment = Environment.BOTH)
     @IArgument(name = "topic", description = "Tópico no qual a pergunta será filtrada", type = OptionType.INTEGER, required = true, hasAutoComplete = true)
     @IArgument(name = "category", description = "Categoria no qual a pergunta será buscada", type = OptionType.STRING, required = true, hasAutoComplete = true)
@@ -80,16 +89,8 @@ public class QuestionGroup {
             embedBuilder.setColor(getScoreColor(response.score()));
             event.getHook().editOriginalEmbeds(embedBuilder.build())
                 .queue(interactionHook -> {
-                    String positiveId = String.format("%s:%s", POSITIVE_FEEDBACK_ACTION, response.historyId());
-                    String negativeId = String.format("%s:%s", NEGATIVE_FEEDBACK_ACTION, response.historyId());
-                    String textId = String.format("%s:%s", TEXT_FEEDBACK_ACTION, response.historyId());
-
-                    Button successButton = Button.success(positiveId, "Era o que esperava");
-                    Button cancelButton = Button.danger(negativeId, "Fora do esperado");
-                    Button textButton = Button.secondary(textId, "Quero enviar um feedback em texto");
-
                     event.getHook().sendMessage("Qual feedback daria para o retorno do bot?")
-                        .addActionRow(successButton, cancelButton, textButton)
+                        .addActionRow(getFeedbackButtons(response.historyId(), event.getUser().getIdLong()))
                         .setEphemeral(true)
                         .queueAfter(2, TimeUnit.SECONDS);
                 });
@@ -98,6 +99,18 @@ public class QuestionGroup {
             embedBuilder.addField("Ops!", "Não encontramos pergunta similar em nossa base de dados", false);
             event.getHook().editOriginalEmbeds(embedBuilder.build()).queue();
         }
+    }
+
+    public static Button[] getFeedbackButtons(long historyId, long userId) {
+        String positiveId = String.format("%s:%s:%s", POSITIVE_FEEDBACK_ACTION, historyId, userId);
+        String negativeId = String.format("%s:%s:%s", NEGATIVE_FEEDBACK_ACTION, historyId, userId);
+        String textId = String.format("%s:%s:%s", TEXT_FEEDBACK_ACTION, historyId, userId);
+
+        Button successButton = Button.success(positiveId, "Era o que esperava");
+        Button cancelButton = Button.danger(negativeId, "Fora do esperado");
+        Button textButton = Button.secondary(textId, "Quero enviar um feedback em texto");
+
+        return new Button[]{successButton, cancelButton, textButton};
     }
 
     @NotNull
@@ -111,10 +124,10 @@ public class QuestionGroup {
         int b = (int) (Color.ORANGE.getBlue() + Math.min(1, score) * (Color.GREEN.getBlue() - Color.ORANGE.getBlue()));
         return new Color(r, g, b);
     }
-    
+
     private static MessageEmbed getApiErrorEmbed() {
         EmbedBuilder builder = new EmbedBuilder();
-        builder.setTitle("Ops! Ocorreu algum erro na comunicação com a API");        
+        builder.setTitle("Ops! Ocorreu algum erro na comunicação com a API");
         return builder.build();
     }
 
@@ -166,40 +179,105 @@ public class QuestionGroup {
     public static void positiveFeedbackButton(ButtonInteractionEvent event) {
         System.out.println("Received positive feedback: " + event.getComponentId());
         String[] args = event.getComponentId().split(":");
-        executor.submit(() -> {
-            ModelUtil.saveFeedback(Long.parseLong(args[1]), 1, null);
-        });
-        event.editMessage("Obrigado pelo feedback!").setComponents().queue(interactionHook -> {
-            interactionHook.deleteOriginal().queueAfter(2, TimeUnit.SECONDS);
-        });
+        if (args.length == 3) {
+            long eventUserId = event.getUser().getIdLong();
+            long questionAuthorUserId = Long.parseLong(args[2]);
+            if (eventUserId == questionAuthorUserId) {
+                executor.submit(() -> {
+                    ModelUtil.saveFeedback(Long.parseLong(args[1]), 1, null);
+                });
+                event.editMessage("Obrigado pelo feedback!").setComponents().queue(interactionHook -> {
+                    interactionHook.deleteOriginal().queueAfter(2, TimeUnit.SECONDS);
+                });
+                return;
+            }
+        }
+        event.deferReply(true).queue();
+        event.getInteraction().getHook().setEphemeral(true).sendMessage("Ação inválida").queue();
     }
-    
+
+    @ICommand(name = "setup", description = "Configure o canal", environment = Environment.SERVER, permissions = Permission.ADMINISTRATOR)
+    @IArgument(name = "topic", description = "Tópico no qual a categoria será filtrada", type = OptionType.INTEGER, required = true, hasAutoComplete = true)
+    @IArgument(name = "category", description = "Categoria no qual a pergunta será buscada", type = OptionType.STRING, required = true, hasAutoComplete = true)
+    public static void setup(SlashCommandInteractionEvent event) {
+        event.deferReply(true).queue();
+        ChannelCategoryRepository repository = Main.applicationContext.getBean(ChannelCategoryRepository.class);
+        GuildMessageChannelUnion guildChannel = event.getGuildChannel();
+        if (guildChannel instanceof TextChannel) {
+            long category = event.getOption("category").getAsLong();
+            if (repository.existsById(guildChannel.getIdLong())) {
+                event.getInteraction().getHook().setEphemeral(true).sendMessage("Canal já cadastrado no banco").queue();
+            } else {
+                repository.save(new ChannelCategory(guildChannel.getIdLong(), category));
+                event.getInteraction().getHook().setEphemeral(true).sendMessage("Configuração feita com sucesso").queue();
+            }
+        } else {
+            event.getInteraction().getHook().setEphemeral(true).sendMessage("Ação inválida").queue();
+        }
+    }
+
+    @ICommand(name = "remove", description = "Remove configuração do canal", environment = Environment.SERVER, permissions = Permission.ADMINISTRATOR)
+    public static void remove(SlashCommandInteractionEvent event) {
+        event.deferReply(true).queue();
+        ChannelCategoryRepository repository = Main.applicationContext.getBean(ChannelCategoryRepository.class);
+        GuildMessageChannelUnion guildChannel = event.getGuildChannel();
+        if (guildChannel instanceof TextChannel) {
+            if (repository.existsById(guildChannel.getIdLong())) {
+                repository.deleteById(guildChannel.getIdLong());
+                event.getInteraction().getHook().setEphemeral(true).sendMessage("Canal removido").queue();
+            } else {
+                event.getInteraction().getHook().setEphemeral(true).sendMessage("Canal não está cadastrado").queue();
+            }
+        } else {
+            event.getInteraction().getHook().setEphemeral(true).sendMessage("Ação inválida").queue();
+        }
+    }
+
     @IButton(id = NEGATIVE_FEEDBACK_ACTION)
     public static void negativeFeedbackButton(ButtonInteractionEvent event) {
         System.out.println("Received negative feedback: " + event.getComponentId());
         String[] args = event.getComponentId().split(":");
-        executor.submit(() -> {
-            ModelUtil.saveFeedback(Long.parseLong(args[1]), -1, null);
-        });
-        event.editMessage("Obrigado pelo feedback!").setComponents().queue(interactionHook -> {
-            interactionHook.deleteOriginal().queueAfter(2, TimeUnit.SECONDS);
-        });
+        if (args.length == 3) {
+            long eventUserId = event.getUser().getIdLong();
+            long questionAuthorUserId = Long.parseLong(args[2]);
+            if (eventUserId == questionAuthorUserId) {
+                executor.submit(() -> {
+                    ModelUtil.saveFeedback(Long.parseLong(args[1]), -1, null);
+                });
+                event.editMessage("Obrigado pelo feedback!").setComponents().queue(interactionHook -> {
+                    interactionHook.deleteOriginal().queueAfter(2, TimeUnit.SECONDS);
+                });
+                return;
+            }
+        }
+        event.deferReply(true).queue();
+        event.getInteraction().getHook().setEphemeral(true).sendMessage("Ação inválida").queue();
     }
 
     @IButton(id = TEXT_FEEDBACK_ACTION)
     public static void editMessage(ButtonInteractionEvent event) {
         System.out.println("Received text feedback: " + event.getComponentId());
-        String historyId = event.getComponentId().split(":")[1];
-        TextInput body = TextInput.create("text", "Mensagem", TextInputStyle.PARAGRAPH)
-            .setPlaceholder("Eu acho que...")
-            .setMinLength(1)
-            .setMaxLength(200)
-            .build();
-        Modal modal = Modal.create(String.format("%s:%s", MODAL_FEEDBACK_ACTION, historyId), "Enviar feedback")
-            .addActionRow(body)
-            .build();
-        
-        event.replyModal(modal).queue();
+        String[] args = event.getComponentId().split(":");
+        if (args.length == 3) {
+            long eventUserId = event.getUser().getIdLong();
+            long questionAuthorUserId = Long.parseLong(args[2]);
+            if (eventUserId == questionAuthorUserId) {
+                String historyId = args[1];
+                TextInput body = TextInput.create("text", "Mensagem", TextInputStyle.PARAGRAPH)
+                    .setPlaceholder("Eu acho que...")
+                    .setMinLength(1)
+                    .setMaxLength(200)
+                    .build();
+                Modal modal = Modal.create(String.format("%s:%s", MODAL_FEEDBACK_ACTION, historyId), "Enviar feedback")
+                    .addActionRow(body)
+                    .build();
+
+                event.replyModal(modal).queue();
+                return;
+            }
+        }
+        event.deferReply(true).queue();
+        event.getInteraction().getHook().setEphemeral(true).sendMessage("Ação inválida").queue();
     }
 
     @IModal(id = MODAL_FEEDBACK_ACTION, title = "Enviar feedback", textInputs = {
@@ -215,15 +293,15 @@ public class QuestionGroup {
         });
         event.editMessage("Obrigado pelo feedback!").setComponents().queue();
     }
-    
+
     public static class AutoCompleter extends ListenerAdapter {
         @Override
         public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
             String path = event.getCommandPath();
-            String focusedKey   = event.getFocusedOption().getName();
+            String focusedKey = event.getFocusedOption().getName();
             String focusedValue = event.getFocusedOption().getValue().trim();
 
-            if (path.equals("make-question") && focusedKey.equals("category")) {
+            if ((path.equals("make-question") || path.equals("setup")) && focusedKey.equals("category")) {
                 long topicId = event.getOption("topic").getAsLong();
                 CategoryResponseBody[] categories = ModelUtil.getCategories(topicId);
                 Command.Choice[] choices = Arrays.stream(categories)
