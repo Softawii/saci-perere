@@ -35,3 +35,5 @@ In recent years, the exponential growth of the internet has revolutionized the w
     - [API](/front-api)
 - [API do Modelo](/model)
 - [Bot para Discord](/discord-bot)
+
+> Desenvolvido e testado no Ubuntu 22.04

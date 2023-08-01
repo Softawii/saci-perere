@@ -1,6 +1,18 @@
-# chatbot-front-api
+# API do Sistema Administrativo
 
-## Run
+## Requisitos
 
-> npm install
-> npm run server
+- [Node 18+](https://nodejs.org/) e NPM
+- [PostgreSQL](https://www.postgresql.org/) configurado e com [tabelas criadas](/sql-scripts/)
+
+### Como instalar
+
+```bash
+npm install
+```
+
+### Como executar
+
+```bash
+npm run server
+```
