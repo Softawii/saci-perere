@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./chatbot-front-api/
+        working-directory: ./front-api/
     container: node:current-buster
 
     services:
