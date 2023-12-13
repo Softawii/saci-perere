@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+title: "SACI PeReRe: um sistema para responder FAQs"
+message: "If you use this software, please cite it as below."
+authors:
+  - given-names: Eduardo
+    family-names: Cabral
+  - given-names: Romulo
+    family-names: Menezes
+date-released: 2023-08-04
+url: "https://github.com/Softawii/saci-perere"
+
